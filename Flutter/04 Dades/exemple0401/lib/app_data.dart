@@ -45,7 +45,7 @@ class AppData extends ChangeNotifier {
 
       request.headers.addAll({'Content-Type': 'application/json'});
       request.body = jsonEncode(
-          {'model': 'phi3', 'prompt': 'Why is the sky blue?', 'stream': true});
+          {'model': 'phi4', 'prompt': 'Why is the sky blue?', 'stream': true});
 
       var streamedResponse = await _client!.send(request);
       _streamSubscription =
