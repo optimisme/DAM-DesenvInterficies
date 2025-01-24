@@ -61,10 +61,18 @@ Quan volem dibuixar al *Canvas* fem servir el context anterior:
     gc.fillOval(x, y, size, size);
 ```
 
-El canvas va 'pintant' els objectes a sobre dels antics, així si volem netejar-lo i començar de nou:
+Al canvas si poden anar 'pintant' els objectes a sobre dels antics, així si volem netejar-lo i començar de nou:
 
 <br/>
 <center><img src="./assets/context00.png" style="max-height: 400px" alt="">
+<br/></center>
+<br/>
+<br/>
+
+Les coordenades del canvas són "Top-Left" això vol dir que la posició (0,0) està a dalt a l'esquerra.
+
+<br/>
+<center><img src="./assets/context01.png" style="max-height: 400px" alt="">
 <br/></center>
 <br/>
 <br/>

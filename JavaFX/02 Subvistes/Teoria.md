@@ -137,6 +137,9 @@ L'arxiu de la subvista *"listItem.fxml"*, només defineix el format però no el 
 
 Aleshores, l'aplicació carrega una llista formatada com a *"listItem.fxml"*
 
-<center><img src="./assets/ex0201.gif" style="max-width: 90%; max-height: 400px;" alt="">
-<br/></center>
-<br/>
+<center>
+<video width="600" style="max-width: 90%;" controls autoplay loop>
+  <source src="./assets/ex0201.mov" type="video/mp4">
+  El teu navegador no suporta la reproducció de vídeo.
+</video>
+</center>

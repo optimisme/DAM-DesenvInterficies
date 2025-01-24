@@ -9,11 +9,17 @@ La carpeta ‘src/main/resources/assets’ conté els arxius necessaris per fer 
 
 L'aplicació té dues vistes segons la mida de la finestra. I mostra la informació de l'arxiu .json així:
 
-<center><img src="./assets/viewdesktoppreview.gif" style="max-width: 90%; max-height: 200px;" alt="">
-<br/></center>
-<br/>
+<center>
+<video width="275" height="480" controls>
+  <source src="./assets/viewdesktoppreview.mov" type="video/mp4">
+  El teu navegador no suporta la reproducció de vídeo.
+</video>
+</center>
 
-<center><img src="./assets/viewsmallpreview.gif" style="max-width: 90%; max-height: 400px;" alt="">
-<br/></center>
-<br/>
+<center>
+<video width="275" height="480" controls>
+  <source src="./assets/viewsmallpreview.mov" type="video/mp4">
+  El teu navegador no suporta la reproducció de vídeo.
+</video>
+</center>
 

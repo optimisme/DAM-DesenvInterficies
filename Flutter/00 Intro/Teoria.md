@@ -62,7 +62,13 @@ Cal apuntar, que les aplicacions web estan limitades per les mesures de segureta
 
 ## Instal·lació
 
-Per instal·lar flutter, seguir el tutorial de la documentació:
+Per instal·lar flutter, a la **"Command Palette"** de **Visual Studio Code** escriure "Flutter", escollir "New Project" i instal·lar l'SDK de Flutter. Si el poseu a la carpeta de GitHub, per configurar el PATH cal fer:
+
+```bash
+export PATH=$HOME/Documents/GitHub/flutter/bin:$PATH
+```
+
+* Per instruccions més detallades:
 
 [https://docs.flutter.dev/get-started/install](https://docs.flutter.dev/get-started/install)
 

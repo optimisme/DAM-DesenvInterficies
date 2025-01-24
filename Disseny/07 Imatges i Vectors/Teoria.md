@@ -261,9 +261,9 @@ Les avantatges de fer el dibuix amb gràfics vectorials enlloc d'imatges:
 - Menys intercanvi de dades, més ràpid de carregar a telèfons mòbils ([fins a un 80% menys](https://bgr.com/general/apple-maps-data-consumption-80-percent-less-than-google-maps/))
 - Dibuixios més nítids, adaptats a la densitat de pantalla de cada dispositiu
 
-Google no ho volia, perquè no volia donar les coordenades de les localitzacions dels seus mapes. I s'hi va negar.
+Google no ho volia, perquè no volia publicar les coordenades de les localitzacions dels seus mapes. I s'hi va negar.
 
-Canv, [Apple va fer]((https://appleinsider.com/articles/12/08/03/inside_apples_new_vector_based_maps_in_ios_6)) la seva pròpia "Apple Maps".
+Al final, [Apple va fer]((https://appleinsider.com/articles/12/08/03/inside_apples_new_vector_based_maps_in_ios_6)) la seva pròpia "Apple Maps".
 
 <div class="image-container">
     <div class="image-item">

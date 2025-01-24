@@ -21,6 +21,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Arrays;
 
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.java_websocket.exceptions.WebsocketNotConnectedException;
@@ -258,6 +261,21 @@ public class Main extends WebSocketServer {
         return resultat.toString().trim();
     }
 
+    public static void setSignTerm(Main server) {
+        SignalHandler handler = sig -> {
+            System.out.println(sig.getName() + " received. Stopping server...");
+            try {
+                server.stop(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Server stopped.");
+            System.exit(0);
+        };
+        Signal.handle(new Signal("TERM"), handler);
+        Signal.handle(new Signal("INT"), handler);
+    }
+
     public static void main(String[] args) {
 
         String systemName = askSystemName();
@@ -266,6 +284,9 @@ public class Main extends WebSocketServer {
         Main server = new Main(new InetSocketAddress(3000));
         server.start();
         
+        // Permet aturar el servidor amb SITERM/SIGINT
+        setSignTerm(server);
+
         LineReader reader = LineReaderBuilder.builder().build();
         System.out.println("Server running. Type 'exit' to gracefully stop it.");
 

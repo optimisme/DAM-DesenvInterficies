@@ -75,6 +75,8 @@ bin/*
 
 # Dart
 .dart_tool
+.metadata
+.lock
 android
 build
 ios

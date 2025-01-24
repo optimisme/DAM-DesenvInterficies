@@ -125,6 +125,7 @@ public class Controller implements Initializable {
             // Assignar els valors als controls del template
             itemController.setTitle(name);
             itemController.setSubtitle(category);
+            itemController.setImatge("/assets/images/" + name.toLowerCase() + ".png");
             itemController.setCircleColor(color);
 
             // Afegir el nou element a 'yPane'

@@ -89,3 +89,11 @@ Aquest exemple mostra un widget personalitzat anomenat *Picker360*:
 <center><img src="./assets/ex0600.gif" style="max-height: 400px" alt="">
 <br/></center>
 <br/>
+
+# Llibreries d'estil
+
+Amb els widgets personalitzats es poden fer llibreries completes amb widgets que imiten l'estil d'un sistema:
+
+- [**MacOS**](https://pub.dev/packages/flutter_cupertino_desktop_kit)
+- [**Demo**](https://optimisme.github.io/flutter_cupertino_desktop_kit/gh-pages/example/)
+

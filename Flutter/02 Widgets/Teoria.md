@@ -128,47 +128,53 @@ Gairebé tots els elements de les aplicacions s’organitzen amb **"Rows"** o **
 En aquest exemple s'organitza una aplicació en una columna que conté dues files, la primera amb números i la segona amb botons:
 
 ```dart
-body: Center(
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: <Widget>[
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            '$_firstNumber',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(width: 20),
-          Text(
-            '$_secondNumber',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-        ],
+@override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(widget.title),
       ),
-      const SizedBox(height: 20),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          ElevatedButton(
-            onPressed: _incrementFirstNumber,
-            child: const Text('Increment First Number'),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: _decrementSecondNumber,
-            child: const Text('Decrement Second Number'),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: _resetNumbers,
-            child: const Text('Reset Numbers'),
-          ),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('$_firstNumber'),
+                const SizedBox(width: 20),
+                Text('$_secondNumber'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                CupertinoButton.filled(
+                  onPressed: _incrementFirstNumber,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: const Text('Increment First Number'),
+                ),
+                const SizedBox(width: 10),
+                CupertinoButton.filled(
+                  onPressed: _decrementSecondNumber,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: const Text('Decrement Second'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            CupertinoButton(
+              onPressed: _resetNumbers,
+              child: const Text('Reset Numbers'),
+            ),
+          ],
+        ),
       ),
-    ],
-  ),
-)
+    );
+  }
 ```
 
 <br/>
