@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'constants.dart';
 import 'drawable.dart';
 
 class AppData extends ChangeNotifier {
   String _responseText = "";
   bool _isLoading = false;
-  bool _isWaiting = true;
   bool _isInitial = true;
   http.Client? _client;
   IOClient? _ioClient;
@@ -18,9 +18,9 @@ class AppData extends ChangeNotifier {
 
   final List<Drawable> drawables = [];
 
-  String get responseText => _isInitial
-      ? "Cal un servidor en funcionament ..."
-      : (_isWaiting ? "Esperant ..." : _responseText);
+  String get responseText =>
+      _isInitial ? "..." : (_isLoading ? "Esperant ..." : _responseText);
+
   bool get isLoading => _isLoading;
 
   AppData() {
@@ -42,7 +42,6 @@ class AppData extends ChangeNotifier {
   Future<void> callStream({required String question}) async {
     _responseText = "";
     _isInitial = false;
-    _isWaiting = true;
     setLoading(true);
 
     try {
@@ -58,7 +57,6 @@ class AppData extends ChangeNotifier {
       var streamedResponse = await _client!.send(request);
       _streamSubscription =
           streamedResponse.stream.transform(utf8.decoder).listen((value) {
-        _isWaiting = false;
         var jsonResponse = jsonDecode(value);
         _responseText += jsonResponse['response'];
         notifyListeners();
@@ -69,7 +67,6 @@ class AppData extends ChangeNotifier {
         } else {
           _responseText = "Error during streaming: $error";
         }
-        _isWaiting = false;
         setLoading(false);
         notifyListeners();
       }, onDone: () {
@@ -77,161 +74,17 @@ class AppData extends ChangeNotifier {
       });
     } catch (e) {
       _responseText = "Error during streaming.";
-      _isWaiting = false;
       setLoading(false);
       notifyListeners();
     }
-  }
-
-  Future<void> callComplete({required String question}) async {
-    _responseText = "";
-    _isInitial = false;
-    _isWaiting = true;
-    setLoading(true);
-
-    try {
-      var response = await _client!.post(
-        Uri.parse('http://localhost:11434/api/generate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(
-            {'model': 'llama3.2', 'prompt': question, 'stream': false}),
-      );
-
-      var jsonResponse = jsonDecode(response.body);
-      _responseText = jsonResponse['response'];
-      _isWaiting = false;
-      setLoading(false);
-      notifyListeners();
-    } catch (e) {
-      _responseText = "Error during completion.";
-      _isWaiting = false;
-      setLoading(false);
-      notifyListeners();
-    }
-  }
-
-  void cancelRequests() {
-    _streamSubscription?.cancel();
-    _httpClient?.close(force: true);
-    _httpClient = HttpClient();
-    _ioClient = IOClient(_httpClient!);
-    _client = _ioClient;
-    _responseText += "\nRequest cancelled.";
-    _isWaiting = false;
-    setLoading(false);
-    notifyListeners();
   }
 
   Future<void> callWithCustomTools({required String userPrompt}) async {
     const apiUrl = 'http://localhost:11434/api/chat';
 
-    final tools = [
-      {
-        "type": "function",
-        "function": {
-          "name": "draw_line",
-          "description": "Dibuixa una línia entre dos punts",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "start": {
-                "type": "object",
-                "properties": {
-                  "x": {"type": "number"},
-                  "y": {"type": "number"}
-                },
-                "required": ["x", "y"]
-              },
-              "end": {
-                "type": "object",
-                "properties": {
-                  "x": {"type": "number"},
-                  "y": {"type": "number"}
-                },
-                "required": ["x", "y"]
-              }
-            },
-            "required": ["start", "end"]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "draw_circle",
-          "description": "Dibuixa un cercle amb un radi determinat",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "center": {
-                "type": "object",
-                "properties": {
-                  "x": {"type": "number"},
-                  "y": {"type": "number"}
-                },
-                "required": ["x", "y"]
-              },
-              "radius": {"type": "number"}
-            },
-            "required": ["center", "radius"]
-          }
-        }
-      },
-      {
-        "type": "function",
-        "function": {
-          "name": "draw_rectangle",
-          "description":
-              "Dibuixa un rectangle definit per les coordenades superior-esquerra i inferior-dreta",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "top_left": {
-                "type": "object",
-                "properties": {
-                  "x": {"type": "number"},
-                  "y": {"type": "number"}
-                },
-                "required": ["x", "y"]
-              },
-              "bottom_right": {
-                "type": "object",
-                "properties": {
-                  "x": {"type": "number"},
-                  "y": {"type": "number"}
-                },
-                "required": ["x", "y"]
-              }
-            },
-            "required": ["top_left", "bottom_right"]
-          }
-        }
-      }
-    ];
-
-    final schema = jsonEncode({
-      "type": "object",
-      "properties": {
-        "tool_calls": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "function": {
-                "type": "object",
-                "properties": {
-                  "name": {"type": "string"},
-                  "arguments": {"type": "object"}
-                },
-                "required": ["name", "arguments"]
-              }
-            },
-            "required": ["function"]
-          }
-        }
-      },
-      "required": ["tool_calls"]
-    });
+    _responseText = "";
+    _isInitial = false;
+    setLoading(true);
 
     final body = {
       "model": "llama3.2",
@@ -263,76 +116,112 @@ class AppData extends ChangeNotifier {
             }
           }
         }
+        setLoading(false);
       } else {
+        setLoading(false);
         throw Exception("Error: ${response.body}");
       }
     } catch (e) {
       print("Error during API call: $e");
+      setLoading(false);
     }
   }
 
+  void cancelRequests() {
+    _streamSubscription?.cancel();
+    _httpClient?.close(force: true);
+    _httpClient = HttpClient();
+    _ioClient = IOClient(_httpClient!);
+    _client = _ioClient;
+    _responseText += "\nRequest cancelled.";
+    setLoading(false);
+    notifyListeners();
+  }
+
+  Map<String, dynamic> normalizeParameters(Map<String, dynamic> parameters) {
+    final normalized = <String, dynamic>{};
+
+    parameters.forEach((key, value) {
+      if (value is String) {
+        try {
+          // Si és JSON dins d'una cadena
+          final parsed = jsonDecode(value);
+          if (parsed is Map<String, dynamic>) {
+            normalized[key] = normalizeParameters(parsed);
+          } else if (parsed is List && parsed.length == 2) {
+            // Converteix llistes JSON [x, y] a un mapa {"x": x, "y": y}
+            normalized[key] = {
+              "x": parsed[0].toDouble(),
+              "y": parsed[1].toDouble()
+            };
+          } else if (parsed is num) {
+            normalized[key] = parsed.toDouble();
+          } else {
+            normalized[key] = parsed;
+          }
+        } catch (_) {
+          // Si no és JSON, pot ser una cadena tipus "[x, y]"
+          final regex = RegExp(r'\[(\d+\.?\d*),\s*(\d+\.?\d*)\]');
+          final match = regex.firstMatch(value);
+          if (match != null) {
+            normalized[key] = {
+              "x": double.parse(match.group(1)!),
+              "y": double.parse(match.group(2)!)
+            };
+          } else {
+            normalized[key] = value; // Deixa la cadena tal qual si no encaixa
+          }
+        }
+      } else if (value is num) {
+        // Converteix qualsevol valor numèric a double
+        normalized[key] = value.toDouble();
+      } else if (value is Map<String, dynamic>) {
+        // Normalitzem els objectes aniuats
+        normalized[key] = normalizeParameters(value);
+      } else {
+        // Altres tipus (llistes, booleans, etc.)
+        normalized[key] = value;
+      }
+    });
+
+    return normalized;
+  }
+
   void _processFunctionCall(Map<String, dynamic> functionCall) {
-    final parameters = functionCall['arguments'];
+    final parameters = normalizeParameters(functionCall['arguments']);
+
     switch (functionCall['name']) {
       case 'draw_line':
         if (parameters['start'] != null && parameters['end'] != null) {
-          final start = _parsePoint(parameters['start']);
-          final end = _parsePoint(parameters['end']);
-          if (start != null && end != null) {
-            addDrawable(Line(start: start, end: end));
-          }
+          final start =
+              Offset(parameters['start']['x'], parameters['start']['y']);
+          final end = Offset(parameters['end']['x'], parameters['end']['y']);
+          addDrawable(Line(start: start, end: end));
         }
         break;
 
       case 'draw_circle':
         if (parameters['center'] != null && parameters['radius'] != null) {
-          final center = _parsePoint(parameters['center']);
-          final radius = _parseNumber(parameters['radius']);
-          if (center != null && radius != null) {
-            addDrawable(Circle(center: center, radius: radius));
-          }
+          final center =
+              Offset(parameters['center']['x'], parameters['center']['y']);
+          final radius = parameters['radius'];
+          addDrawable(Circle(center: center, radius: radius));
         }
         break;
 
       case 'draw_rectangle':
         if (parameters['top_left'] != null &&
             parameters['bottom_right'] != null) {
-          final topLeft = _parsePoint(parameters['top_left']);
-          final bottomRight = _parsePoint(parameters['bottom_right']);
-          if (topLeft != null && bottomRight != null) {
-            addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
-          }
+          final topLeft =
+              Offset(parameters['top_left']['x'], parameters['top_left']['y']);
+          final bottomRight = Offset(
+              parameters['bottom_right']['x'], parameters['bottom_right']['y']);
+          addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
         }
         break;
 
       default:
         print("Unknown function call: ${functionCall['name']}");
     }
-  }
-
-  // Funció per convertir punts
-  Offset? _parsePoint(dynamic point) {
-    if (point is Map<String, dynamic>) {
-      return Offset(point['x']?.toDouble() ?? 0, point['y']?.toDouble() ?? 0);
-    } else if (point is String) {
-      // Converteix cadenes com "[20, 50]" a objectes
-      final regex = RegExp(r'\[(\d+),\s*(\d+)\]');
-      final match = regex.firstMatch(point);
-      if (match != null) {
-        return Offset(
-            double.parse(match.group(1)!), double.parse(match.group(2)!));
-      }
-    }
-    return null;
-  }
-
-  // Funció per convertir nombres
-  double? _parseNumber(dynamic value) {
-    if (value is num) {
-      return value.toDouble();
-    } else if (value is String) {
-      return double.tryParse(value);
-    }
-    return null;
   }
 }
