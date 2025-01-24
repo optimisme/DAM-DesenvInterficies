@@ -138,18 +138,18 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Posa els paràmetres JSON rebuts de la IA en un format estàndard
   Map<String, dynamic> normalizeParameters(Map<String, dynamic> parameters) {
     final normalized = <String, dynamic>{};
 
     parameters.forEach((key, value) {
       if (value is String) {
         try {
-          // Si és JSON dins d'una cadena
+          // Si és un JSON dins d'una cadena, el deserialitzem
           final parsed = jsonDecode(value);
           if (parsed is Map<String, dynamic>) {
             normalized[key] = normalizeParameters(parsed);
           } else if (parsed is List && parsed.length == 2) {
-            // Converteix llistes JSON [x, y] a un mapa {"x": x, "y": y}
             normalized[key] = {
               "x": parsed[0].toDouble(),
               "y": parsed[1].toDouble()
@@ -160,17 +160,8 @@ class AppData extends ChangeNotifier {
             normalized[key] = parsed;
           }
         } catch (_) {
-          // Si no és JSON, pot ser una cadena tipus "[x, y]"
-          final regex = RegExp(r'\[(\d+\.?\d*),\s*(\d+\.?\d*)\]');
-          final match = regex.firstMatch(value);
-          if (match != null) {
-            normalized[key] = {
-              "x": double.parse(match.group(1)!),
-              "y": double.parse(match.group(2)!)
-            };
-          } else {
-            normalized[key] = value; // Deixa la cadena tal qual si no encaixa
-          }
+          // Deixa la cadena tal qual si no es pot deserialitzar
+          normalized[key] = value;
         }
       } else if (value is num) {
         // Converteix qualsevol valor numèric a double
