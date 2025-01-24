@@ -104,88 +104,50 @@ final schema = jsonEncode({
               },
               "arguments": {
                 "type": "object",
-                "allOf": [
-                  {
-                    "if": {
-                      "properties": {
-                        "name": {"const": "draw_line"}
-                      }
+                "properties": {
+                  "start": {
+                    "type": "object",
+                    "properties": {
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
                     },
-                    "then": {
-                      "properties": {
-                        "start": {
-                          "type": "object",
-                          "properties": {
-                            "x": {"type": "number"},
-                            "y": {"type": "number"}
-                          },
-                          "required": ["x", "y"]
-                        },
-                        "end": {
-                          "type": "object",
-                          "properties": {
-                            "x": {"type": "number"},
-                            "y": {"type": "number"}
-                          },
-                          "required": ["x", "y"]
-                        }
-                      },
-                      "required": ["start", "end"],
-                      "additionalProperties": false
-                    }
+                    "required": ["x", "y"]
                   },
-                  {
-                    "if": {
-                      "properties": {
-                        "name": {"const": "draw_circle"}
-                      }
+                  "end": {
+                    "type": "object",
+                    "properties": {
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
                     },
-                    "then": {
-                      "properties": {
-                        "center": {
-                          "type": "object",
-                          "properties": {
-                            "x": {"type": "number"},
-                            "y": {"type": "number"}
-                          },
-                          "required": ["x", "y"]
-                        },
-                        "radius": {"type": "number"}
-                      },
-                      "required": ["center", "radius"],
-                      "additionalProperties": false
-                    }
+                    "required": ["x", "y"]
                   },
-                  {
-                    "if": {
-                      "properties": {
-                        "name": {"const": "draw_rectangle"}
-                      }
+                  "center": {
+                    "type": "object",
+                    "properties": {
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
                     },
-                    "then": {
-                      "properties": {
-                        "top_left": {
-                          "type": "object",
-                          "properties": {
-                            "x": {"type": "number"},
-                            "y": {"type": "number"}
-                          },
-                          "required": ["x", "y"]
-                        },
-                        "bottom_right": {
-                          "type": "object",
-                          "properties": {
-                            "x": {"type": "number"},
-                            "y": {"type": "number"}
-                          },
-                          "required": ["x", "y"]
-                        }
-                      },
-                      "required": ["top_left", "bottom_right"],
-                      "additionalProperties": false
-                    }
+                    "required": ["x", "y"]
+                  },
+                  "radius": {"type": "number"},
+                  "top_left": {
+                    "type": "object",
+                    "properties": {
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
+                    },
+                    "required": ["x", "y"]
+                  },
+                  "bottom_right": {
+                    "type": "object",
+                    "properties": {
+                      "x": {"type": "number"},
+                      "y": {"type": "number"}
+                    },
+                    "required": ["x", "y"]
                   }
-                ]
+                },
+                "additionalProperties": false
               }
             },
             "required": ["name", "arguments"]

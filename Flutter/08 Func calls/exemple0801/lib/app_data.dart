@@ -79,6 +79,25 @@ class AppData extends ChangeNotifier {
     }
   }
 
+  dynamic fixJsonInStrings(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data.map((key, value) => MapEntry(key, fixJsonInStrings(value)));
+    } else if (data is List) {
+      return data.map(fixJsonInStrings).toList();
+    } else if (data is String) {
+      try {
+        // Si és JSON dins d'una cadena, el deserialitzem
+        final parsed = jsonDecode(data);
+        return fixJsonInStrings(parsed);
+      } catch (_) {
+        // Si no és JSON, retornem la cadena tal qual
+        return data;
+      }
+    }
+    // Retorna qualsevol altre tipus sense canvis (números, booleans, etc.)
+    return data;
+  }
+
   Future<void> callWithCustomTools({required String userPrompt}) async {
     const apiUrl = 'http://localhost:11434/api/chat';
 
@@ -138,64 +157,33 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Posa els paràmetres JSON rebuts de la IA en un format estàndard
-  Map<String, dynamic> normalizeParameters(Map<String, dynamic> parameters) {
-    final normalized = <String, dynamic>{};
-
-    parameters.forEach((key, value) {
-      if (value is String) {
-        try {
-          // Si és un JSON dins d'una cadena, el deserialitzem
-          final parsed = jsonDecode(value);
-          if (parsed is Map<String, dynamic>) {
-            normalized[key] = normalizeParameters(parsed);
-          } else if (parsed is List && parsed.length == 2) {
-            normalized[key] = {
-              "x": parsed[0].toDouble(),
-              "y": parsed[1].toDouble()
-            };
-          } else if (parsed is num) {
-            normalized[key] = parsed.toDouble();
-          } else {
-            normalized[key] = parsed;
-          }
-        } catch (_) {
-          // Deixa la cadena tal qual si no es pot deserialitzar
-          normalized[key] = value;
-        }
-      } else if (value is num) {
-        // Converteix qualsevol valor numèric a double
-        normalized[key] = value.toDouble();
-      } else if (value is Map<String, dynamic>) {
-        // Normalitzem els objectes aniuats
-        normalized[key] = normalizeParameters(value);
-      } else {
-        // Altres tipus (llistes, booleans, etc.)
-        normalized[key] = value;
-      }
-    });
-
-    return normalized;
-  }
-
   void _processFunctionCall(Map<String, dynamic> functionCall) {
-    final parameters = normalizeParameters(functionCall['arguments']);
+    // Normalitza arguments recursivament
+    final fixedJson = fixJsonInStrings(functionCall);
+    final parameters = fixedJson['arguments'];
 
-    switch (functionCall['name']) {
+    switch (fixedJson['name']) {
       case 'draw_line':
         if (parameters['start'] != null && parameters['end'] != null) {
-          final start =
-              Offset(parameters['start']['x'], parameters['start']['y']);
-          final end = Offset(parameters['end']['x'], parameters['end']['y']);
+          final start = Offset(
+            parameters['start']['x'].toDouble(),
+            parameters['start']['y'].toDouble(),
+          );
+          final end = Offset(
+            parameters['end']['x'].toDouble(),
+            parameters['end']['y'].toDouble(),
+          );
           addDrawable(Line(start: start, end: end));
         }
         break;
 
       case 'draw_circle':
         if (parameters['center'] != null && parameters['radius'] != null) {
-          final center =
-              Offset(parameters['center']['x'], parameters['center']['y']);
-          final radius = parameters['radius'];
+          final center = Offset(
+            parameters['center']['x'].toDouble(),
+            parameters['center']['y'].toDouble(),
+          );
+          final radius = parameters['radius'].toDouble();
           addDrawable(Circle(center: center, radius: radius));
         }
         break;
@@ -203,16 +191,20 @@ class AppData extends ChangeNotifier {
       case 'draw_rectangle':
         if (parameters['top_left'] != null &&
             parameters['bottom_right'] != null) {
-          final topLeft =
-              Offset(parameters['top_left']['x'], parameters['top_left']['y']);
+          final topLeft = Offset(
+            parameters['top_left']['x'].toDouble(),
+            parameters['top_left']['y'].toDouble(),
+          );
           final bottomRight = Offset(
-              parameters['bottom_right']['x'], parameters['bottom_right']['y']);
+            parameters['bottom_right']['x'].toDouble(),
+            parameters['bottom_right']['y'].toDouble(),
+          );
           addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
         }
         break;
 
       default:
-        print("Unknown function call: ${functionCall['name']}");
+        print("Unknown function call: ${fixedJson['name']}");
     }
   }
 }
