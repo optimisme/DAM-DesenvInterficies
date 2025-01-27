@@ -112,7 +112,7 @@ class AppData extends ChangeNotifier {
         {"role": "user", "content": userPrompt}
       ],
       "tools": tools,
-      "format": schema
+      "format": format
     };
 
     try {
@@ -158,48 +158,63 @@ class AppData extends ChangeNotifier {
   }
 
   void _processFunctionCall(Map<String, dynamic> functionCall) {
-    // Normalitza arguments recursivament
     final fixedJson = fixJsonInStrings(functionCall);
     final parameters = fixedJson['arguments'];
+
+    Offset? parseOffset(dynamic value) {
+      try {
+        if (value is String) {
+          final List<dynamic> coords = jsonDecode(value);
+          if (coords.length == 2) {
+            return Offset(coords[0].toDouble(), coords[1].toDouble());
+          }
+        } else if (value is List) {
+          if (value.length == 2) {
+            return Offset(value[0].toDouble(), value[1].toDouble());
+          }
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    double parseDouble(dynamic value) {
+      if (value is String) {
+        return double.tryParse(value) ?? 0.0;
+      } else if (value is num) {
+        return value.toDouble();
+      }
+      return 0.0;
+    }
 
     switch (fixedJson['name']) {
       case 'draw_line':
         if (parameters['start'] != null && parameters['end'] != null) {
-          final start = Offset(
-            parameters['start']['x'].toDouble(),
-            parameters['start']['y'].toDouble(),
-          );
-          final end = Offset(
-            parameters['end']['x'].toDouble(),
-            parameters['end']['y'].toDouble(),
-          );
-          addDrawable(Line(start: start, end: end));
+          final start = parseOffset(parameters['start']);
+          final end = parseOffset(parameters['end']);
+          if (start != null && end != null) {
+            addDrawable(Line(start: start, end: end));
+          }
         }
         break;
 
       case 'draw_circle':
         if (parameters['center'] != null && parameters['radius'] != null) {
-          final center = Offset(
-            parameters['center']['x'].toDouble(),
-            parameters['center']['y'].toDouble(),
-          );
-          final radius = parameters['radius'].toDouble();
-          addDrawable(Circle(center: center, radius: radius));
+          final center = parseOffset(parameters['center']);
+          final radius = parseDouble(parameters['radius']);
+          if (center != null && radius > 0) {
+            addDrawable(Circle(center: center, radius: radius));
+          }
         }
         break;
 
       case 'draw_rectangle':
         if (parameters['top_left'] != null &&
             parameters['bottom_right'] != null) {
-          final topLeft = Offset(
-            parameters['top_left']['x'].toDouble(),
-            parameters['top_left']['y'].toDouble(),
-          );
-          final bottomRight = Offset(
-            parameters['bottom_right']['x'].toDouble(),
-            parameters['bottom_right']['y'].toDouble(),
-          );
-          addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
+          final topLeft = parseOffset(parameters['top_left']);
+          final bottomRight = parseOffset(parameters['bottom_right']);
+          if (topLeft != null && bottomRight != null) {
+            addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
+          }
         }
         break;
 

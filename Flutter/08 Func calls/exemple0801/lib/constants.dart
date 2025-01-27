@@ -87,7 +87,7 @@ const tools = [
 ];
 
 // Defineix el format esperat de la resposta de la IA
-final schema = jsonEncode({
+final format = jsonEncode({
   "type": "object",
   "properties": {
     "tool_calls": {
