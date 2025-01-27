@@ -8,12 +8,6 @@
 </div>
 <br/>
 
-<br/>
-<center><img src="./assets/dartlogo.png" style="max-height: 75px" alt="">
-<br/></center>
-<br/>
-<br/>
-
 # Function calls
 
 Les **function calls** són una funcionalitat que permet que un model d'intel·ligència artificial, conegui quines funcions hi ha definides al teu codi (noms de les funcions i paràmtres), i decideixi si s'han d'invocar a partir de les peticions (prompts) d'un usuari.

@@ -3,15 +3,9 @@
         <p>© Albert Palacios Jiménez, 2023</p>
     </div>
     <div style="flex: 1; padding: 0px; text-align: right;">
-        <img src="./assets/ieti.png" height="32" alt="Logo de IETI" style="max-height: 32px;">
+        <img src="../assets/ieti.png" height="32" alt="Logo de IETI" style="max-height: 32px;">
     </div>
 </div>
-<br/>
-
-<br/>
-<center><img src="./assets/dartlogo.png" style="max-height: 75px" alt="">
-<br/></center>
-<br/>
 <br/>
 
 # Eina de dibuix vectorial (amb IA)
