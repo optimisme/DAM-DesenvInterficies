@@ -28,7 +28,7 @@ S'ha de poder:
 - Decidir el gruix de les linies i contorns
 - Decidir el color de les línies i contorns
 - Decidir el color dels emplenats dels polígons
-- Decidir el gradien d'emplenat dels polígons
+- Decidir els colors i tipus de gradient d'emplenat dels polígons
 - Dibuixar textos amb diferents tipografies, mides i estils (normal, negreta, ...)
 
 ## Fase 2
