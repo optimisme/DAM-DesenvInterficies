@@ -14,7 +14,7 @@
 <br/>
 <br/>
 
-# Eina de dibuix vectorial
+# Eina de dibuix vectorial (amb IA)
 
 Fent servir **function calls** fes una eina de dibuix assistida per IA, en la que els usuaris fan preguntes a la IA per fer dibuixos i escriure textos a l'aplicació.
 
