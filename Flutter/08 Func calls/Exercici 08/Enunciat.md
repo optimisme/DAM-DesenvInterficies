@@ -40,7 +40,9 @@ S'ha de poder:
 - Canviar les propietats d'un polígon (color, mida del contorn, emplenat, posició ...)
 - Fer consultes a partir dels % de la mida de dibuix disponibles o amb paraules tipus "a la meitat del dibuix", "la diagonal del quadre", ...
 
-# Fase 3
+## Fase 3
 
-- Fes que es pogui modificar la posició del polígon seleccionat arrossegant-lo amb el mouse
-- Fes que es pogui canviar les propietats del polígon seleccionat amb un formulari sense ver servir el chat IA
+S'ha de poder:
+
+- Modificar la posició del polígon seleccionat arrossegant-lo amb el mouse
+- Canviar les propietats del polígon seleccionat amb formularis sense ver servir el chat IA
