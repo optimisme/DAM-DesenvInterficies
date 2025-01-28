@@ -31,3 +31,10 @@ flutter run -d macos
 ```bash
 flutter upgrade
 ```
+
+# Permisos d'accés a la xarxa
+
+Si l'exemple o programa necessita permissos d'accés a la xarxa, afegir-los:
+
+- A *macOS* i *iOS* obrir el projecte XCode i donar-los tant pel mode debug com pel mode release
+- A *Android* afegir-los al fitxer *AndroidManifest.xml*
