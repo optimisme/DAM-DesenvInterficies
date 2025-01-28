@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
@@ -111,8 +112,7 @@ class AppData extends ChangeNotifier {
       "messages": [
         {"role": "user", "content": userPrompt}
       ],
-      "tools": tools,
-      "format": format
+      "tools": tools
     };
 
     try {
@@ -126,16 +126,18 @@ class AppData extends ChangeNotifier {
         print(response.body);
 
         final jsonResponse = jsonDecode(response.body);
-        final content = jsonDecode(jsonResponse['message']['content']);
 
-        if (jsonResponse['message'] != null && content['tool_calls'] != null) {
-          final toolCalls = content['tool_calls'] as List<dynamic>;
+        if (jsonResponse['message'] != null &&
+            jsonResponse['message']['tool_calls'] != null) {
+          final toolCalls =
+              jsonResponse['message']['tool_calls'] as List<dynamic>;
           for (final toolCall in toolCalls) {
             if (toolCall['function'] != null) {
               _processFunctionCall(toolCall['function']);
             }
           }
         }
+
         setLoading(false);
       } else {
         setLoading(false);
@@ -158,64 +160,65 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
+  double parseDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
   void _processFunctionCall(Map<String, dynamic> functionCall) {
     final fixedJson = fixJsonInStrings(functionCall);
     final parameters = fixedJson['arguments'];
 
-    Offset? parseOffset(dynamic value) {
-      try {
-        if (value is Map) {
-          return Offset(value['x'].toDouble(), value['y'].toDouble());
-        }
-      } catch (_) {}
-      return null;
-    }
-
-    double parseDouble(dynamic value) {
-      if (value is num) {
-        return value.toDouble();
-      }
-      return 0.0;
-    }
-
     switch (fixedJson['name']) {
       case 'draw_circle':
-        if (parameters['center'] != null && parameters['radius'] != null) {
-          final center = parseOffset(parameters['center']);
-          final radius = parseDouble(parameters['radius']);
-          if (center != null && radius > 0) {
-            addDrawable(Circle(center: center, radius: radius));
-          } else {
-            print("Invalid circle parameters: center=$center, radius=$radius");
-          }
+        if (parameters['x'] != null &&
+            parameters['y'] != null &&
+            parameters['radius'] != null) {
+          final dx = parseDouble(parameters['x']);
+          final dy = parseDouble(parameters['y']);
+          final radius = max(0.0, parseDouble(parameters['radius']));
+          addDrawable(Circle(center: Offset(dx, dy), radius: radius));
         } else {
           print("Missing circle properties: $parameters");
         }
         break;
 
       case 'draw_line':
-        if (parameters['start'] != null && parameters['end'] != null) {
-          final start = parseOffset(parameters['start']);
-          final end = parseOffset(parameters['end']);
-          if (start != null && end != null) {
-            addDrawable(Line(start: start, end: end));
-          } else {
-            print("Invalid line parameters: start=$start, end=$end");
-          }
+        if (parameters['startX'] != null &&
+            parameters['startY'] != null &&
+            parameters['endX'] != null &&
+            parameters['endY'] != null) {
+          final startX = parseDouble(parameters['startX']);
+          final startY = parseDouble(parameters['startY']);
+          final endX = parseDouble(parameters['endX']);
+          final endY = parseDouble(parameters['endY']);
+          final start = Offset(startX, startY);
+          final end = Offset(endX, endY);
+          addDrawable(Line(start: start, end: end));
+        } else {
+          print("Missing line properties: $parameters");
         }
         break;
 
       case 'draw_rectangle':
-        if (parameters['top_left'] != null &&
-            parameters['bottom_right'] != null) {
-          final topLeft = parseOffset(parameters['top_left']);
-          final bottomRight = parseOffset(parameters['bottom_right']);
-          if (topLeft != null && bottomRight != null) {
-            addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
-          } else {
-            print(
-                "Invalid rectangle parameters: topLeft=$topLeft, bottomRight=$bottomRight");
-          }
+        if (parameters['topLeftX'] != null &&
+            parameters['topLeftY'] != null &&
+            parameters['bottomRightX'] != null &&
+            parameters['bottomRightY'] != null) {
+          final topLeftX = parseDouble(parameters['topLeftX']);
+          final topLeftY = parseDouble(parameters['topLeftY']);
+          final bottomRightX = parseDouble(parameters['bottomRightX']);
+          final bottomRightY = parseDouble(parameters['bottomRightY']);
+          final topLeft = Offset(topLeftX, topLeftY);
+          final bottomRight = Offset(bottomRightX, bottomRightY);
+          addDrawable(Rectangle(topLeft: topLeft, bottomRight: bottomRight));
+        } else {
+          print("Missing rectangle properties: $parameters");
         }
         break;
 

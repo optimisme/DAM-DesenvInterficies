@@ -3,18 +3,20 @@ import 'package:provider/provider.dart';
 import 'app_data.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => AppData(),
-      child: CupertinoApp(
+      child: const CupertinoApp(
         debugShowCheckedModeBanner: false,
         title: 'Ollama Flutter App',
-        theme: const CupertinoThemeData(
+        theme: CupertinoThemeData(
           primaryColor: CupertinoColors.activeBlue,
         ),
         home: MainPage(),
@@ -24,6 +26,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MainPage extends StatelessWidget {
+  const MainPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appData = Provider.of<AppData>(context);

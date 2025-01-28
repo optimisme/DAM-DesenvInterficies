@@ -31,7 +31,7 @@ class View0 extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        CupertinoPageRoute(builder: (context) => View1()),
+                        CupertinoPageRoute(builder: (context) => const View1()),
                       );
                     },
                   ),
@@ -40,7 +40,7 @@ class View0 extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        CupertinoPageRoute(builder: (context) => View2()),
+                        CupertinoPageRoute(builder: (context) => const View2()),
                       );
                     },
                   ),

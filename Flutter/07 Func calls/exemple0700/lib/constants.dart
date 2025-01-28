@@ -3,52 +3,34 @@ const tools = [
   {
     "type": "function",
     "function": {
-      "name": "draw_line",
-      "description": "Dibuixa una línia entre dos punts",
+      "name": "draw_circle",
+      "description":
+          "Dibuixa un cercle amb un radi determinat, si falta el radi posar-ne un de 10 per defecte, si el radi ha de ser aletori posar-ne un aleatori entre 10 i 25",
       "parameters": {
         "type": "object",
         "properties": {
-          "start": {
-            "type": "object",
-            "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"}
-            },
-            "required": ["x", "y"]
-          },
-          "end": {
-            "type": "object",
-            "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"}
-            },
-            "required": ["x", "y"]
-          }
+          "x": {"type": "number"},
+          "y": {"type": "number"},
+          "radius": {"type": "number"}
         },
-        "required": ["start", "end"]
+        "required": ["x", "y", "radius"]
       }
     }
   },
   {
     "type": "function",
     "function": {
-      "name": "draw_circle",
-      "description":
-          "Dibuixa un cercle amb un radi determinat, si falta el radi o ha de ser aletori posar-ne un de 10 per defecte",
+      "name": "draw_line",
+      "description": "Dibuixa una línia entre dos punts",
       "parameters": {
         "type": "object",
         "properties": {
-          "center": {
-            "type": "object",
-            "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"}
-            },
-            "required": ["x", "y"]
-          },
-          "radius": {"type": "number"}
+          "startX": {"type": "number"},
+          "startY": {"type": "number"},
+          "endX": {"type": "number"},
+          "endY": {"type": "number"},
         },
-        "required": ["center", "radius"]
+        "required": ["startX", "startY", "endX", "endY"]
       }
     }
   },
@@ -61,102 +43,13 @@ const tools = [
       "parameters": {
         "type": "object",
         "properties": {
-          "top_left": {
-            "type": "object",
-            "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"}
-            },
-            "required": ["x", "y"]
-          },
-          "bottom_right": {
-            "type": "object",
-            "properties": {
-              "x": {"type": "number"},
-              "y": {"type": "number"}
-            },
-            "required": ["x", "y"]
-          }
+          "topLeftX": {"type": "number"},
+          "topLeftY": {"type": "number"},
+          "bottomRightX": {"type": "number"},
+          "bottomRightY": {"type": "number"},
         },
-        "required": ["top_left", "bottom_right"]
+        "required": ["topLeftX", "topLeftY", "bottomRightX", "bottomRightY"]
       }
     }
   }
 ];
-
-final format = {
-  "type": "object",
-  "properties": {
-    "tool_calls": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "function": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string",
-                "enum": ["draw_line", "draw_circle", "draw_rectangle"]
-              },
-              "arguments": {
-                "type": "object",
-                "properties": {
-                  "start": {
-                    "type": "object",
-                    "properties": {
-                      "x": {"type": "number"},
-                      "y": {"type": "number"}
-                    },
-                    "required": ["x", "y"]
-                  },
-                  "end": {
-                    "type": "object",
-                    "properties": {
-                      "x": {"type": "number"},
-                      "y": {"type": "number"}
-                    },
-                    "required": ["x", "y"]
-                  },
-                  "center": {
-                    "type": "object",
-                    "properties": {
-                      "x": {"type": "number"},
-                      "y": {"type": "number"}
-                    },
-                    "required": ["x", "y"]
-                  },
-                  "radius": {
-                    "type": "number",
-                    "minimum": 1 // Per evitar que el radi sigui 0 o negatiu
-                  },
-                  "top_left": {
-                    "type": "object",
-                    "properties": {
-                      "x": {"type": "number"},
-                      "y": {"type": "number"}
-                    },
-                    "required": ["x", "y"]
-                  },
-                  "bottom_right": {
-                    "type": "object",
-                    "properties": {
-                      "x": {"type": "number"},
-                      "y": {"type": "number"}
-                    },
-                    "required": ["x", "y"]
-                  }
-                },
-                "required": ["center", "radius"],
-                "additionalProperties": false
-              }
-            },
-            "required": ["name", "arguments"]
-          }
-        },
-        "required": ["function"]
-      }
-    }
-  },
-  "required": ["tool_calls"]
-};
