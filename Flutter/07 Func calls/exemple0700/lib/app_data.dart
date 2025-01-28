@@ -184,7 +184,10 @@ class AppData extends ChangeNotifier {
     final fixedJson = fixJsonInStrings(functionCall);
     final parameters = fixedJson['arguments'];
 
-    switch (fixedJson['name']) {
+    String name = fixedJson['name'];
+    print("Draw $name: $parameters");
+
+    switch (name) {
       case 'draw_circle':
         if (parameters['x'] != null &&
             parameters['y'] != null &&
@@ -199,7 +202,6 @@ class AppData extends ChangeNotifier {
         break;
 
       case 'draw_line':
-        print("Draw line: $parameters");
         if (parameters['startX'] != null &&
             parameters['startY'] != null &&
             parameters['endX'] != null &&
