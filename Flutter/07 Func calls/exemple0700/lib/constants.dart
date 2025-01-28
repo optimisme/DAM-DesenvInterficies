@@ -21,7 +21,8 @@ const tools = [
     "type": "function",
     "function": {
       "name": "draw_line",
-      "description": "Dibuixa una línia entre dos punts",
+      "description":
+          "Dibuixa una línia entre dos punts, si no s'especifica la posició escull els punts aleatòries entre x=10, y=10 i x=100, y=100",
       "parameters": {
         "type": "object",
         "properties": {

@@ -24,6 +24,7 @@ class _LayoutState extends State<Layout> {
     final random = Random();
     final placeholders = [
       'Dibuixa una línia 10, 50 i 100, 25 ...',
+      'Dibuixa dues linies i dos cercles',
       'Dibuixa un cercle amb centre a 150, 200 i radi 50 ...',
       'Fes un rectangle entre x=10, y=20 i x=100, y=200 ...',
       'Dibuixa un cercle a la posició 50,100 de radi 34.66',

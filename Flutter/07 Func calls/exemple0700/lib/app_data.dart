@@ -99,9 +99,22 @@ class AppData extends ChangeNotifier {
     return data;
   }
 
+  dynamic cleanKeys(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      final result = <String, dynamic>{};
+      value.forEach((k, v) {
+        result[k.trim()] = cleanKeys(v);
+      });
+      return result;
+    }
+    if (value is List) {
+      return value.map(cleanKeys).toList();
+    }
+    return value;
+  }
+
   Future<void> callWithCustomTools({required String userPrompt}) async {
     const apiUrl = 'http://localhost:11434/api/chat';
-
     _responseText = "";
     _isInitial = false;
     setLoading(true);
@@ -123,21 +136,18 @@ class AppData extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        print(response.body);
-
         final jsonResponse = jsonDecode(response.body);
-
         if (jsonResponse['message'] != null &&
             jsonResponse['message']['tool_calls'] != null) {
-          final toolCalls =
-              jsonResponse['message']['tool_calls'] as List<dynamic>;
-          for (final toolCall in toolCalls) {
-            if (toolCall['function'] != null) {
-              _processFunctionCall(toolCall['function']);
+          final toolCalls = (jsonResponse['message']['tool_calls'] as List)
+              .map((e) => cleanKeys(e))
+              .toList();
+          for (final tc in toolCalls) {
+            if (tc['function'] != null) {
+              _processFunctionCall(tc['function']);
             }
           }
         }
-
         setLoading(false);
       } else {
         setLoading(false);
@@ -189,6 +199,7 @@ class AppData extends ChangeNotifier {
         break;
 
       case 'draw_line':
+        print("Draw line: $parameters");
         if (parameters['startX'] != null &&
             parameters['startY'] != null &&
             parameters['endX'] != null &&
