@@ -147,7 +147,6 @@ class AppData extends ChangeNotifier {
     }
   }
 
-// Dibuixa un cercle a la posició 50,100 de radi 34.66
   void cancelRequests() {
     _streamSubscription?.cancel();
     _httpClient?.close(force: true);

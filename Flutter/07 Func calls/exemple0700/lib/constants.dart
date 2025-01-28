@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 // Defineix les eines/funcions que hi ha disponibles a flutter
 const tools = [
   {
