@@ -41,7 +41,6 @@ class AppData extends ChangeNotifier {
   }
 
   Future<void> callStream({required String question}) async {
-    _responseText = "";
     _isInitial = false;
     setLoading(true);
 
@@ -59,14 +58,15 @@ class AppData extends ChangeNotifier {
       _streamSubscription =
           streamedResponse.stream.transform(utf8.decoder).listen((value) {
         var jsonResponse = jsonDecode(value);
-        _responseText += jsonResponse['response'];
+        var jsonResponseStr = jsonResponse['response'];
+        _responseText = "$_responseText\n$jsonResponseStr";
         notifyListeners();
       }, onError: (error) {
         if (error is http.ClientException &&
             error.message == 'Connection closed while receiving data') {
           _responseText += "\nRequest cancelled.";
         } else {
-          _responseText = "Error during streaming: $error";
+          _responseText += "\nError during streaming: $error";
         }
         setLoading(false);
         notifyListeners();
@@ -74,7 +74,7 @@ class AppData extends ChangeNotifier {
         setLoading(false);
       });
     } catch (e) {
-      _responseText = "Error during streaming.";
+      _responseText = "\nError during streaming.";
       setLoading(false);
       notifyListeners();
     }
@@ -115,7 +115,6 @@ class AppData extends ChangeNotifier {
 
   Future<void> callWithCustomTools({required String userPrompt}) async {
     const apiUrl = 'http://localhost:11434/api/chat';
-    _responseText = "";
     _isInitial = false;
     setLoading(true);
 
@@ -185,7 +184,10 @@ class AppData extends ChangeNotifier {
     final parameters = fixedJson['arguments'];
 
     String name = fixedJson['name'];
-    print("Draw $name: $parameters");
+    String infoText = "Draw $name: $parameters";
+
+    print(infoText);
+    _responseText = "$_responseText\n$infoText";
 
     switch (name) {
       case 'draw_circle':
