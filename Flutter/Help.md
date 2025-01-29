@@ -23,6 +23,9 @@ Quan un projecte encara no té carpeta de desenvolupament 'desktop'
 flutter config --enable-macos-desktop
 flutter create .
 flutter run -d macos
+
+# Per cridar directament 'arm64' a macos
+arch -arm64 flutter run -d macos
 ```
 
 **Nota**: Canviar *"macos"* per "linux" o "windows" si cal
