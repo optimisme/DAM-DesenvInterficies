@@ -10,12 +10,11 @@
 
 # Function calls
 
-Les **function calls** són una funcionalitat que permet que un model d'intel·ligència artificial, conegui quines funcions hi ha definides al teu codi (noms de les funcions i paràmtres), i decideixi si s'han d'invocar a partir de les peticions (prompts) d'un usuari.
+Les **function calls** són una funcionalitat que permet que un model d'intel·ligència artificial, conegui quines funcions hi ha definides al teu codi (noms de les funcions i paràmetres), i decideixi si s'han d'invocar a partir de les peticions (prompts) d'un usuari.
 
 Per fer-ho possible cal:
 
 - **Definir les funcions** que hi han disponibles, els paràmetres que reben i explicar el què fan.
-- **Definir la resposta** esperada, nom de la funció que s'ha de cridar i amb quins paràmetres
 - **Fer crides a la IA** amb el format de 'custom tools'
 - **Processar la resposta** de la IA per cridar a la funció del nostre codi
 
