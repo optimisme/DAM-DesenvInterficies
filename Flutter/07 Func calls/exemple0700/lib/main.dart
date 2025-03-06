@@ -18,8 +18,6 @@ void main() async {
     print(e);
   }
 
-
-
   // Define the app as a ChangeNotifierProvider
   runApp(
     ChangeNotifierProvider(
@@ -31,6 +29,8 @@ void main() async {
 
 // Show the window when it's ready
 void showWindow(_) async {
-  windowManager.setMinimumSize(const Size(300.0, 600.0));
+  windowManager.setMinimumSize(const Size(300, 600));
   await windowManager.setTitle('App');
+  await windowManager.show();
+  await windowManager.focus();
 }
