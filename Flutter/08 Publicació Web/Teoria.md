@@ -26,7 +26,7 @@ Per exportar un projecte flutter a web hi ha les comandes:
 cd "Flutter/08 Publicació Web/Exemple Web/client_flutter/"
 
 # Opció A: Executar l'aplicació en mode desenvolupament (amb el servidor funcionant)
-flutter run -d chrome --wasm --skwasm
+flutter run -d chrome --wasm
 
 # Opció B: Exportar l'aplicació per publicar-la a producció 
 # (després cal copiar la web a la carpeta 'public' del servidor)
