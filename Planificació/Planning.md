@@ -15,7 +15,9 @@
 08/01 Flutter - CustomPainter
 15/01 Flutter - CustomPainter
 22/01 Flutter - WebSockets
-29/01 Flutter - WebSockets
+29/01 Flutter - Publicació Web
+
+
 
 22/01 - 12/02 Projecte 2
 
