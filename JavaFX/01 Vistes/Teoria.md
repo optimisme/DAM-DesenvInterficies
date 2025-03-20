@@ -70,7 +70,7 @@ stage.show();
 
 L'exemple '0101' fa servir *'UtilsViews'* per mostrar el canvi entre diferents vistes.
 
-Al main, s'afegeixen les vistes a l'escena. Al afegir cada vista se li dóna un nom (View0, View1, ...) per poder-les referenciar més endavant:
+Al main, s'afegeixen les vistes a l'escena. Al afegir cada vista se li dóna un identificador (View0, View1, ...) per poder-les referenciar més endavant:
 
 ```java
 UtilsViews.parentContainer.setStyle("-fx-font: 14 arial;");
@@ -103,8 +103,17 @@ En el codi anterior:
 <center><img src="./assets/ex0101.gif" style="max-width: 90%; max-height: 350px;" alt="">
 <br/></center>
 <br/>
+ Es poden fer servir per aquest propòsit, encara que només tinguin un element fill.
+
+## Controladors de les vistes
+
+Amb **UtilsViews**, podem obtenir el controlador d'una vista a partir del seu identificador:
+
+```java
+// Cal fer cast/transformar al tipus del controlador que s'obté (nom de l'objecte)
+Controller0 ctrl0 = (Controller0) UtilsViews.getController("View0");
+```
 
 # Posicionament
 
-Els elements més flexibles per posicionar elements són **HBOX** i **VBOX**, ja que permeten centrar o alinear els elements fills en diferents posicions. Es poden fer servir per aquest propòsit, encara que només tinguin un element fill.
-
+Els elements més flexibles per posicionar elements són **HBOX** i **VBOX**, ja que permeten centrar o alinear els elements fills en diferents posicions.
