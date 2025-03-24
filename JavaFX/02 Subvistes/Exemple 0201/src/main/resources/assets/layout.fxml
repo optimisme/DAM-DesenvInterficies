@@ -15,17 +15,17 @@
                <children>
                   <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
                      <children>
-                        <Button fx:id="buttonAnimals" mnemonicParsing="false" onAction="#setAnimals" prefHeight="26.0" prefWidth="70.0" text="Animals" />
+                        <Button fx:id="buttonSeasons" mnemonicParsing="false" onAction="#setSeasons" prefHeight="26.0" prefWidth="100.0" text="Seasons" />
                      </children>
                   </VBox>
                   <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
                      <children>
-                        <Button fx:id="buttonBrands" mnemonicParsing="false" onAction="#setBrands" prefHeight="26.0" prefWidth="70.0" text="Brands" />
+                        <Button fx:id="buttonBrands" mnemonicParsing="false" onAction="#setBrands" prefHeight="26.0" prefWidth="100.0" text="Brands" />
                      </children>
                   </VBox>
                   <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
                      <children>
-                        <Button fx:id="buttonFXML" mnemonicParsing="false" onAction="#setFXML" prefHeight="26.0" prefWidth="70.0" text="FXML" />
+                        <Button fx:id="buttonFXML" mnemonicParsing="false" onAction="#setFXML" prefHeight="26.0" prefWidth="100.0" text="FXML" />
                      </children>
                   </VBox>
                </children>

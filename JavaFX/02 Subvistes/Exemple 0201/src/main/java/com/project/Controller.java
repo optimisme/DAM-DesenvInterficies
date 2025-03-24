@@ -34,13 +34,13 @@ import javafx.scene.layout.VBox;
 public class Controller implements Initializable {
 
     @FXML
-    private Button buttonAnimals, buttonBrands, buttonFXML;
+    private Button buttonSeasons, buttonBrands, buttonFXML;
     @FXML
     private AnchorPane container;
     @FXML
     private VBox yPane = new VBox();
 
-    private String animals[] = { "Dog", "Cat", "Horse", "Cow", "Pig" };
+    private String seasons[] = { "Summer", "Autumn", "Winter", "Spring" };
     private String brands[] = { "Audi", "BMW", "Citroen", "Fiat", "Ford", "Honda", "Hyundai", "Kia", "Mazda", "Mercedes",
             "Nissan", "Opel", "Peugeot", "Renault", "Seat", "Skoda", "Suzuki", "Toyota", "Volkswagen", "Volvo" };
 
@@ -56,7 +56,7 @@ public class Controller implements Initializable {
             jsonInfo = new JSONArray(content);
 
             // Actualitza la UI amb els valors inicials dels animals
-            setAnimals(null);
+            setSeasons(null);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,9 +64,9 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    private void setAnimals(ActionEvent event) {
+    private void setSeasons(ActionEvent event) {
         ArrayList<String> list = new ArrayList<>();
-        for (String name : animals) {
+        for (String name : seasons) {
             list.add(name);
         }
 
