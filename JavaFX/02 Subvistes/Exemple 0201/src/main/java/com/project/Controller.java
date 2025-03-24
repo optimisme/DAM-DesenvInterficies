@@ -50,6 +50,10 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
+            // Obtenir el recurs del template .fxml
+            URL resource = this.getClass().getResource("/assets/listItem.fxml");
+
+            // Obtenir la llista
             URL jsonFileURL = getClass().getResource("/assets/animals.json");
             Path path = Paths.get(jsonFileURL.toURI());
             String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
@@ -65,26 +69,25 @@ public class Controller implements Initializable {
 
     @FXML
     private void setSeasons(ActionEvent event) {
-        ArrayList<String> list = new ArrayList<>();
-        for (String name : seasons) {
-            list.add(name);
-        }
-
+        // Esborrar la llista anterior
         yPane.getChildren().clear();
-        for (String s : list) {
-            Label label = new Label(s);
+
+        // Generar la nova llista
+        for (String name : seasons) {
+            Label label = new Label(name);
             label.setStyle("-fx-border-color: red;");
             yPane.getChildren().add(label);
         }
-
     }
 
     @FXML
     private void setBrands(ActionEvent event) {
-        // Exemple de com pots continuar utilitzant altres funcions
+        // Esborrar la llista anterior
         yPane.getChildren().clear();
-        for (String s : brands) {
-            Label label = new Label(s);
+
+        // Generar la nova llista
+        for (String name : brands) {
+            Label label = new Label(name);
             label.setStyle("-fx-border-color: black;");
             yPane.getChildren().add(label);
         }
@@ -93,13 +96,10 @@ public class Controller implements Initializable {
     @FXML
     private void setFXML(ActionEvent event) throws Exception {
 
-        // Obtenir el recurs del template .fxml
-        URL resource = this.getClass().getResource("/assets/listItem.fxml");
-
-        // Netejar el contingut existent
+        // Esborrar la llista anterior
         yPane.getChildren().clear();
 
-        // Iterar sobre els elements del JSONArray 'jsonInfo' (ja carregat a initialize)
+        // Generar la nova llista a partir de 'jsonInfo'
         for (int i = 0; i < jsonInfo.length(); i++) {
             // Obtenir l'objecte JSON individual (animal)
             JSONObject animal = jsonInfo.getJSONObject(i);
