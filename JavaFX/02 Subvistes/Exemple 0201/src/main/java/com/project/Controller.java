@@ -55,7 +55,7 @@ public class Controller implements Initializable {
             String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
             jsonInfo = new JSONArray(content);
 
-            // Actualitza la UI amb els valors inicials dels animals
+            // Actualitza la UI amb els valors inicials de les estacions
             setSeasons(null);
 
         } catch (Exception e) {
