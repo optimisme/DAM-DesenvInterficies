@@ -3,6 +3,9 @@ package com.project;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -48,17 +51,9 @@ public class Controller implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         try {
             URL jsonFileURL = getClass().getResource("/assets/animals.json");
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(jsonFileURL.openStream(), StandardCharsets.UTF_8));
-            StringBuilder jsonText = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonText.append(line);
-            }
-            reader.close();
-
-            // Parseja el contingut del JSON
-            jsonInfo = new JSONArray(jsonText.toString());
+            Path path = Paths.get(jsonFileURL.toURI());
+            String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+            jsonInfo = new JSONArray(content);
 
             // Actualitza la UI amb els valors inicials dels animals
             setAnimals(null);
@@ -87,9 +82,6 @@ public class Controller implements Initializable {
     @FXML
     private void setBrands(ActionEvent event) {
         // Exemple de com pots continuar utilitzant altres funcions
-        String[] brands = { "Audi", "BMW", "Citroen", "Fiat", "Ford", "Honda", "Hyundai", "Kia", "Mazda", "Mercedes",
-                "Nissan", "Opel", "Peugeot", "Renault", "Seat", "Skoda", "Suzuki", "Toyota", "Volkswagen", "Volvo" };
-
         yPane.getChildren().clear();
         for (String s : brands) {
             Label label = new Label(s);
