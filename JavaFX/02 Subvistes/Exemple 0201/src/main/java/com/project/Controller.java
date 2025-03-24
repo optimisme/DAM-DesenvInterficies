@@ -96,6 +96,9 @@ public class Controller implements Initializable {
     @FXML
     private void setFXML(ActionEvent event) throws Exception {
 
+        // Obtenir el recurs del template .fxml
+        URL resource = this.getClass().getResource("/assets/listItem.fxml");
+
         // Esborrar la llista anterior
         yPane.getChildren().clear();
 
