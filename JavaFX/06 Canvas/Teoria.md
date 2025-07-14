@@ -366,11 +366,10 @@ Executar els arxius a la carpeta **proxmox**
 
 ```bash
 cd proxmox
-./proxmoxRedirect80.sh    # Redirecciona el port 80 cap al SERVER_PORT
-./proxmoxRedirectUndo.sh  # Desfà la redirecció anterior
-
-./proxmoxRun.sh           # Compila el servidor i el puja al servidor remot
-./proxmoxStop.sh          # Atura el servidor remot
+./proxmoxConnect.sh         # Inicia una connexió SSH de terminal amb el servidor
+./proxmoxDeploy.sh          # Puja el codi al servidor (i el reinicia)
+./proxmoxSetupAutostart.sh  # Configura el servidor remot perquè s'inicii automàticament al reiniciar
+./proxmoxSetupRedirect80.sh # Configura el servidor remot perquè redireccioni el port 80 cap al port del servidor
 ```
 
 També podeu pasar la configuració per paràmetres:
