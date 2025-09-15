@@ -106,3 +106,11 @@ mvn compile
 ```
 
 **Nota:** Els usuaris de Windows crideu a '.\run.ps1' enlloc de './run.sh'
+
+# Versió de les llibreries Maven
+
+Les llibreries **Maven** s'actualitzen constantment, sobretot per motius de seguretat.
+
+Si a l'arxiu **.pom** surt un avís de versió insegura, **només cap actualitzar-la a la última versió segura**.
+
+Visual Studio Code permet fer aquesta actualització fàcilment amb la opció "Fix Issue"

@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.39.3.0</version>
+            <version>3.44.1.0</version>
         </dependency>
         <!-- Dependency for JavaFX -->
         <dependency>
@@ -46,11 +46,11 @@
             <artifactId>Java-WebSocket</artifactId>
             <version>1.5.3</version>
         </dependency>
-        <!-- Dependency for JSON -->
+        <!-- Dependency for JSON (updated to fix vulnerability) -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220924</version> <!-- This seems to be a future date, please ensure it's the correct version -->
+            <version>20231013</version>
         </dependency>
         <!-- Dependencies for SLF4J -->
         <dependency>
