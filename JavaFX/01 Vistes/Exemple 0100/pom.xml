@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220924</version> <!-- This seems to be a future date, please ensure it's the correct version -->
+            <version>20230227</version>
         </dependency>
         <!-- Dependencies for SLF4J -->
         <dependency>

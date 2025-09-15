@@ -1,49 +1,59 @@
-# ABC
-function Get-LatestVersion {
-    param (
-        [string]$moduleName
-    )
+param(
+  [string]$MainClass = "com.project.Main"
+)
 
-    # Find the JAR files and sort them by version while excluding javadoc and sources
-    $jarFiles = Get-ChildItem -Path "$env:USERPROFILE\.m2\repository\org\openjfx" -Recurse -File |
-                Where-Object { $_.Name -like "${moduleName}-*.jar" -and $_.Name -notmatch "(javadoc|sources)" } |
-                Sort-Object Name -Descending
+# --- Setup (Windows) ---
+$ErrorActionPreference = "Stop"
 
-    # Return the latest version's path
-    if ($jarFiles.Count -gt 0) {
-        return $jarFiles[0].FullName
-    } else {
-        return $null
+# --- Ensure deps (download to ~/.m2) ---
+mvn -q -DskipTests dependency:resolve | Out-Null
+
+# --- Try to build module-path via dependency plugin ---
+$mpFile = "target\javafx.modulepath.txt"
+mvn -q org.apache.maven.plugins:maven-dependency-plugin:3.6.1:build-classpath `
+  -DincludeScope=runtime `
+  -Dmdep.includeGroupIds=org.openjfx `
+  -Dmdep.outputFile="$mpFile" `
+  -Dmdep.pathSeparator=";" | Out-Null
+
+$modulePath = ""
+if (Test-Path $mpFile) {
+  $modulePath = (Get-Content $mpFile -Raw).Trim()
+}
+
+# --- Fallback: scan ~/.m2 for OpenJFX jars (Windows classifiers) ---
+if ([string]::IsNullOrWhiteSpace($modulePath)) {
+  # Note: adjust patterns if you use aarch64 or different version/classifier
+  $home = $env:USERPROFILE
+  $fxRoot = Join-Path $home ".m2\repository\org\openjfx"
+  if (Test-Path $fxRoot) {
+    $jars = Get-ChildItem -Path $fxRoot -Recurse -Include `
+      "javafx-base*-win*.jar","javafx-graphics*-win*.jar","javafx-controls*-win*.jar","javafx-fxml*-win*.jar" `
+      | Sort-Object FullName -Unique
+    if ($jars.Count -gt 0) {
+      $modulePath = ($jars | ForEach-Object { $_.FullName }) -join ";"
     }
+  }
 }
 
-$fxBasePath = Get-LatestVersion "javafx-base"
-$fxControlsPath = Get-LatestVersion "javafx-controls"
-$fxFxmlPath = Get-LatestVersion "javafx-fxml"
-$fxGraphicsPath = Get-LatestVersion "javafx-graphics"
-
-$fxPath = "$fxBasePath;$fxControlsPath;$fxFxmlPath;$fxGraphicsPath"
-
-if (-not $fxPath) {
-    Write-Host "No es pot trobar el mòdul JavaFX al repositori Maven local."
-    exit 1
+if ([string]::IsNullOrWhiteSpace($modulePath)) {
+  Write-Error "No s'ha pogut construir el module-path de JavaFX. Assegura dependències 'org.openjfx' al pom i torna-ho a provar."
+  exit 1
 }
 
-# Opcions comunes per a MAVEN_OPTS
-$env:MAVEN_OPTS = "--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --module-path $fxPath --add-modules javafx.controls,javafx.fxml,javafx.graphics"
+# --- Compile (classes ready) ---
+mvn -q -DskipTests compile | Out-Null
 
-# Resta de l'script
+# --- Run with JVM module flags (NOT program args) ---
+# Note: exec-maven-plugin accepts -Dexec.jvmArgs for JVM flags.
+$mvnCmd = @(
+  "exec:java",
+  "-PrunMain",
+  "-Dexec.mainClass=$MainClass",
+  "-Dexec.jvmArgs=--module-path `"$modulePath`" --add-modules javafx.controls,javafx.fxml"
+)
 
-# Check for the first argument and set it as the main class
-$mainClass = $args[0]
-
-Write-Output "Setting MAVEN_OPTS to: $MAVEN_OPTS"
-Write-Output "Main Class: $mainClass"
-
-# Split the execArg into an array
-$execArgs = @("-PrunMain", "-Dexec.mainClass=$mainClass")
-
-Write-Output "Exec args: $($execArgs -join ' ')"
-
-# Execute mvn command
-mvn clean test-compile exec:java $execArgs
+Write-Host "Main Class: $MainClass"
+Write-Host "Module Path (JavaFX): $modulePath"
+Write-Host "Running..."
+mvn @mvnCmd
