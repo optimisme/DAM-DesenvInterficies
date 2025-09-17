@@ -115,6 +115,7 @@ L’usuari pot pensar que no està al sender correcte.
 - Esperes que no donen una idea del temps que falta per acabar una tasca
 - Talls en la comunicació amb els servidors
 - Missatges d’error que no s’entenen
+- IAs que no entenen el què demanes
 - …
 
 ## UI (User Interface) disseny d’interfícies
