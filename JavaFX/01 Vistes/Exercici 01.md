@@ -13,3 +13,22 @@ Fes un programa amb dues vistes:
     * Ha de tenir un botó "Tornar" que torna a la vista anterior
 
 Els pas d'informació entre les dues vistes, s'ha de fer a través de **Variables estàtiques al Main**
+
+Exemple: 
+
+
+```java
+public class Main extends Application {
+
+    static String edat = "20";
+    ...
+}
+```
+
+S'accedeix des dels controladors com **"Main.edat"**:
+
+```java
+    public void escriuEdat() {
+        System.out.println("Edat des de Desktop: " + Main.edat);
+    }
+```

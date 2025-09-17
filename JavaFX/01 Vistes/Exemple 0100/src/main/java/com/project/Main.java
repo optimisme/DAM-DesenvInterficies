@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
+    static String edat = "20";
+
     final int WINDOW_WIDTH = 600;
     final int WINDOW_HEIGHT = 400;
     final int MIN_WIDTH = 300;
