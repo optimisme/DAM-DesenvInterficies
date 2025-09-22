@@ -36,7 +36,10 @@ S'accedeix des dels controladors com **"Main.edat"**:
 Recordeu que podeu obtenir el controlador de la vista on voleu anar, abans de canviar de vista, per cridar les funcions del controlador.
 
 ```java
-    ControllerVistaB ctrlB = (ControllerVistaB)UtilsView.getController("VistaB");
-    ctrlB.setData("Toni", 25);
-    UtilsViews.setView("VistaB");
+ControllerVistaB ctrlB = (ControllerVistaB)UtilsView.getController("VistaB");
+
+// És un exemle, no cal pas de paràmetres si són estàtics al Main!
+ctrlB.setData("Toni", 25); 
+
+UtilsViews.setView("VistaB");
 ```

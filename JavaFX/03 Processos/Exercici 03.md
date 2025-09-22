@@ -5,6 +5,12 @@ Fent servir Ollama, i els models:
 - Model de text: llama3.2:1b
 - Model de visió: llava-phi3
 
+**Nota**: Recorda, per instal·lar models
+```bash
+ollama run llama3.2:1b
+ollama run llava-phi3
+```
+
 Fes una versió de ChatGPT amb JavaFX
 
 L'aplicació ha d'acceptar textos i imatges
