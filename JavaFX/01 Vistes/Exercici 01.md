@@ -32,3 +32,11 @@ S'accedeix des dels controladors com **"Main.edat"**:
         System.out.println("Edat des de Desktop: " + Main.edat);
     }
 ```
+
+Recordeu que podeu obtenir el controlador de la vista on voleu anar, abans de canviar de vista, per cridar les funcions del controlador.
+
+```java
+    ControllerVistaB ctrlB = (ControllerVistaB)UtilsView.getController("VistaB");
+    ctrlB.setData("Toni", 25);
+    UtilsViews.setView("VistaB");
+```
