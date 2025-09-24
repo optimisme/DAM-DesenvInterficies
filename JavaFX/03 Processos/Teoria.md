@@ -133,8 +133,8 @@ En aquest exemple podeu veure com es carrega una imatge des del navegador d'arxi
 Per fer anar aquest exemple cal un servidor Ollama amb el model 'llama3.2':
 
 ```bash
-ollama pull llama3.2:1b
-ollama run llama3.2:1b
+ollama pull gemma3:1b
+ollama run gemma3:1b
 ```
 
 Quan estigui carregat, en un terminal diferent:
