@@ -12,18 +12,18 @@
    <children>
       <HBox alignment="CENTER" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <ImageView fx:id="img" fitHeight="225.0" fitWidth="225.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="imageView" fitHeight="225.0" fitWidth="225.0" pickOnBounds="true" preserveRatio="true">
                <HBox.margin>
                   <Insets />
                </HBox.margin>
             </ImageView>
             <Region HBox.hgrow="ALWAYS" />
-            <TextArea fx:id="txt" editable="false" prefWidth="225.0" wrapText="true">
+            <TextArea fx:id="textBase64" editable="false" prefWidth="225.0" wrapText="true">
                <HBox.margin>
                   <Insets left="8.0" right="8.0" />
                </HBox.margin></TextArea>
             <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="btn" mnemonicParsing="false" onAction="#actionLoad" text="Load Image" />
+            <Button fx:id="buttonLoad" mnemonicParsing="false" onAction="#callLoadImage" text="Load Image" />
          </children>
          <padding>
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />

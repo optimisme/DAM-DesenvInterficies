@@ -5,69 +5,48 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.event.ActionEvent;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Base64;
 
 public class Controller {
 
-    @FXML
-    private ImageView img;
+    @FXML private ImageView imageView;
+    @FXML private TextArea textBase64;
+    @FXML private Button buttonLoad;
 
     @FXML
-    private TextArea txt; // Changed from Text to TextArea
-
-    @FXML
-    private Button btn;
-
-    @FXML
-    private void actionLoad() {
-        File initialDirectory = new File("./");
-        FileChooser fileChooser = new FileChooser();
-        if (initialDirectory.exists()) {
-            fileChooser.setInitialDirectory(initialDirectory);
+    private void callLoadImage(ActionEvent event) {
+        // Choose image file (default dir = current working dir)
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Choose an image");
+        File initialDir = new File(System.getProperty("user.dir"));
+        if (initialDir.exists() && initialDir.isDirectory()) {
+            fc.setInitialDirectory(initialDir);
         }
-        fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        fc.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif")
         );
-        
-        Stage stage = (Stage) btn.getScene().getWindow();
-        File selectedFile = fileChooser.showOpenDialog(stage);
 
-        if (selectedFile != null) {
-            try {
-                // Read the image file
-                BufferedImage bufferedImage = ImageIO.read(selectedFile);
+        File file = fc.showOpenDialog(buttonLoad.getScene().getWindow());
+        if (file == null) return;
 
-                // Create a ByteArrayOutputStream to store the image bytes
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            // Read bytes and encode to Base64
+            byte[] bytes = Files.readAllBytes(file.toPath());
+            String base64 = Base64.getEncoder().encodeToString(bytes);
 
-                // Write the image to the output stream in PNG format
-                ImageIO.write(bufferedImage, "png", outputStream);
+            // Preview image
+            imageView.setImage(new Image(file.toURI().toString()));
 
-                // Get the byte array
-                byte[] imageBytes = outputStream.toByteArray();
-
-                // Encode to Base64
-                String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-
-                // Set the image in the ImageView
-                Image image = new Image(selectedFile.toURI().toString());
-                img.setImage(image);
-
-                // Set the Base64 string in the TextArea (was previously a Text element)
-                txt.setText(base64Image);
-
-                outputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // Output base64 to textarea
+            textBase64.setText(base64);
+        } catch (Exception e) {
+            e.printStackTrace(); // log error
+            textBase64.setText("Error reading image: " + e.getMessage());
         }
     }
 }
