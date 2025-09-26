@@ -271,6 +271,18 @@ private void onMouseDragged(MouseEvent event) {
 <br/></center>
 <br/>
 
+## Exemple 0604
+
+En aquest exemple, es veu com fer una animació simple amb el timer.
+
+<br/>
+<center>
+<video width="100%" controls allowfullscreen>
+  <source src="./assets/exCanvas04.mov" type="video/mp4">
+</video>
+</center>
+<br/>
+
 ## Exemple Pong
 
 Aquest exemple mostra una versió de Pong per a un sol jugador, mostra com es poden fer jocs senzills amb *Canvas* i també com capturar les tecles.
