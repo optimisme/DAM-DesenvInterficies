@@ -28,11 +28,16 @@ El joc ha de tenir **cinc vistes**:
    - Mostra l’estat **“Esperant contrincant”** o **“Emparellant…”**.  
    - Quan l’altre jugador accepta, passa automàticament a la partida.
 
-4. **Partida (tauler i joc en temps real)**  
+4. **Compte enrrera**  
+   - Mostra **“3, 2, 1”**.  
+   - Passa automàticament a la partida.
+
+5. **Partida (tauler i joc en temps real)**  
    - **Tauler de 7 columnes (A–G) x 6 files (0–5)**.  
    - El tauler es dibuixa dins un **Canvas JavaFX** i es redibuixa cada cop que canvia l’estat.  
    - **Interacció i torns**:  
-     - El jugador amb el torn veu el text **“Et toca jugar”**.  
+     - El jugador veu el punter del mouse del contrincant.
+     - El jugador amb el torn veu el text **“Et toca jugar”**. 
      - L’altre jugador té la interacció **desactivada**.  
    - **Hover i arrossegament**:  
      - Hi ha una serie de fitxes disponibles a la dreta de la finestra, ordenades aleatòriament com si estiguéssin a sobre d'una taula.
@@ -44,7 +49,7 @@ El joc ha de tenir **cinc vistes**:
      - Guanya qui connecta **4 fitxes consecutives** (horitzontals, verticals o diagonals).  
      - Si el tauler s’omple sense guanyador, és **empat**.
 
-5. **Resultat**  
+6. **Resultat**  
    - Mostra **Guanyador / Perdedor / Empat**.  
    - Botons per **tornar a la selecció de contrincant** o **tancar**.
 
