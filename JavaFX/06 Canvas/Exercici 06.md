@@ -90,9 +90,12 @@ Esdeveniments mínims (API - JSON):
 - `lobby.list { players[] }`
 - `invite { to }` / `invite.accept { from }` / `invite.decline`
 - `game.start { gameId, youAre: "R"|"Y", firstTurn }`
-- `game.hover { gameId, column }` *(s’emet mentre el ratolí es mou per columnes)*
-- `game.play { gameId, column }`
-- `game.state { board, turn, lastMove, status: "playing"|"win"|"draw", winner? }`
+- `game.move { gameId, posX, posY }` *(s’emet mentre el ratolí es mou sense fitxa)*
+- `game.drag { gameId, posX, posY }` *(s’emet mentre el ratolí arrossega una fitxa)*
+- `game.play { gameId, column }` *(quan s'ha tirat una fitxa per una columna i s'ha d'animar la caiguda)
+- `game.state: ha de portar dades ...
+  - board, turn, lastMove, status: "playing"|"win"|"draw", winner?
+  - l’snapshot complet del taulell (6×7) per resincro­nitzar els taulells a cada jugador
 - `game.end { result: "win"|"lose"|"draw" }`
 - `error { message }`
 
