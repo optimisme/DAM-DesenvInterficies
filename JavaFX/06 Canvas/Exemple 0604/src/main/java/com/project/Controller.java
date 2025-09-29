@@ -207,7 +207,7 @@ public class Controller implements Initializable {
 
         // Mostrar FPS del teu CnvTimer
         if (timer != null) {
-            timer.draw(gc);
+        //    timer.draw(gc);
         }
     }
 

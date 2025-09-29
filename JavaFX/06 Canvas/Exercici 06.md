@@ -35,9 +35,9 @@ El joc ha de tenir **cinc vistes**:
      - El jugador amb el torn veu el text **“Et toca jugar”**.  
      - L’altre jugador té la interacció **desactivada**.  
    - **Hover i arrossegament**:  
-     - En passar el ratolí per sobre d’una **columna**, aquesta es **ressalta** i es mostra una **fitxa fantasma** a la part superior.  
-     - El jugador que **no** té el torn veu en temps real el **hover remot** de l’altre jugador (ressalt diferenciat).  
-     - Es pot fer **clic** a una columna o bé **arrossegar una fitxa** des de dalt i **deixar-la anar** a la columna per jugar.  
+     - Hi ha una serie de fitxes disponibles a la dreta de la finestra, ordenades aleatòriament com si estiguéssin a sobre d'una taula.
+     - El jugador ha d'escollir una de les fitxes del seu color i arrossegar-la a sobre d'una columna del tauler, quan aixeca el botó del mouse *"la fitxa cau"* per aquella columna.  
+     - L'oponent ha de veure la posició del mouse del jugador contrari en temps real, com arrossega una fitxa i com la deixa caure al tauler.
    - **Animació de caiguda**:  
      - Quan es juga, la fitxa cau animadament fins a la posició lliure més baixa de la columna.  
    - **Condicions de victòria i empat**:  
