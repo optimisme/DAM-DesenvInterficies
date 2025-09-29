@@ -113,6 +113,8 @@ Esdeveniments mínims (API - JSON):
   - **Client WS** (gestió de missatges)  
   - **Model** (estat local derivat del servidor)
 
+> **Important!**: La lògica ha d'estar tota al servidor, els clients només han de mostrar l'estat de les dades que intercanvien amb el servidor
+
 ---
 
 ## Validacions mínimes
