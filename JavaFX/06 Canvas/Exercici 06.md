@@ -8,7 +8,7 @@
 </div>
 <br/>
 
-# Exercici 0
+# Exercici
 
 ## "Connecta 4" amb JavaFX i WebSockets
 
