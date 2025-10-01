@@ -1,8 +1,6 @@
 package com.client;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.json.JSONObject;
@@ -14,7 +12,13 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
+import com.shared.ClientData;
+import com.shared.GameObject;
+
 public class CtrlPlay implements Initializable {
+
+    @FXML
+    public javafx.scene.control.Label title;
 
     @FXML
     private Canvas canvas;
@@ -24,12 +28,10 @@ public class CtrlPlay implements Initializable {
     private PlayTimer animationTimer;
     private PlayGrid grid;
 
-    public Map<String, JSONObject> clientMousePositions = new HashMap<>();
     private Boolean mouseDragging = false;
     private double mouseOffsetX, mouseOffsetY;
 
-    public static Map<String, JSONObject> selectableObjects = new HashMap<>();
-    private String selectedObject = "";
+    private GameObject selectedObject = null;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -77,24 +79,27 @@ public class CtrlPlay implements Initializable {
         double mouseX = event.getX();
         double mouseY = event.getY();
 
-        JSONObject newPosition = new JSONObject();
-        newPosition.put("x", mouseX);
-        newPosition.put("y", mouseY);
-        if (grid.isPositionInsideGrid(mouseX, mouseY)) {                
-            newPosition.put("col", grid.getCol(mouseX));
-            newPosition.put("row", grid.getRow(mouseY));
-        } else {
-            newPosition.put("col", -1);
-            newPosition.put("row", -1);
-        }
-        clientMousePositions.put(Main.clientId, newPosition);
+        String color = Main.clients.stream()
+            .filter(c -> c.name.equals(Main.clientName))
+            .map(c -> c.color)
+            .findFirst()
+            .orElse("gray");
 
-        JSONObject msgObj = clientMousePositions.get(Main.clientId);
-        msgObj.put("type", "clientMouseMoving");
-        msgObj.put("clientId", Main.clientId);
-    
+        ClientData cd = new ClientData(
+            Main.clientName, 
+            color,
+            (int)mouseX, 
+            (int)mouseY,  
+            grid.isPositionInsideGrid(mouseX, mouseY) ? grid.getRow(mouseY) : -1,
+            grid.isPositionInsideGrid(mouseX, mouseY) ? grid.getCol(mouseX) : -1
+        );
+
+        JSONObject msg = new JSONObject();
+        msg.put("type", "clientMouseMoving");
+        msg.put("value", cd.toJSON());
+
         if (Main.wsClient != null) {
-            Main.wsClient.safeSend(msgObj.toString());
+            Main.wsClient.safeSend(msg.toString());
         }
     }
 
@@ -103,21 +108,15 @@ public class CtrlPlay implements Initializable {
         double mouseX = event.getX();
         double mouseY = event.getY();
 
-        selectedObject = "";
+        selectedObject = null;
         mouseDragging = false;
 
-        for (String objectId : selectableObjects.keySet()) {
-            JSONObject obj = selectableObjects.get(objectId);
-            int objX = obj.getInt("x");
-            int objY = obj.getInt("y");
-            int cols = obj.getInt("cols");
-            int rows = obj.getInt("rows");
-
-            if (isPositionInsideObject(mouseX, mouseY, objX, objY,  cols, rows)) {
-                selectedObject = objectId;
+        for (GameObject go : Main.objects) {
+            if (isPositionInsideObject(mouseX, mouseY, go.x, go.y, go.col, go.row)) {
+                selectedObject = new GameObject(go.id, go.x, go.y, go.col, go.row);
                 mouseDragging = true;
-                mouseOffsetX = event.getX() - objX;
-                mouseOffsetY = event.getY() - objY;
+                mouseOffsetX = event.getX() - go.x;
+                mouseOffsetY = event.getY() - go.y;
                 break;
             }
         }
@@ -125,64 +124,62 @@ public class CtrlPlay implements Initializable {
 
     private void onMouseDragged(MouseEvent event) {
         if (mouseDragging) {
-            JSONObject obj = selectableObjects.get(selectedObject);
             double objX = event.getX() - mouseOffsetX;
             double objY = event.getY() - mouseOffsetY;
-            
-            obj.put("x", objX);
-            obj.put("y", objY);
-            obj.put("col", grid.getCol(objX));
-            obj.put("row", grid.getRow(objY));
 
-            JSONObject msgObj = selectableObjects.get(selectedObject);
-            msgObj.put("type", "clientSelectableObjectMoving");
-            msgObj.put("objectId", obj.getString("objectId"));
-        
+            selectedObject = new GameObject(selectedObject.id, (int)objX, (int)objY, (int)selectedObject.col, (int)selectedObject.row);
+
+            JSONObject msg = new JSONObject();
+            msg.put("type", "clientObjectMoving");
+            msg.put("value", selectedObject.toJSON());
+
             if (Main.wsClient != null) {
-                Main.wsClient.safeSend(msgObj.toString());
+                Main.wsClient.safeSend(msg.toString());
             }
         }
         setOnMouseMoved(event);
     }
 
     private void onMouseReleased(MouseEvent event) {
-        if (selectedObject != "") {
-            JSONObject obj = selectableObjects.get(selectedObject);
-            int objCol = obj.getInt("col");
-            int objRow = obj.getInt("row");
+        if (selectedObject != null) {
+            double objX = event.getX() - mouseOffsetX; // left tip X
+            double objY = event.getY() - mouseOffsetY; // left tip Y
 
-            if (objCol != -1 && objRow != -1) {
-                obj.put("x", grid.getCellX(objCol));
-                obj.put("y", grid.getCellY(objRow));
+            // build object with dragged position (size stays in col/row)
+            selectedObject = new GameObject(
+                selectedObject.id,
+                (int) objX,
+                (int) objY,
+                selectedObject.col,
+                selectedObject.row
+            );
+
+            // snap by left-top corner to underlying cell
+            if (grid.isPositionInsideGrid(objX, objY)) {
+                snapObjectLeftTop(selectedObject);
             }
 
-            JSONObject msgObj = selectableObjects.get(selectedObject);
-            msgObj.put("type", "clientSelectableObjectMoving");
-            msgObj.put("objectId", obj.getString("objectId"));
-        
-            if (Main.wsClient != null) {
-                Main.wsClient.safeSend(msgObj.toString());
-            }
+            JSONObject msg = new JSONObject();
+            msg.put("type", "clientObjectMoving");
+            msg.put("value", selectedObject.toJSON());
+            if (Main.wsClient != null) Main.wsClient.safeSend(msg.toString());
 
             mouseDragging = false;
-            selectedObject = "";
+            selectedObject = null;
         }
     }
 
-    public void setPlayersMousePositions(JSONObject positions) {
-        clientMousePositions.clear();
-        for (String clientId : positions.keySet()) {
-            JSONObject positionObject = positions.getJSONObject(clientId);
-            clientMousePositions.put(clientId, positionObject);
-        }
-    }
+    // Snap piece so its left-top corner sits exactly on the grid cell under its left tip.
+    private void snapObjectLeftTop(GameObject obj) {
+        int col = grid.getCol(obj.x); // left X -> column
+        int row = grid.getRow(obj.y); // top Y  -> row
 
-    public void setSelectableObjects(JSONObject objects) {
-        selectableObjects.clear();
-        for (String objectId : objects.keySet()) {
-            JSONObject positionObject = objects.getJSONObject(objectId);
-            selectableObjects.put(objectId, positionObject);
-        }
+        // clamp inside grid
+        col = (int) Math.max(0, Math.min(col, grid.getCols() - 1));
+        row = (int) Math.max(0, Math.min(row, grid.getRows() - 1));
+
+        obj.x = grid.getCellX(col);
+        obj.y = grid.getCellY(row);
     }
 
     public Boolean isPositionInsideObject(double positionX, double positionY, int objX, int objY, int cols, int rows) {
@@ -210,47 +207,38 @@ public class CtrlPlay implements Initializable {
     // Draw game to canvas
     public void draw() {
 
+        if (Main.clients == null) { return; }
+
         // Clean drawing area
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
         // Draw colored 'over' cells
-
-        for (String clientId : clientMousePositions.keySet()) {
-            JSONObject position = clientMousePositions.get(clientId);
-
-            int col = position.getInt("col");
-            int row = position.getInt("row");
-
+        for (ClientData clientData : Main.clients) {
             // Comprovar si està dins dels límits de la graella
-            if (row >= 0 && col >= 0) {
-                if ("A".equals(clientId)) {
-                    gc.setFill(Color.LIGHTBLUE); 
-                } else {
-                    gc.setFill(Color.LIGHTGREEN); 
-                }
-                // Emplenar la casella amb el color clar
-                gc.fillRect(grid.getCellX(col), grid.getCellY(row), grid.getCellSize(), grid.getCellSize());
+            if (clientData.row >= 0 && clientData.col >= 0) {
+                Color base = getColor(clientData.color);
+                Color alpha = new Color(base.getRed(), base.getGreen(), base.getBlue(), 0.5);
+                gc.setFill(alpha); 
+                gc.fillRect(grid.getCellX(clientData.col), grid.getCellY(clientData.row), grid.getCellSize(), grid.getCellSize());
             }
         }
 
         // Draw grid
         drawGrid();
 
-        // Draw selectable objects
-        for (String objectId : selectableObjects.keySet()) {
-            JSONObject selectableObject = selectableObjects.get(objectId);
-            drawSelectableObject(objectId, selectableObject);
+        // Draw mouse circles
+        for (ClientData clientData : Main.clients) {
+            gc.setFill(getColor(clientData.color)); 
+            gc.fillOval(clientData.mouseX - 5, clientData.mouseY - 5, 10, 10);
         }
 
-        // Draw mouse circles
-        for (String clientId : clientMousePositions.keySet()) {
-            JSONObject position = clientMousePositions.get(clientId);
-            if ("A".equals(clientId)) {
-                gc.setFill(Color.BLUE);
+        // Draw objects
+        for (GameObject go : Main.objects) {
+            if (selectedObject != null && go.id.equals(selectedObject.id)) {
+                drawObject(selectedObject);
             } else {
-                gc.setFill(Color.GREEN); 
+                drawObject(go);
             }
-            gc.fillOval(position.getInt("x") - 5, position.getInt("y") - 5, 10, 10);
         }
 
         // Draw FPS if needed
@@ -270,33 +258,16 @@ public class CtrlPlay implements Initializable {
         }
     }
 
-    public void drawSelectableObject(String objectId, JSONObject obj) {
+    public void drawObject(GameObject obj) {
         double cellSize = grid.getCellSize();
 
-        int x = obj.getInt("x");
-        int y = obj.getInt("y");
-        double width = obj.getInt("cols") * cellSize;
-        double height = obj.getInt("rows") * cellSize;
+        int x = obj.x;
+        int y = obj.y;
+        double width = obj.col * cellSize;
+        double height = obj.row * cellSize;
 
         // Seleccionar un color basat en l'objectId
-        Color color;
-        switch (objectId.toLowerCase()) {
-            case "red":
-                color = Color.RED;
-                break;
-            case "blue":
-                color = Color.BLUE;
-                break;
-            case "green":
-                color = Color.GREEN;
-                break;
-            case "yellow":
-                color = Color.YELLOW;
-                break;
-            default:
-                color = Color.GRAY;
-                break;
-        }
+        Color color = Color.GRAY;
 
         // Dibuixar el rectangle
         gc.setFill(color);
@@ -308,6 +279,33 @@ public class CtrlPlay implements Initializable {
 
         // Opcionalment, afegir text (per exemple, l'objectId)
         gc.setFill(Color.BLACK);
-        gc.fillText(objectId, x + 5, y + 15);
+        gc.fillText(obj.id, x + 5, y + 15);
+    }
+
+    public Color getColor(String colorName) {
+        switch (colorName.toLowerCase()) {
+            case "red":
+                return Color.RED;
+            case "blue":
+                return Color.BLUE;
+            case "green":
+                return Color.GREEN;
+            case "yellow":
+                return Color.YELLOW;
+            case "orange":
+                return Color.ORANGE;
+            case "purple":
+                return Color.PURPLE;
+            case "pink":
+                return Color.PINK;
+            case "brown":
+                return Color.BROWN;
+            case "gray":
+                return Color.GRAY;
+            case "black":
+                return Color.BLACK;
+            default:
+                return Color.LIGHTGRAY; // Default color
+        }
     }
 }

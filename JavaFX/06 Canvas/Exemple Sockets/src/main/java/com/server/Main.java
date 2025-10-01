@@ -1,341 +1,335 @@
 package com.server;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 import org.java_websocket.server.WebSocketServer;
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.UserInterruptException;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
-
-import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Arrays;
-
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
+import org.java_websocket.exceptions.WebsocketNotConnectedException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.java_websocket.exceptions.WebsocketNotConnectedException;
 
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+
+import com.shared.ClientData;
+import com.shared.GameObject;
+
+/**
+ * Servidor WebSocket que manté l'estat complet dels clients i objectes seleccionables.
+ *
+ * Protocol simplificat:
+ *  - Client -> Server:  { "type": "clientData", "data": { ...ClientData... } }
+ *  - Server -> Clients: { "type": "state", "clientId": <clientId>, "clients": [ ...ClientData... ], "gameObjects": { ... }, "countdown": n? }
+ */
 public class Main extends WebSocketServer {
 
-    private static final List<String> PLAYER_NAMES = Arrays.asList("A", "B");
+    /** Port per defecte on escolta el servidor. */
+    public static final int DEFAULT_PORT = 3000;
 
-    private Map<WebSocket, String> clients;
-    private List<String> availableNames;
-    private Map<String, JSONObject> clientMousePositions = new HashMap<>();
+    /** Llista de noms disponibles per als clients connectats. */
+    private static final List<String> PLAYER_NAMES = Arrays.asList(
+        "Bulbasaur", "Charizard", "Blaziken", "Umbreon", "Mewtwo", "Pikachu", "Wartortle"
+    );
 
-    private static Map<String, JSONObject> selectableObjects = new HashMap<>();
+    /** Llista de colors disponibles per als clients connectats. */
+    private static final List<String> PLAYER_COLORS = Arrays.asList(
+        "GREEN", "ORANGE", "RED", "GRAY", "PURPLE", "YELLOW", "BLUE"
+    );
 
+    /** Nombre de clients necessaris per iniciar el compte enrere. */
+    private static final int REQUIRED_CLIENTS = 2;
+
+    // Claus JSON
+    private static final String K_TYPE = "type";
+    private static final String K_VALUE = "value";
+    private static final String K_CLIENT_NAME = "clientName";
+    private static final String K_CLIENTS_LIST = "clientsList";             
+    private static final String K_OBJECTS_LIST = "objectsList"; 
+
+    // Tipus de missatge nous i (alguns) heretats
+    private static final String T_CLIENT_MOUSE_MOVING = "clientMouseMoving";  // client -> server
+    private static final String T_CLIENT_OBJECT_MOVING = "clientObjectMoving";// client -> server
+    private static final String T_SERVER_DATA = "serverData";                 // server -> clients
+    private static final String T_COUNTDOWN = "countdown";                    // server -> clients
+
+    /** Registre de clients i assignació de noms (pool integrat). */
+    private final ClientRegistry clients;
+
+    /** Mapa d’estat per client (source of truth del servidor). Clau = name/id. */
+    private final Map<String, ClientData> clientsData = new HashMap<>();
+
+    /** Mapa d'objectes seleccionables compartits. */
+    private final Map<String, GameObject> gameObjects = new HashMap<>();
+
+    private volatile boolean countdownRunning = false;
+
+    /** Freqüència d’enviament de l’estat (frames per segon). */
+    private static final int SEND_FPS = 30;
+    private final ScheduledExecutorService ticker;
+
+    /**
+     * Crea un servidor WebSocket que escolta a l'adreça indicada.
+     *
+     * @param address adreça i port d'escolta del servidor
+     */
     public Main(InetSocketAddress address) {
         super(address);
-        clients = new ConcurrentHashMap<>();
-        resetAvailableNames();
+        this.clients = new ClientRegistry(PLAYER_NAMES);
+        initializegameObjects();
+
+        ThreadFactory tf = r -> {
+            Thread t = new Thread(r, "ServerTicker");
+            t.setDaemon(true);
+            return t;
+        };
+        this.ticker = Executors.newSingleThreadScheduledExecutor(tf);
     }
 
-    private void resetAvailableNames() {
-        availableNames = new ArrayList<>(PLAYER_NAMES);
-        Collections.shuffle(availableNames);
+    /**
+     * Inicialitza els objectes seleccionables predefinits.
+     */
+    private void initializegameObjects() {
+        String objId = "O0";
+        GameObject obj0 = new GameObject(objId, 300, 50, 4, 1);
+        gameObjects.put(objId, obj0);
+
+        objId = "O1";
+        GameObject obj1 = new GameObject(objId, 300, 100, 1, 3);
+        gameObjects.put(objId, obj1);
     }
 
-    @Override
-    public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        String clientName = getNextAvailableName();
-        clients.put(conn, clientName);
-        System.out.println("WebSocket client connected: " + clientName);
-        sendClientsList();
-        sendCowntdown();
+    /**
+     * Obté el color per un nom de client.
+     *
+     * @return color assignat
+     */
+    private synchronized String getColorForName(String name) {
+        int idx = PLAYER_NAMES.indexOf(name);
+        if (idx < 0) idx = 0; // fallback si el nom no està a la llista
+        return PLAYER_COLORS.get(idx % PLAYER_COLORS.size());
     }
 
-    private String getNextAvailableName() {
-        if (availableNames.isEmpty()) {
-            resetAvailableNames();
+    /** Envia un compte enrere (5..0) com a part del mateix STATE.
+     *  Evita comptes simultanis i es cancel·la si baixa el nombre de clients. */
+    private void sendCountdown() {
+        synchronized (this) {
+            if (countdownRunning) return;
+            if (clients.snapshot().size() != REQUIRED_CLIENTS) return;
+            countdownRunning = true;
         }
-        return availableNames.remove(0);
-    }
 
-    @Override
-    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        String clientName = clients.get(conn);
-        clients.remove(conn);
-        availableNames.add(clientName);
-        System.out.println("WebSocket client disconnected: " + clientName);
-        sendClientsList();
-    }
+        new Thread(() -> {
+            try {
+                for (int i = 5; i >= 0; i--) {
+                    // Si durant el compte enrere ja no hi ha els clients requerits, cancel·la
+                    if (clients.snapshot().size() < REQUIRED_CLIENTS) {
+                        break;
+                    }
 
-    @Override
-    public void onMessage(WebSocket conn, String message) {
-        JSONObject obj = new JSONObject(message);
-    
-        
-        if (obj.has("type")) {
-            String type = obj.getString("type");
-    
-            switch (type) {
-                case "clientMouseMoving":
-                    // Obtenim el clientId del missatge
-                    String clientId = obj.getString("clientId");   
-                    clientMousePositions.put(clientId, obj);
-        
-                    // Prepara el missatge de tipus 'serverMouseMoving' amb les posicions de tots els clients
-                    JSONObject rst0 = new JSONObject();
-                    rst0.put("type", "serverMouseMoving");
-                    rst0.put("positions", clientMousePositions);
-        
-                    // Envia el missatge a tots els clients connectats
-                    broadcastMessage(rst0.toString(), null);
-                    break;
-                case "clientSelectableObjectMoving":
-                    String objectId = obj.getString("objectId");
-                    selectableObjects.put(objectId, obj);
-
-                    sendServerSelectableObjects();
-                    break;
-            }
-        }
-    }
-   
-    private void broadcastMessage(String message, WebSocket sender) {
-        for (Map.Entry<WebSocket, String> entry : clients.entrySet()) {
-            WebSocket conn = entry.getKey();
-            if (conn != sender) {
-                try {
-                    conn.send(message);
-                } catch (WebsocketNotConnectedException e) {
-                    System.out.println("Client " + entry.getValue() + " not connected.");
-                    clients.remove(conn);
-                    availableNames.add(entry.getValue());
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    sendCountdownToAll(i);
+                    if (i > 0) Thread.sleep(750); // ritme del compte enrere
                 }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            } finally {
+                countdownRunning = false;
             }
-        }
+        }, "CountdownThread").start();
     }
 
-    private void sendPrivateMessage(String destination, String message, WebSocket senderConn) {
-        boolean found = false;
+    // ----------------- Helpers JSON -----------------
 
-        for (Map.Entry<WebSocket, String> entry : clients.entrySet()) {
-            if (entry.getValue().equals(destination)) {
-                found = true;
-                try {
-                    entry.getKey().send(message);
-                    JSONObject confirmation = new JSONObject();
-                    confirmation.put("type", "confirmation");
-                    confirmation.put("message", "Message sent to " + destination);
-                    senderConn.send(confirmation.toString());
-                } catch (WebsocketNotConnectedException e) {
-                    System.out.println("Client " + destination + " not connected.");
-                    clients.remove(entry.getKey());
-                    availableNames.add(destination);
-                    notifySenderClientUnavailable(senderConn, destination);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
-            }
-        }
-
-        if (!found) {
-            System.out.println("Client " + destination + " not found.");
-            notifySenderClientUnavailable(senderConn, destination);
-        }
+    /** Crea un objecte JSON amb el camp type inicialitzat. */
+    private static JSONObject msg(String type) {
+        return new JSONObject().put(K_TYPE, type);
     }
 
-    private void notifySenderClientUnavailable(WebSocket sender, String destination) {
-        JSONObject rst = new JSONObject();
-        rst.put("type", "error");
-        rst.put("message", "Client " + destination + " not available.");
-
+    /** Envia de forma segura un payload i, si el socket no està connectat, el neteja del registre. */
+    private void sendSafe(WebSocket to, String payload) {
+        if (to == null) return;
         try {
-            sender.send(rst.toString());
+            to.send(payload);
+        } catch (WebsocketNotConnectedException e) {
+            String name = clients.cleanupDisconnected(to);
+            clientsData.remove(name);
+            System.out.println("Client desconnectat durant send: " + name);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void sendClientsList() {
-        JSONArray clientList = new JSONArray();
-        for (String clientName : clients.values()) {
-            clientList.put(clientName);
+    /** Envia un missatge a tots els clients excepte l'emissor. */
+    private void broadcastExcept(WebSocket sender, String payload) {
+        for (Map.Entry<WebSocket, String> e : clients.snapshot().entrySet()) {
+            WebSocket conn = e.getKey();
+            if (!Objects.equals(conn, sender)) sendSafe(conn, payload);
+        }
+    }
+
+    private void broadcastStatus() {
+
+        JSONArray arrClients = new JSONArray();
+        for (ClientData c : clientsData.values()) {
+            arrClients.put(c.toJSON());
         }
 
-        Iterator<Map.Entry<WebSocket, String>> iterator = clients.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<WebSocket, String> entry = iterator.next();
-            WebSocket conn = entry.getKey();
-            String clientName = entry.getValue();
+        JSONArray arrObjects = new JSONArray();
+        for (GameObject obj : gameObjects.values()) {
+            arrObjects.put(obj.toJSON());
+        }
 
-            JSONObject rst = new JSONObject();
-            rst.put("type", "clients");
-            rst.put("id", clientName);
-            rst.put("list", clientList);
+        JSONObject rst = msg(T_SERVER_DATA)
+                        .put(K_CLIENTS_LIST, arrClients)
+                        .put(K_OBJECTS_LIST, arrObjects);
 
-            try {
-                conn.send(rst.toString());
-            } catch (WebsocketNotConnectedException e) {
-                System.out.println("Client " + clientName + " not connected.");
-                iterator.remove();
-                availableNames.add(clientName);
-            } catch (Exception e) {
-                e.printStackTrace();
+        for (Map.Entry<WebSocket, String> e : clients.snapshot().entrySet()) {
+            WebSocket conn = e.getKey();
+            String name = clients.nameBySocket(conn);
+            rst.put(K_CLIENT_NAME, name);
+            sendSafe(conn, rst.toString());
+        }
+    }
+
+    /** Envia a tots els clients el compte enrere. */
+    private void sendCountdownToAll(int n) {
+        JSONObject rst = msg(T_COUNTDOWN).put(K_VALUE, n);
+        broadcastExcept(null, rst.toString());
+    }
+
+    // ----------------- WebSocketServer overrides -----------------
+
+    /** Assigna un nom i color al client i envia l’STATE complet. */
+    @Override
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        String name = clients.add(conn);
+        String color = getColorForName(name);
+
+        clientsData.put(name, new ClientData(name, color));
+
+        System.out.println("WebSocket client connected: " + name + " (" + color + ")");
+        sendCountdown();
+    }
+
+    /** Elimina el client del registre i envia l’STATE complet. */
+    @Override
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        String name = clients.remove(conn);
+        clientsData.remove(name);
+        System.out.println("WebSocket client disconnected: " + name);
+    }
+
+    /** Processa els missatges rebuts. */
+    @Override
+    public void onMessage(WebSocket conn, String message) {
+        JSONObject obj;
+        try {
+            obj = new JSONObject(message);
+        } catch (Exception ex) {
+            return; // JSON invàlid
+        }
+
+        String type = obj.optString(K_TYPE, "");
+        switch (type) {
+            case T_CLIENT_MOUSE_MOVING -> {
+                String clientName = clients.nameBySocket(conn);
+                clientsData.put(clientName, ClientData.fromJSON(obj.getJSONObject(K_VALUE))); 
+            }
+
+            case T_CLIENT_OBJECT_MOVING -> {
+                GameObject objData = GameObject.fromJSON(obj.getJSONObject(K_VALUE));
+                gameObjects.put(objData.id, objData);
+            }
+
+            default -> {
+                // Ignora altres tipus
             }
         }
     }
 
-    public void sendCowntdown() {
-        int requiredNumberOfClients = 2;
-        if (clients.size() == requiredNumberOfClients) {
-            for (int i = 5; i >= 0; i--) {
-                JSONObject msg = new JSONObject();
-                msg.put("type", "countdown");
-                msg.put("value", i);
-                broadcastMessage(msg.toString(), null);
-                if (i == 0) {
-                    sendServerSelectableObjects();
-                } else {
-                    try {
-                        Thread.sleep(750);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    public void sendServerSelectableObjects() {
-
-        // Prepara el missatge de tipus 'serverObjects' amb les posicions de tots els clients
-        JSONObject rst1 = new JSONObject();
-        rst1.put("type", "serverSelectableObjects");
-        rst1.put("selectableObjects", selectableObjects);
-
-        // Envia el missatge a tots els clients connectats
-        broadcastMessage(rst1.toString(), null);
-    }
-   
+    /** Log d'error global o de socket concret. */
     @Override
     public void onError(WebSocket conn, Exception ex) {
         ex.printStackTrace();
     }
 
+    /** Arrencada: log i configuració del timeout de connexió perduda. */
     @Override
     public void onStart() {
         System.out.println("WebSocket server started on port: " + getPort());
-        setConnectionLostTimeout(0);
         setConnectionLostTimeout(100);
+        startTicker();
     }
 
-    public static String askSystemName() {
-        StringBuilder resultat = new StringBuilder();
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("uname", "-r");
-            Process process = processBuilder.start();
+    // ----------------- Lifecycle util -----------------
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                resultat.append(line).append("\n");
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                return "Error: El procés ha finalitzat amb codi " + exitCode;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error: " + e.getMessage();
-        }
-        return resultat.toString().trim();
-    }
-
-    public static void setSignTerm(Main server) {
-        SignalHandler handler = sig -> {
-            System.out.println(sig.getName() + " received. Stopping server...");
+    /** Registra un shutdown hook per aturar netament el servidor en finalitzar el procés. */
+    private static void registerShutdownHook(Main server) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Aturant servidor (shutdown hook)...");
             try {
+                server.stopTicker();      // <- atura el bucle periòdic
                 server.stop(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
-            System.out.println("Server stopped.");
-            System.exit(0);
-        };
-        Signal.handle(new Signal("TERM"), handler);
-        Signal.handle(new Signal("INT"), handler);
+            System.out.println("Servidor aturat.");
+        }));
     }
 
-    public static void main(String[] args) {
-
-        String systemName = askSystemName();
-
-        // WebSockets server
-        Main server = new Main(new InetSocketAddress(3000));
-        server.start();
-        
-        // Permet aturar el servidor amb SITERM/SIGINT
-        setSignTerm(server);
-
-        LineReader reader = LineReaderBuilder.builder().build();
-        System.out.println("Server running. Type 'exit' to gracefully stop it.");
-
-        // Add objects
-        String name0 = "O0";
-        JSONObject obj0 = new JSONObject();
-        obj0.put("objectId", name0);
-        obj0.put("x", 300);
-        obj0.put("y", 50);
-        obj0.put("cols", 4);
-        obj0.put("rows", 1);
-        selectableObjects.put(name0, obj0);
-
-        String name1 = "O1";
-        JSONObject obj1 = new JSONObject();
-        obj1.put("objectId", name1);
-        obj1.put("x", 300);
-        obj1.put("y", 100);
-        obj1.put("cols", 1);
-        obj1.put("rows", 3);
-        selectableObjects.put(name1, obj1);
-
+    /** Bloqueja el fil principal indefinidament fins que sigui interromput. */
+    private static void awaitForever() {
+        CountDownLatch latch = new CountDownLatch(1);
         try {
-            while (true) {
-                String line = null;
-                try {
-                    line = reader.readLine("> ");
-                } catch (UserInterruptException e) {
-                    continue;
-                } catch (EndOfFileException e) {
-                    break;
-                }
-
-                line = line.trim();
-
-                if (line.equalsIgnoreCase("exit")) {
-                    System.out.println("Stopping server...");
-                    try {
-                        server.stop(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                } else {
-                    System.out.println("Unknown command. Type 'exit' to stop server gracefully.");
-                }
-            }
-        } finally {
-            System.out.println("Server stopped.");
+            latch.await();
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         }
+    }
+
+
+    // ----------------- Ticker util -----------------
+
+    private void startTicker() {
+        long periodMs = Math.max(1, 1000 / SEND_FPS);
+        ticker.scheduleAtFixedRate(() -> {
+            try {
+                // Opcional: si no hi ha clients, evita enviar
+                if (!clients.snapshot().isEmpty()) {
+                    broadcastStatus();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, periodMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopTicker() {
+        try {
+            ticker.shutdownNow();
+            ticker.awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Punt d'entrada. */
+    public static void main(String[] args) {
+        Main server = new Main(new InetSocketAddress(DEFAULT_PORT));
+        server.start();
+        registerShutdownHook(server);
+
+        System.out.println("Server running on port " + DEFAULT_PORT + ". Press Ctrl+C to stop it.");
+        awaitForever();
     }
 }

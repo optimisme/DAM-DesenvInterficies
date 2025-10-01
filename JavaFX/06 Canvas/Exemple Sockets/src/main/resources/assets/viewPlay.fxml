@@ -10,7 +10,7 @@
    <children>
       <VBox alignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Label alignment="CENTER" text="Test game">
+            <Label fx:id="title" alignment="CENTER" text="Test game">
                <font>
                   <Font size="36.0" />
                </font>

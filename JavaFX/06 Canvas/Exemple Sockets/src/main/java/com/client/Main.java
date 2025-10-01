@@ -6,6 +6,9 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.shared.ClientData;
+import com.shared.GameObject;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.animation.PauseTransition;
@@ -19,7 +22,10 @@ public class Main extends Application {
 
     public static UtilsWS wsClient;
 
-    public static String clientId = "";
+    public static String clientName = "";
+    public static List<ClientData> clients;
+    public static List<GameObject> objects;
+
     public static CtrlConfig ctrlConfig;
     public static CtrlWait ctrlWait;
     public static CtrlPlay ctrlPlay;
@@ -102,20 +108,47 @@ public class Main extends Application {
     }
    
     private static void wsMessage(String response) {
+        
         // System.out.println(response);
+        
         JSONObject msgObj = new JSONObject(response);
         switch (msgObj.getString("type")) {
-            case "clients":
-                if (clientId == "") {
-                    clientId = msgObj.getString("id");
+            case "serverData":
+                clientName = msgObj.getString("clientName");
+
+                JSONArray arrClients = msgObj.getJSONArray("clientsList");
+                List<ClientData> newClients = new ArrayList<>();
+                for (int i = 0; i < arrClients.length(); i++) {
+                    JSONObject obj = arrClients.getJSONObject(i);
+                    newClients.add(ClientData.fromJSON(obj));
                 }
-                if (UtilsViews.getActiveView() != "ViewWait") {
+                clients = newClients;
+
+                JSONArray arrObjects = msgObj.getJSONArray("objectsList");
+                List<GameObject> newObjects = new ArrayList<>();
+                for (int i = 0; i < arrObjects.length(); i++) {
+                    JSONObject obj = arrObjects.getJSONObject(i);
+                    newObjects.add(GameObject.fromJSON(obj));
+                }
+                objects = newObjects;
+
+                if (clients.size() == 1) {
+
+                    ctrlWait.txtPlayer0.setText(clients.get(0).name);
+
+                } else if (clients.size() > 1) {
+
+                    ctrlWait.txtPlayer0.setText(clients.get(0).name);
+                    ctrlWait.txtPlayer1.setText(clients.get(1).name);
+                    ctrlPlay.title.setText(clients.get(0).name + " vs " + clients.get(1).name);
+                }
+                
+                if (UtilsViews.getActiveView().equals("ViewConfig")) {
                     UtilsViews.setViewAnimating("ViewWait");
                 }
-                List<String> stringList = jsonArrayToList(msgObj.getJSONArray("list"), String.class);
-                if (stringList.size() > 0) { ctrlWait.txtPlayer0.setText(stringList.get(0)); }
-                if (stringList.size() > 1) { ctrlWait.txtPlayer1.setText(stringList.get(1)); }
+
                 break;
+            
             case "countdown":
                 int value = msgObj.getInt("value");
                 String txt = String.valueOf(value);
@@ -125,17 +158,10 @@ public class Main extends Application {
                 }
                 ctrlWait.txtTitle.setText(txt);
                 break;
-            case "serverMouseMoving":
-                ctrlPlay.setPlayersMousePositions(msgObj.getJSONObject("positions"));
-                break;
-            case "serverSelectableObjects":
-                ctrlPlay.setSelectableObjects(msgObj.getJSONObject("selectableObjects"));
-                break;
         }
     }
 
     private static void wsError(String response) {
-
         String connectionRefused = "Connection refused";
         if (response.indexOf(connectionRefused) != -1) {
             ctrlConfig.txtMessage.setTextFill(Color.RED);

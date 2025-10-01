@@ -14,7 +14,7 @@
          <children>
             <Label fx:id="txtTitle" alignment="CENTER" prefHeight="17.0" prefWidth="600.0" text="Waiting for players ..." VBox.vgrow="NEVER">
                <font>
-                  <Font size="36.0" />
+                  <Font size="32.0" />
                </font>
                <VBox.margin>
                   <Insets top="100.0" />
@@ -27,7 +27,7 @@
                      <children>
                         <Label fx:id="txtPlayer0" text="?">
                            <font>
-                              <Font size="64.0" />
+                              <Font size="40.0" />
                            </font>
                            <padding>
                               <Insets right="8.0" />
@@ -39,7 +39,7 @@
                      <children>
                         <Label fx:id="txtPlayer1" text="?">
                            <font>
-                              <Font size="64.0" />
+                              <Font size="40.0" />
                            </font>
                            <padding>
                               <Insets right="8.0" />
