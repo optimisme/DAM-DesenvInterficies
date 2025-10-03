@@ -87,22 +87,54 @@ El joc ha de tenir **cinc vistes**:
 
 ---
 
-## Protocol (orientatiu) via WebSocket
+## Protocol/API via WebSocket (orientatiu)
 
-Esdeveniments mínims (API - JSON):
+Client > Servidor:
 
-- `join { name }`
-- `lobby.list { players[] }`
-- `invite { to }` / `invite.accept { from }` / `invite.decline`
-- `game.start { gameId, youAre: "R"|"Y", firstTurn }`
-- `game.move { gameId, posX, posY }` *(s’emet mentre el ratolí es mou sense fitxa)*
-- `game.drag { gameId, posX, posY }` *(s’emet mentre el ratolí arrossega una fitxa)*
-- `game.play { gameId, column }` *(quan s'ha tirat una fitxa per una columna i s'ha d'animar la caiguda)
-- `game.state: ha de portar dades ...
-  - board, turn, lastMove, status: "playing"|"win"|"draw", winner?
-  - l’snapshot complet del taulell (6×7) per resincro­nitzar els taulells a cada jugador
-- `game.end { result: "win"|"lose"|"draw" }`
-- `error { message }`
+- clientMouseMoving
+- clientPieceMoving
+- clientPlay
+
+Servidor > Clients:
+
+- countdown
+- serverData
+
+Proposta de serverData (caldrà adaptar-la):
+
+- role: R (red), Y (yellow)
+- status: waiting | countdown | playing | win | draw
+- lastMove: per animar la caiguda
+
+```json
+{
+  "type": "serverData",
+  "clientName": "Bulbasaur",
+  "clientsList": [
+    { "name": "Bulbasaur", "color": "GREEN", "mouseX": 412.5, "mouseY": 133.0, "role": "R" },
+    { "name": "Charizard", "color": "ORANGE", "mouseX": 220.0, "mouseY": 210.0, "role": "Y" }
+  ],
+  "objectsList": [
+    { "id": "R_00", "x": 610.0, "y": 80.0, "role": "R" },
+    { "id": "Y_00", "x": 670.0, "y": 80.0, "role": "Y" }
+    ...
+  ],
+  "game": {
+    "status": "playing",
+    "board": [
+      [" "," "," "," "," "," "," "],
+      [" "," "," "," "," "," "," "],
+      [" "," "," "," "," "," "," "],
+      [" "," "," ","R"," "," "," "],
+      [" "," "," ","R","Y"," "," "],
+      ["R","Y"," ","R","Y"," "," "]
+    ],
+    "turn": "Bulbasaur", 
+    "lastMove": { "col": 3, "row": 3 },
+    "winner": "" 
+  }
+}
+```
 
 ---
 
