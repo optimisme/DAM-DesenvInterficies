@@ -80,10 +80,13 @@ El joc ha de tenir **cinc vistes**:
   - Caiguda de fitxes  
   - Detecció de **4 en línia** i **empat**  
   - Sincronització d’estat entre clients
+  - Manté la lògica de la partida
+
 - Els **clients**:
   - **Envien esdeveniments** (connectar, convidar, acceptar, **hover**, **jugada**)  
   - **Renderitzen** l’estat rebut del servidor  
   - Fan servir **Canvas + animacions** per a la UI
+  - Fa la lògica d'animació de caiguda
 
 ---
 
@@ -144,11 +147,13 @@ Proposta de serverData (caldrà adaptar-la):
 - **WebSockets** per a la comunicació temps real (client Java; servidor pot ser Java o un altre llenguatge).  
 - **Timeline / Animation** de JavaFX per a les caigudes de fitxes.  
 - **ExecutorService** opcional per a tasques d’E/S o timers (no bloquejar el fil d’UI).  
-- **CSS JavaFX** per estils generals i textos (missatges de torn, resultat, etc.).  
+- **CSS JavaFX** per estils generals  
 - **Separació clara** entre:
   - **Vista (UI Canvas + JavaFX)**  
   - **Client WS** (gestió de missatges)  
   - **Model** (estat local derivat del servidor)
+- **Server** Manté la lògica de la partida, envia *broadcast* a clients 30 vegades per segon
+- **Client** Envia interacció al servidor, anima la caiguda de fitxes
 
 > **Important!**: La lògica ha d'estar tota al servidor, els clients només han de mostrar l'estat de les dades que intercanvien amb el servidor
 
@@ -159,7 +164,7 @@ Proposta de serverData (caldrà adaptar-la):
 - No es pot jugar en una **columna plena**.  
 - Només el **jugador amb torn** pot enviar `game.play`.  
 - El servidor rebutja jugades **invàlides** i re-emet l’**estat autoritatiu**.  
-- En acabar la partida, la vista 4 queda **en lectura** i es mostra la vista 5 (resultat).
+- En acabar la partida, es mostra la pantalla amb el resultat i el panell final
 
 ---
 
@@ -170,4 +175,4 @@ Proposta de serverData (caldrà adaptar-la):
 - Documenta al `README.md`:
   - Com **arrencar el servidor**  
   - Com **executar el client**  
-  - **Ports**, variables d’entorn i dependències
+  - **Ports** i dependències
