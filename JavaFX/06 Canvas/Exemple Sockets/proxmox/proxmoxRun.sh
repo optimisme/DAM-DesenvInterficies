@@ -1,28 +1,14 @@
 #!/bin/bash
 
-# Function for cleanup on script exit
-cleanup() {
-    local exit_code=$?
-    echo "Performing cleanup..."
-    [[ -n "$JAR_PATH" ]] && rm -f "$JAR_PATH"
-    ssh-agent -k 2>/dev/null
-    cd "$ORIGINAL_DIR" 2>/dev/null
-    exit $exit_code
-}
-trap cleanup EXIT
-
-# Store original directory
-ORIGINAL_DIR=$(pwd)
-
 source ./config.env
 
 USER=${1:-$DEFAULT_USER}
-RSA_PATH=${2:-"$DEFAULT_RSA_PATH"}
+RSA_PATH=${2:-$DEFAULT_RSA_PATH}
 SERVER_PORT=${3:-$DEFAULT_SERVER_PORT}
-RSA_PATH="${RSA_PATH%$'\r'}"
+SSH_OPTS='-oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedAlgorithms=+ssh-rsa'
 
 echo "User: $USER"
-echo "Ruta RSA: ${RSA_PATH}"
+echo "Ruta RSA: $RSA_PATH"
 echo "Server port: $SERVER_PORT"
 
 JAR_NAME="server-package.jar"
@@ -30,8 +16,9 @@ JAR_PATH="./target/$JAR_NAME"
 
 cd ..
 
-if [[ ! -f "${RSA_PATH}" ]]; then
-    echo "Error: No s'ha trobat el fitxer de clau privada: ${RSA_PATH}"
+if [[ ! -f "$RSA_PATH" ]]; then
+    echo "Error: No s'ha trobat el fitxer de clau privada: $RSA_PATH"
+    cd proxmox
     exit 1
 fi
 
@@ -41,20 +28,27 @@ rm -f "$JAR_PATH"
 
 if [[ ! -f "$JAR_PATH" ]]; then
     echo "Error: No s'ha trobat l'arxiu JAR: $JAR_PATH"
+    cd proxmox
     exit 1
 fi
 
 eval "$(ssh-agent -s)"
-ssh-add "${RSA_PATH}"
-
-echo "Enviant $JAR_PATH al servidor..."
-scp -P 20127 "$JAR_PATH" "$USER@ieticloudpro.ieti.cat:~/"
+ssh-add "$RSA_PATH"
 if [[ $? -ne 0 ]]; then
-    echo "Error durant l'enviament SCP"
+    echo "Error: No s'ha pogut carregar la clau RSA."
     exit 1
 fi
 
-ssh -t -p 20127 "$USER@ieticloudpro.ieti.cat" << EOF
+echo "Enviant $JAR_PATH al servidor..."
+scp -P 20127 $SSH_OPTS "$JAR_PATH" "$USER@ieticloudpro.ieti.cat:~/"
+if [[ $? -ne 0 ]]; then
+    echo "Error durant l'enviament SCP"
+    ssh-agent -k
+    cd proxmox
+    exit 1
+fi
+
+ssh -t -p 20127 $SSH_OPTS "$USER@ieticloudpro.ieti.cat" << EOF
     cd "\$HOME/"
 
     PID=\$(ps aux | grep 'java -jar $JAR_NAME' | grep -v 'grep' | awk '{print \$2}')
@@ -100,3 +94,5 @@ ssh -t -p 20127 "$USER@ieticloudpro.ieti.cat" << EOF
     fi
 EOF
 
+ssh-agent -k
+cd proxmox
