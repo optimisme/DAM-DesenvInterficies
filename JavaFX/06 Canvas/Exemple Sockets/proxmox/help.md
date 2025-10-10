@@ -29,3 +29,16 @@ El servidor remot rep peticions pel port *80*, per seguretat és millor redirigi
 # Al terminal local
 ./proxmoxRedirect80.sh
 ```
+
+## Permisos de l'arxiu *id_rsa*
+
+Cal que l'arxiu **"id_rsa"** només tingui permisos de lectura i escriptura per l'usuari.
+
+Per aconseguir-ho:
+```bash
+chmod -x id_rsa
+chmod go-rw id_rsa
+ls -ltr id_rsa
+# Ha de donar:
+-rw-------@ 
+```
