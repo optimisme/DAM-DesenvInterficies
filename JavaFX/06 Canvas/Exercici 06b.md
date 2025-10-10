@@ -10,4 +10,6 @@
 
 # Exercici
 
-Fes que el joc de **"Connecta 4"** funcioni també amb Android i permeti jugar un client JavaFX contra un Android.
+Fes que un jugador vegui la partida que hi ha al servidor de **"Connecta 4"** des d'un telèfon Android.
+
+Només ha de visualitzar la partida en temps real, no cal que sigui jugador (només observador).
