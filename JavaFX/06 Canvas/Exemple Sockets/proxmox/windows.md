@@ -14,6 +14,8 @@ DEFAULT_RSA_PATH="/root/.ssh/id_rsa"
 ```
 **Important**: La ruta de l'arxiu amb la clau privada ha d'estar a l'espai WSL amb permissos 600.
 
+Això vol dir que no funciona des de *"/mnt/c/?"* perquè són arxius tipus Windows sense permissos UNIX.
+
 **També** és recomanable tenir tot el projecte a l'espai d'arxius WSL per tal que funcionin els permissos d'execuió.
 
 ## Format d'arxius
