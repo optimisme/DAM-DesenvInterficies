@@ -130,6 +130,16 @@ cd exemple0000
 
 **Important:** **NO** facis servir espais als noms de carpeta de TOTA la ruta on tens l’aplicació, tampoc espais ni caràcters estranys com accents o símbols de puntuació
 
+## Recompilar els exemples de la teoria
+
+Els exemples no funcionen simplement descarregant-los, cal dir a flutter que els vols fer anar amb el teu sistema, per exemple:
+```bash
+cd exemple0000
+flutter config --enable-macos-desktop
+flutter config --enable-web
+flutter create .
+```
+
 ## Compilar i fer anar una aplicació
 
 Per provar el codi podem executar la instrucció:
