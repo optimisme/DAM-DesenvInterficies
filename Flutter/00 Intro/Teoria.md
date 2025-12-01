@@ -300,6 +300,7 @@ class MyApp extends StatelessWidget {
         );
     }
 }
+```
 
 Definició del widget 'MyHomePage', la vista que es veu per defecte:
 
