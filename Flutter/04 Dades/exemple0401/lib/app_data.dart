@@ -45,7 +45,7 @@ class AppData extends ChangeNotifier {
 
       request.headers.addAll({'Content-Type': 'application/json'});
       request.body = jsonEncode(
-          {'model': 'phi4', 'prompt': 'Why is the sky blue?', 'stream': true});
+          {'model': 'phi3', 'prompt': 'Why is the sky blue?', 'stream': true});
 
       var streamedResponse = await _client!.send(request);
       _streamSubscription =
@@ -69,6 +69,7 @@ class AppData extends ChangeNotifier {
       });
     } catch (e) {
       _responseText = "Error during streaming.";
+      print(e);
       _isWaiting = false; // Canvia a false en cas d'error
       setLoading(false);
       notifyListeners();
