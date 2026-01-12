@@ -79,6 +79,13 @@ Necessitaràs els següents widgets personalitzats:
 
 A més, afegeix un apartat on es pot veure l'arbre de carpetes i arxius del servidor, dibuixat a través d'un canvas  (a l'estil baobab o daisydisk):
 
+[Baobab](https://apps.gnome.org/ca/Baobab/) (aka "Disk Usage Analyzer"):
+
+```bash
+sudo apt update
+sudo apt install baobab
+```
+
 <br/>
 <center><img src="./imgbaobab.png" style="max-height: 400px" alt="">
 <br/></center>
