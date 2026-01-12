@@ -12,7 +12,12 @@
 
 Fes una aplicació 'Flutter' que permeti gestionar arxius al Proxmox.
 
-Tota la obtenció de dades i intercanvi d'arxius es farà amb comandes *SSH* i *SCP*.
+Podeu fer servir la llibreria dart:
+
+[dartssh2](https://pub.dev/packages/dartssh2)
+
+O Una llibreria per interactuar amb SSH a través de flutter.
+
 
 ## Configuració de comptes
 
