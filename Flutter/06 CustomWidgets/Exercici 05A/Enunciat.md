@@ -72,8 +72,14 @@ Si es detecta una carpeta de servidor tipus **NodeJS** o **Java**, ha de permetr
 Necessitaràs els següents widgets personalitzats:
 
 - Un widget que mostra una llista amb títols en negreta i items seleccionables més petits amb identació.
-- Un widget que mostri sigui un cercle verd o vermell, segons l'estat boleà (true/false)
+- Un widget que mostri sigui un cercle verd o vermell, segons l'estat boleà a través d'un canvas (true/false)
 - Un widget que és un camp de text, amb un títol i una part editable.
 - Un widget per configurar i desconfigurar redireccions del port 80 cap a un altre port.
 - Un widget que mostra l'estat d'un servidor (en funcionament, aturat, reiniciant o error).
-- Altres widgets que creguis convenients...
+
+A més, afegeix un apartat on es pot veure l'arbre de carpetes i arxius del servidor, dibuixat a través d'un canvas  (a l'estil baobab o daisydisk):
+
+<br/>
+<center><img src="./imgbaobab.png" style="max-height: 400px" alt="">
+<br/></center>
+<br/>
