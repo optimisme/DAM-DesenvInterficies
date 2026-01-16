@@ -135,12 +135,6 @@ Els icones i textos s’han de llegir amb claredat, això s’aconsegueix fent q
 </div>
 <br/>
 
-Comparació entre el nou "Liquid Glass" amb l'antic "Frozen Glass" de Apple. S'ha perdut claredat:
-
-<center>
-<img src="./assets/liquidvsfrozen.png" style="max-width: 400px" alt="">
-</center>
-
 Cal tenir en compte, que hi ha [persones amb dificultats visuals](https://blog.iamsuleiman.com/techniques-to-display-text-overlay-background-images/), no poden llegir bé els textos si no hi ha prou contrast amb el fons.
 
 <div class="image-container">
@@ -154,6 +148,12 @@ Cal tenir en compte, que hi ha [persones amb dificultats visuals](https://blog.i
     </div>
 </div>
 <br/>
+
+Comparació entre el nou "Liquid Glass" amb l'antic "Frozen Glass" de Apple. S'ha perdut claredat:
+
+<center>
+<img src="./assets/liquidvsfrozen.png" style="max-width: 400px" alt="">
+</center>
 
 El contrast, pot fer resaltar un element o botó i induir a l’usuari a fer accions més fàcilment.
 
