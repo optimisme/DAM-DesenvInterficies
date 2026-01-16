@@ -152,8 +152,9 @@ Cal tenir en compte, que hi ha [persones amb dificultats visuals](https://blog.i
 Comparació entre el nou "Liquid Glass" amb l'antic "Frozen Glass" de Apple. S'ha perdut claredat:
 
 <center>
-<img src="./assets/liquidvsfrozen.png" style="max-width: 400px" alt="">
+<img src="./assets/liquidvsfrozen.png" style="max-width: 300px" alt="">
 </center>
+<br/>
 
 El contrast, pot fer resaltar un element o botó i induir a l’usuari a fer accions més fàcilment.
 
