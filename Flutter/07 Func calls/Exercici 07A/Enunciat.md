@@ -12,7 +12,7 @@
 
 Fent servir **function calls** fes una eina de dibuix assistida per IA, en la que els usuaris fan preguntes a la IA per fer dibuixos i escriure textos a l'aplicació.
 
-Fes servir l'exemple 0801 com a base inicial, veuràs que l'exemple manté una llista de polígons que cal dibuixar i les seves propietats.
+Fes servir l'exemple 0700 com a base inicial, veuràs que l'exemple manté una llista de polígons que cal dibuixar i les seves propietats.
 
 ## Fase 1
 
@@ -33,10 +33,3 @@ S'ha de poder:
 - Esborrar polígons
 - Canviar les propietats d'un polígon (color, mida del contorn, emplenat, posició ...)
 - Fer consultes a partir dels % de la mida de dibuix disponibles o amb paraules tipus "a la meitat del dibuix", "la diagonal del quadre", ...
-
-## Fase 3
-
-S'ha de poder:
-
-- Modificar la posició del polígon seleccionat arrossegant-lo amb el mouse
-- Canviar les propietats del polígon seleccionat amb formularis sense ver servir el chat IA
