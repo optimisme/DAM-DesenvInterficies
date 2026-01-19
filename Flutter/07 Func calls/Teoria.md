@@ -18,7 +18,7 @@ Per fer-ho possible cal:
 - **Fer crides a la IA** amb el format de 'custom tools'
 - **Processar la resposta** de la IA per cridar a la funció del nostre codi
 
-**Important**: No tots els models de IA tenen les *function calls* disponibles.
+**Important**: No tots els models de IA tenen les *function calls* disponibles. A Ollama han de tenir el tag "tools"
 
 ## Intercanvi de dades amb la IA
 
