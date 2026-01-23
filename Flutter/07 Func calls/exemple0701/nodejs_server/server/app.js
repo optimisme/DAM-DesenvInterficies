@@ -11,14 +11,26 @@ let httpServer
 const dataDir = path.join(__dirname, 'data')
 const dbPath = process.env.SQLITE_PATH || path.join(dataDir, 'planets.sqlite')
 const jsonPath = path.join(__dirname, 'data', 'planets.json')
-//const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434/api/chat'
-const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11414/api/chat'
+// Base URL used when a model-specific host is not provided.
+// You can still override everything with OLLAMA_URL for backwards compatibility.
+const defaultOllamaUrl = process.env.OLLAMA_URL || 'http://localhost:11414/api/chat'
 
-const primaryModelA = process.env.OLLAMA_MODEL_A || 'granite4:3b'
-const primaryModelB = process.env.OLLAMA_MODEL_B || 'qwen2.5:3b'
-const judgeModel = process.env.OLLAMA_JUDGE_MODEL || 'granite3.3:2b'
-const tiebreakerModel = process.env.OLLAMA_TIEBREAKER_MODEL || 'granite4:3b' // 'granite4:3b'
-const jsonRepairModel = 'qwen2.5:3b'
+// Optional per-model endpoints (e.g., point each model to a different host/IP).
+const maria14 = 'http://localhost:11414/api/chat'
+const maria24 = 'http://localhost:11424/api/chat'
+
+const primaryModelAUrl   = maria14
+const primaryModelBUrl   = maria24
+const judgeModelUrl      = maria14
+const tiebreakerModelUrl = maria24
+const jsonRepairModelUrl = maria24
+
+const primaryModelA = 'granite3.3:8b' // 'granite4:3b'
+const primaryModelB = 'qwen3:8b'      // 'qwen2.5:3b'
+const judgeModel = 'granite3.3:2b'
+const tiebreakerModel = 'granite4:3b'
+const jsonRepairModel = 'granite4:3b'
+
 const HISTORY_LIMIT = 15
 
 const sessions = new Map()
@@ -121,53 +133,83 @@ app.post('/chat', async (req, res) => {
     ]
 
     const systemPrompt = [
-      'You are an assistant that can access a SQLite database, but you should first decide if database data is actually needed.',
-      'If the request does NOT require database data, call the directAnswer tool with the exact response "I don\'t have this information." translated to user\'s language. Do NOT call dbQuery in that case.',
-      'If the user request requires data from the database, use the dbQuery tool with exactly one argument: {"query": "<full SQL SELECT>"}.',
-      'Only SELECT queries are allowed (WITH ... SELECT is also allowed). Never use INSERT, UPDATE, DELETE, DROP, ALTER, PRAGMA.',
+      'You are a SQLite database agent. The SQLite database is the ONLY source of truth.',
+      'Do NOT use outside knowledge. Do NOT guess. Do NOT invent names or values.',
       '',
-      'You have access to optional session memory via the getValidatedHistory tool (last turns that were already verified and shown to the user).',
-      'Do NOT assume memory exists. Call getValidatedHistory only if the user request depends on prior context.',
+      'You have exactly these tools: dbQuery, directAnswer, getValidatedHistory.',
       '',
-      'You are allowed to call dbQuery multiple times if the question requires intermediate data.',
-      'Example: first query to obtain an ID, second query using that ID.',
+      'When to use tools:',
+      '- If the user question can be answered ONLY using the database (planets data): you MUST call dbQuery.',
+      '- Use directAnswer ONLY when the request is clearly unrelated to the database content.',
+      '- Use getValidatedHistory ONLY if the request depends on prior context. Otherwise ignore memory.',
       '',
-      'You must not make up any data. Always rely on history or database contents.',
-      'The database contains fictional planets.',
-      'You MUST NOT invent planet names or values.',
-      'If you mention any planet name, it MUST come from dbQuery results in this conversation.',
-      'For any question about planets, ALWAYS call dbQuery first (even if you think you know).',
-      'If the query returns 0 rows, respond with exactly "0" (or ask for a different query if needed).',
-
+      'ABSOLUTE RULE (planets domain):',
+      '- For ANY question about planets (names, moons, diameter, gravity, distance, mass, rotation, orbit, inclination, etc.) you MUST call dbQuery BEFORE writing ANY planet name or ANY numeric value.',
+      '',
+      'Tool-call formatting rules (critical):',
+      '- You MUST use the tool-call mechanism. Do NOT write tool calls as plain text.',
+      '- Do NOT write: "dbQuery { ... }" or "Assistant dbQuery ...".',
+      '- Do NOT write SQL or JSON in markdown code fences. Do NOT use ```.',
+      '- Do NOT explain your plan before calling a tool.',
+      '',
+      'dbQuery rules:',
+      '- Call dbQuery with exactly one argument: {"query":"<full SQL SELECT>"}',
+      '- Only SELECT queries are allowed (WITH ... SELECT is allowed).',
+      '- Never use: INSERT, UPDATE, DELETE, DROP, ALTER, PRAGMA, CREATE, REPLACE, ATTACH, DETACH, VACUUM.',
+      '- Only one statement. No semicolons inside the query.',
+      '',
+      'Grounding rules:',
+      '- Every planet name you mention MUST appear in dbQuery rows returned in THIS conversation.',
+      '- Every numeric value you mention MUST appear in dbQuery rows returned in THIS conversation.',
+      '- If dbQuery returns 0 rows, respond with exactly "0".',
+      '',
+      'Query strategy:',
+      '- Prefer a single query (JOIN/subquery) if it directly answers the question.',
+      '- You may call dbQuery multiple times if needed for intermediate steps.',
+      '- If doing multi-step queries, include all columns needed for the next step.',
+      '',
+      'Failure handling:',
+      '- If a dbQuery fails, you will see the SQLite error.',
+      '- Then do exactly ONE of these:',
+      '  (1) Call dbQuery again with a corrected SQL SELECT query.',
+      '  (2) Ask a clarification question (no tool call) ONLY if required info is missing.',
+      '',
+      'Output formatting:',
+      '- After you have the needed rows, answer in the user language.',
+      '- If you return rows, include a markdown table.',
+      '- If the user asks for "all data" / "totes les dades", use SELECT * (or list all columns).',
+      '',
       'Database schema (tables and columns):',
-      schemaText,
-      '',
-      'If a query fails, you will receive the SQLite error. Then choose exactly one:',
-      '(1) Call dbQuery again with a corrected SQL query.',
-      '(2) Ask the user a clarification question if required data is missing.',
-      '',
-      'Once you have enough results, answer in natural language.',
-      'If you return rows, also include a markdown table.',
-      '',
-      'When the user asks for "all data" / "totes les dades", you MUST use SELECT * (or explicitly list all columns).',
-      'If you plan multi-step querying, every intermediate query MUST include the columns needed for the next steps (or store them in variables conceptually).',
-      'Never return a final answer that requires columns you did not actually retrieve from dbQuery results.',
-      'Prefer a single SQL query (subquery/JOIN) if it can produce the final result directly.',
-    ].join('\n')
+      schemaText
+    ].join('\\n')
 
-    const candidateModels = [primaryModelA, primaryModelB]
-    const candidates = []
-    let directAnswerCandidate = null
 
-    for (const model of candidateModels) {
-      console.log(`[request ${requestId}] Action: run candidate model -> ${model}`)
-      const candidate = await runAssistantWithTools({ model, userMessage, systemPrompt, tools, requestId, session })
-      candidates.push(candidate)
-      if (candidate?.status === 'direct') {
-        directAnswerCandidate = candidate
-        break
-      }
-    }
+    const candidateModels = [
+      { model: primaryModelA, url: primaryModelAUrl },
+      { model: primaryModelB, url: primaryModelBUrl }
+    ]
+    console.log(`[request ${requestId}] Action: run candidate models in parallel`)
+    const candidatePromises = candidateModels.map(({ model, url }) =>
+      runAssistantWithTools({
+        model,
+        url,
+        userMessage,
+        systemPrompt,
+        tools,
+        requestId,
+        session
+      }).catch((error) => ({
+        model,
+        answer: '',
+        status: 'error',
+        error: error?.message || 'candidate failed',
+        evidence: [],
+        messages: []
+      }))
+    )
+
+    const candidates = await Promise.all(candidatePromises)
+    const directAnswerCandidate = candidates.find((c) => c?.status === 'direct')
 
     if (directAnswerCandidate) {
       const finalAnswer = finalizeCandidateAnswer({ selected: directAnswerCandidate, candidates: [directAnswerCandidate] })
@@ -187,6 +229,7 @@ app.post('/chat', async (req, res) => {
       question: userMessage,
       candidates,
       judgeModel,
+      judgeUrl: judgeModelUrl,
       requestId
     })
 
@@ -200,6 +243,7 @@ app.post('/chat', async (req, res) => {
       console.log(`[request ${requestId}] Action: judge non-equivalence, run tiebreaker -> ${tiebreakerModel}`)
       const tiebreaker = await runAssistantWithTools({
         model: tiebreakerModel,
+        url: tiebreakerModelUrl,
         userMessage,
         systemPrompt,
         tools,
@@ -213,6 +257,7 @@ app.post('/chat', async (req, res) => {
         question: userMessage,
         candidates,
         judgeModel,
+        judgeUrl: judgeModelUrl,
         requestId
       })
 
@@ -244,6 +289,14 @@ app.post('/chat', async (req, res) => {
   }
 })
 
+function stripCodeFences (text) {
+  if (typeof text !== 'string') return ''
+  return text
+    .replace(/```[a-zA-Z0-9_-]*\n?/g, '')
+    .replace(/```/g, '')
+    .trim()
+}
+
 function fixJsonInStrings (data) {
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, fixJsonInStrings(value)]))
@@ -263,10 +316,8 @@ function fixJsonInStrings (data) {
 }
 
 function parseJsonString (value) {
-  if (typeof value !== 'string') {
-    return value
-  }
-  const cleaned = value
+  if (typeof value !== 'string') return value
+  const cleaned = stripCodeFences(value)
     .replace(/«|»/g, '"')
     .replace(/"op"\s*:\s*"([^"]*)""/g, '"op":"$1"')
   try {
@@ -287,6 +338,7 @@ async function repairJsonWithModel ({ text, requestId = 'n/a', context = '' }) {
     console.log(`[request ${requestId}] Action: repair JSON${context ? ` (${context})` : ''} -> ${jsonRepairModel}`)
     const resp = await ollamaChat({
       model: jsonRepairModel,
+      url: jsonRepairModelUrl,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: text }
@@ -328,7 +380,8 @@ function coerceToolCallFromContent (message) {
   if (!message || message.tool_calls?.length) {
     return message
   }
-  const content = typeof message.content === 'string' ? message.content.trim() : ''
+  const contentRaw = typeof message.content === 'string' ? message.content.trim() : ''
+  const content = stripCodeFences(contentRaw)
   if (!content) {
     return message
   }
@@ -569,7 +622,15 @@ function buildCandidateResult ({ model, answer, messages, status, error }) {
   }
 }
 
-async function runAssistantWithTools ({ model, userMessage, systemPrompt, tools, requestId = 'n/a', session = null }) {
+async function runAssistantWithTools ({
+  model,
+  url = defaultOllamaUrl,
+  userMessage,
+  systemPrompt,
+  tools,
+  requestId = 'n/a',
+  session = null
+}) {
   console.log(`[request ${requestId}] Action: build messages -> ${model}`)
   let messages = [
     { role: 'system', content: systemPrompt },
@@ -577,7 +638,7 @@ async function runAssistantWithTools ({ model, userMessage, systemPrompt, tools,
   ]
 
   console.log(`[request ${requestId}] Action: request tool calls -> ${model}`)
-  const firstResponse = await ollamaChat({ model, messages, tools })
+  const firstResponse = await ollamaChat({ model, url, messages, tools })
   let assistantMessage = coerceToolCallFromContent(firstResponse?.message)
 
   if (!assistantMessage?.tool_calls?.length) {
@@ -591,7 +652,7 @@ async function runAssistantWithTools ({ model, userMessage, systemPrompt, tools,
       }
     ]
     console.log(`[request ${requestId}] Action: retry tool calls -> ${model}`)
-    const retryResponse = await ollamaChat({ model, messages: retryMessages, tools })
+    const retryResponse = await ollamaChat({ model, url, messages: retryMessages, tools })
     assistantMessage = coerceToolCallFromContent(retryResponse?.message)
     if (!assistantMessage?.tool_calls?.length) {
       console.log(`[request ${requestId}] Action: still no tool calls -> ${model} (${previewText(assistantMessage?.content ?? '')})`)
@@ -663,7 +724,7 @@ async function runAssistantWithTools ({ model, userMessage, systemPrompt, tools,
         }
       ]
       console.log(`[request ${requestId}] Action: tool error, retry -> ${model}`)
-      const retryResponse = await ollamaChat({ model, messages: retryMessages, tools })
+      const retryResponse = await ollamaChat({ model, url, messages: retryMessages, tools })
       assistantMessage = coerceToolCallFromContent(retryResponse?.message)
 
       if (!assistantMessage?.tool_calls?.length) {
@@ -694,7 +755,7 @@ async function runAssistantWithTools ({ model, userMessage, systemPrompt, tools,
     }
 
     console.log(`[request ${requestId}] Action: request follow-up after tools (round ${toolRounds}) -> ${model}`)
-    const nextResponse = await ollamaChat({ model, messages, tools })
+    const nextResponse = await ollamaChat({ model, url, messages, tools })
     assistantMessage = coerceToolCallFromContent(nextResponse?.message)
   }
 
@@ -722,7 +783,7 @@ function mapCandidateForJudge (candidate, index) {
   }
 }
 
-async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, requestId = 'n/a' }) {
+async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, judgeUrl = defaultOllamaUrl, requestId = 'n/a' }) {
   const system = [
     'You are a strict judge comparing answers from different models for a database assistant.',
     'Each candidate includes the answer text and tool evidence (SQL rows).',
@@ -742,6 +803,7 @@ async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, re
     console.log(`[request ${requestId}] Action: judge equivalence prompt -> ${judgeModel}`)
     const resp = await ollamaChat({
       model: judgeModel,
+      url: judgeUrl,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: JSON.stringify(payload, null, 2) }
@@ -760,7 +822,13 @@ async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, re
   return { equivalent: false, best_index: -1, issues: ['Judge failed to return valid JSON.'] }
 }
 
-async function judgeCandidatesWithTiebreaker ({ question, candidates, judgeModel, requestId = 'n/a' }) {
+async function judgeCandidatesWithTiebreaker ({
+  question,
+  candidates,
+  judgeModel,
+  judgeUrl = defaultOllamaUrl,
+  requestId = 'n/a'
+}) {
   const system = [
     'You are a strict judge comparing answers from different models for a database assistant.',
     'You MUST use evidence to decide which answers are correct.',
@@ -781,6 +849,7 @@ async function judgeCandidatesWithTiebreaker ({ question, candidates, judgeModel
     console.log(`[request ${requestId}] Action: judge tiebreaker prompt -> ${judgeModel}`)
     const resp = await ollamaChat({
       model: judgeModel,
+      url: judgeUrl,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: JSON.stringify(payload, null, 2) }
@@ -935,12 +1004,12 @@ function getToolEvidenceSummary (messages, maxToolMessages = 6) {
   })
 }
 
-async function ollamaChat ({ model, messages, tools }) {
+async function ollamaChat ({ model, messages, tools, url = defaultOllamaUrl }) {
   if (typeof fetch !== 'function') {
     throw new Error('Global fetch is not available. Please use Node.js 18+.')
   }
 
-  const response = await fetch(ollamaUrl, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

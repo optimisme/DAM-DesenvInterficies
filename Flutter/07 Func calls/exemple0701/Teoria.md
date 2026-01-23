@@ -214,11 +214,11 @@ Aquestes preguntes funcionen directament amb el sistema:
 - Quants planetes coneixes?
 - Quins són els tres planetes més llunyans?
 - Dona'm la llista de planetes ordenats de més llunes a menys llunes en una taula amb el nom i el numero de llunes
+- Quins planetes tenen més de 3 llunes? digues el nom i la quantitat de llunes
+- Quins planetes tenen més llunes que Bluehome?
 - Fes una taula amb les dades dels planetes que queden més lluny de 'Redfriend' respecte el sol, inclou el nom i la distància
 - Fes una taula amb totes les dades dels planetes que tenen una gravetat inferior a la de Bluehome
 - Fes una llista ordenant els planetes segons l'eix d'inclinació de més petit a més gran i mostrant el nom del planeta, l'eix i el diametre
-- Quins planetes tenen més de 3 llunes? digues el nom i la quantitat de llunes
-- Quins planetes tenen més llunes que Bluehome?
 - Quins planetes tenen orbital_period_days per sota de la mitjana i alhora average_distance_to_sun_AU per sota de la mitjana? Mostra name, orbital_period_days i average_distance_to_sun_AU
 
 ### Crides amb memòria
