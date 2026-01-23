@@ -8,7 +8,7 @@ const MODE_LOCAL_CALLS_OLLAMA = 0
 const MODE_LOCAL_CALLS_MARIA = 1
 const MODE_PROXMOX_CALLS_MARIA = 2
 
-const mode = MODE_LOCAL_CALLS_MARIA
+const mode = MODE_LOCAL_CALLS_OLLAMA
 
 const dataDir = path.join(__dirname, 'data')
 const dbPath = process.env.SQLITE_PATH || path.join(dataDir, 'planets.sqlite')
