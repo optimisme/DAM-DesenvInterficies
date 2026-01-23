@@ -16,11 +16,11 @@ const jsonPath = path.join(__dirname, 'data', 'planets.json')
 // ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11414:192.168.1.14:11434 apalaci8@ieticloudpro.ieti.cat
 // ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11424:192.168.1.24:11434 apalaci8@ieticloudpro.ieti.cat
 
-const MODE_LOCAL      = 0
-const MODE_CALL_MARIA = 1
-const MODE_PROXMOX    = 2
+const MODE_LOCAL_CALLS_OLLAMA  = 0
+const MODE_LOCAL_CALLS_MARIA   = 1
+const MODE_PROXMOX_CALLS_MARIA = 2
 
-var mode = MODE_CALL_MARIA
+var mode = MODE_LOCAL_CALLS_MARIA
 
 const localOllama = 'http://localhost:11434/api/chat'
 const maria14local = 'http://localhost:11414/api/chat'
@@ -45,7 +45,7 @@ var judgeModel      = model_Granite3b
 var tiebreakerModel = model_Granite3b
 var jsonRepairModel = model_Granite3b
 
-if (mode != MODE_LOCAL) {
+if (mode != MODE_LOCAL_CALLS_OLLAMA) {
 
     primaryModelA   = model_Granite3b
     primaryModelB   = model_Qwen8b
@@ -53,7 +53,7 @@ if (mode != MODE_LOCAL) {
     tiebreakerModel = model_Granite3b
     jsonRepairModel = model_Granite3b
 
-    if (mode == MODE_CALL_MARIA) {
+    if (mode == MODE_LOCAL_CALLS_MARIA) {
 
       primaryModelAUrl   = maria14local
       primaryModelBUrl   = maria24local
@@ -61,7 +61,7 @@ if (mode != MODE_LOCAL) {
       tiebreakerModelUrl = maria24local
       jsonRepairModelUrl = maria24local
 
-    } else if (mode == MODE_PROXMOX) {
+    } else if (mode == MODE_PROXMOX_CALLS_MARIA) {
 
       primaryModelAUrl   = maria14proxmox
       primaryModelBUrl   = maria24proxmox
