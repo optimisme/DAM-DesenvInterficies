@@ -11,11 +11,13 @@ let httpServer
 const dataDir = path.join(__dirname, 'data')
 const dbPath = process.env.SQLITE_PATH || path.join(dataDir, 'planets.sqlite')
 const jsonPath = path.join(__dirname, 'data', 'planets.json')
-// Base URL used when a model-specific host is not provided.
-// You can still override everything with OLLAMA_URL for backwards compatibility.
-const defaultOllamaUrl = process.env.OLLAMA_URL || 'http://localhost:11414/api/chat'
+
+// If calling MarIA models from local host, set up tunneling before:
+// ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11414:192.168.1.14:11434 apalaci8@ieticloudpro.ieti.cat
+// ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11424:192.168.1.24:11434 apalaci8@ieticloudpro.ieti.cat
 
 // Optional per-model endpoints (e.g., point each model to a different host/IP).
+const loalOllama = 'http://localhost:11434/api/chat'
 const maria14 = 'http://localhost:11414/api/chat'
 const maria24 = 'http://localhost:11424/api/chat'
 
@@ -141,7 +143,9 @@ app.post('/chat', async (req, res) => {
       'When to use tools:',
       '- If the user question can be answered ONLY using the database (planets data): you MUST call dbQuery.',
       '- Use directAnswer ONLY when the request is clearly unrelated to the database content.',
-      '- Use getValidatedHistory ONLY if the request depends on prior context. Otherwise ignore memory.',
+      '- You have access to previous conversation turns via the getValidatedHistory tool.',
+      '- Use getValidatedHistory ONLY when the current user request depends on earlier context.',
+      '- If the request is self-contained, do NOT call getValidatedHistory.',
       '',
       'ABSOLUTE RULE (planets domain):',
       '- For ANY question about planets (names, moons, diameter, gravity, distance, mass, rotation, orbit, inclination, etc.) you MUST call dbQuery BEFORE writing ANY planet name or ANY numeric value.',
@@ -624,7 +628,7 @@ function buildCandidateResult ({ model, answer, messages, status, error }) {
 
 async function runAssistantWithTools ({
   model,
-  url = defaultOllamaUrl,
+  url,
   userMessage,
   systemPrompt,
   tools,
@@ -783,7 +787,7 @@ function mapCandidateForJudge (candidate, index) {
   }
 }
 
-async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, judgeUrl = defaultOllamaUrl, requestId = 'n/a' }) {
+async function judgeCandidatesEquivalent ({ question, candidates, judgeModel, judgeUrl, requestId = 'n/a' }) {
   const system = [
     'You are a strict judge comparing answers from different models for a database assistant.',
     'Each candidate includes the answer text and tool evidence (SQL rows).',
@@ -826,7 +830,7 @@ async function judgeCandidatesWithTiebreaker ({
   question,
   candidates,
   judgeModel,
-  judgeUrl = defaultOllamaUrl,
+  judgeUrl,
   requestId = 'n/a'
 }) {
   const system = [
@@ -1004,7 +1008,7 @@ function getToolEvidenceSummary (messages, maxToolMessages = 6) {
   })
 }
 
-async function ollamaChat ({ model, messages, tools, url = defaultOllamaUrl }) {
+async function ollamaChat ({ model, messages, tools, url }) {
   if (typeof fetch !== 'function') {
     throw new Error('Global fetch is not available. Please use Node.js 18+.')
   }
