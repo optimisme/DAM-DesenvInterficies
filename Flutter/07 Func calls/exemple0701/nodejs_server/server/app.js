@@ -18,19 +18,21 @@ const jsonPath = path.join(__dirname, 'data', 'planets.json')
 
 // Optional per-model endpoints (e.g., point each model to a different host/IP).
 const loalOllama = 'http://localhost:11434/api/chat'
-const maria14 = 'http://localhost:11414/api/chat'
-const maria24 = 'http://localhost:11424/api/chat'
+const maria14local = 'http://localhost:11414/api/chat'
+const maria24local = 'http://localhost:11424/api/chat'
+const maria14proxmox = 'http://192.168.1.14:11434/api/chat'
+const maria24proxmox = 'http://192.168.1.24:11434/api/chat'
 
 const model_Granite3b = 'granite4:3b'
 const model_Granite8b = 'granite3.3:8b'
-const model_Qwen3b    = 'qwen2.5:3b'
 const model_Qwen8b    = 'qwen3:8b'
+//const model_Qwen3b    = 'qwen2.5:3b'
 
-const primaryModelAUrl   = maria14
-const primaryModelBUrl   = maria24
-const judgeModelUrl      = maria14
-const tiebreakerModelUrl = maria24
-const jsonRepairModelUrl = maria24
+const primaryModelAUrl   = maria14local
+const primaryModelBUrl   = maria24local
+const judgeModelUrl      = maria14local
+const tiebreakerModelUrl = maria24local
+const jsonRepairModelUrl = maria24local
 
 const primaryModelA   = model_Granite3b
 const primaryModelB   = model_Qwen8b
