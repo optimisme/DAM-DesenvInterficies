@@ -1,0 +1,122 @@
+{
+  "origin": {
+    "units": {
+      "radius_km": "km",
+      "diameter_km": "km",
+      "mass_kg": "kg",
+      "gravity_ms2": "m/s^2",
+      "average_distance_to_sun_km": "km",
+      "average_distance_to_sun_AU": "AU",
+      "orbital_period_days": "dies terrestres",
+      "rotation_period_hours": "hores (signe negatiu = rotaci\u00f3 retr\u00f2grada)",
+      "axial_inclination_degrees": "graus",
+      "number_of_moons": "units"
+    }
+  },
+  "planets": [
+    {
+      "name": "Heatedhell",
+      "radius_km": 2439.7,
+      "diameter_km": 4879.4,
+      "mass_kg": 3.3011e+23,
+      "gravity_ms2": 3.7,
+      "average_distance_to_sun_km": 57909227,
+      "average_distance_to_sun_AU": 0.387098,
+      "orbital_period_days": 87.969,
+      "rotation_period_hours": 1407.6,
+      "axial_inclination_degrees": 0.034,
+      "number_of_moons": null
+    },
+    {
+      "name": "Pressureworld",
+      "radius_km": 6051.8,
+      "diameter_km": 12103.6,
+      "mass_kg": 4.8675e+24,
+      "gravity_ms2": 8.87,
+      "average_distance_to_sun_km": 108209475,
+      "average_distance_to_sun_AU": 0.723332,
+      "orbital_period_days": 224.701,
+      "rotation_period_hours": -5832.5,
+      "axial_inclination_degrees": 177.36,
+      "number_of_moons": null
+    },
+    {
+      "name": "Bluehome",
+      "radius_km": 6371.0,
+      "diameter_km": 12742.0,
+      "mass_kg": 5.97237e+24,
+      "gravity_ms2": 9.80665,
+      "average_distance_to_sun_km": 149597870.7,
+      "average_distance_to_sun_AU": 1.0,
+      "orbital_period_days": 365.256,
+      "rotation_period_hours": 23.934,
+      "axial_inclination_degrees": 23.439,
+      "number_of_moons": 1
+    },
+    {
+      "name": "Redfriend",
+      "radius_km": 3389.5,
+      "diameter_km": 6779.0,
+      "mass_kg": 6.4171e+23,
+      "gravity_ms2": 3.71,
+      "average_distance_to_sun_km": 227943824,
+      "average_distance_to_sun_AU": 1.523679,
+      "orbital_period_days": 686.98,
+      "rotation_period_hours": 24.623,
+      "axial_inclination_degrees": 25.19,
+      "number_of_moons": 2
+    },
+    {
+      "name": "Bigboss",
+      "radius_km": 69911,
+      "diameter_km": 139822,
+      "mass_kg": 1.8982e+27,
+      "gravity_ms2": 24.79,
+      "average_distance_to_sun_km": 778340821,
+      "average_distance_to_sun_AU": 5.2044,
+      "orbital_period_days": 4332.589,
+      "rotation_period_hours": 9.925,
+      "axial_inclination_degrees": 3.13,
+      "number_of_moons": 95
+    },
+    {
+      "name": "Megaring",
+      "radius_km": 58232,
+      "diameter_km": 116464,
+      "mass_kg": 5.6834e+26,
+      "gravity_ms2": 10.44,
+      "average_distance_to_sun_km": 1426666422,
+      "average_distance_to_sun_AU": 9.5826,
+      "orbital_period_days": 10759.22,
+      "rotation_period_hours": 10.656,
+      "axial_inclination_degrees": 26.73,
+      "number_of_moons": 146
+    },
+    {
+      "name": "Farwest",
+      "radius_km": 25362,
+      "diameter_km": 50724,
+      "mass_kg": 8.681e+25,
+      "gravity_ms2": 8.69,
+      "average_distance_to_sun_km": 2870658186,
+      "average_distance_to_sun_AU": 19.2184,
+      "orbital_period_days": 30688.5,
+      "rotation_period_hours": -17.24,
+      "axial_inclination_degrees": 97.77,
+      "number_of_moons": 27
+    },
+    {
+      "name": "Upsidedown",
+      "radius_km": 24622,
+      "diameter_km": 49244,
+      "mass_kg": 1.02413e+26,
+      "gravity_ms2": 11.15,
+      "average_distance_to_sun_km": 4498396441,
+      "average_distance_to_sun_AU": 30.07,
+      "orbital_period_days": 60182,
+      "rotation_period_hours": 16.11,
+      "axial_inclination_degrees": 28.32,
+      "number_of_moons": 14
+    }
+  ]
+}
