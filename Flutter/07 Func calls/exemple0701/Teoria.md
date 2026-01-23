@@ -225,6 +225,7 @@ Aquestes preguntes funcionen directament amb el sistema:
 
 - Quants planetes coneixes?
 - Quins són els tres planetes més llunyans?
+- Quin planeta té 14 llunes?
 - Dona'm la llista de planetes ordenats de més llunes a menys llunes en una taula amb el nom i el numero de llunes
 - Quins planetes tenen més de 3 llunes? digues el nom i la quantitat de llunes
 - Quins planetes tenen més llunes que Bluehome?

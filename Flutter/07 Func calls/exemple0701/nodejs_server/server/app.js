@@ -16,8 +16,13 @@ const jsonPath = path.join(__dirname, 'data', 'planets.json')
 // ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11414:192.168.1.14:11434 apalaci8@ieticloudpro.ieti.cat
 // ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11424:192.168.1.24:11434 apalaci8@ieticloudpro.ieti.cat
 
-// Optional per-model endpoints (e.g., point each model to a different host/IP).
-const loalOllama = 'http://localhost:11434/api/chat'
+const MODE_LOCAL      = 0
+const MODE_CALL_MARIA = 1
+const MODE_PROXMOX    = 2
+
+var mode = MODE_CALL_MARIA
+
+const localOllama = 'http://localhost:11434/api/chat'
 const maria14local = 'http://localhost:11414/api/chat'
 const maria24local = 'http://localhost:11424/api/chat'
 const maria14proxmox = 'http://192.168.1.14:11434/api/chat'
@@ -28,17 +33,43 @@ const model_Granite8b = 'granite3.3:8b'
 const model_Qwen8b    = 'qwen3:8b'
 //const model_Qwen3b    = 'qwen2.5:3b'
 
-const primaryModelAUrl   = maria14local
-const primaryModelBUrl   = maria24local
-const judgeModelUrl      = maria14local
-const tiebreakerModelUrl = maria24local
-const jsonRepairModelUrl = maria24local
+var primaryModelAUrl   = localOllama
+var primaryModelBUrl   = localOllama
+var judgeModelUrl      = localOllama
+var tiebreakerModelUrl = localOllama
+var jsonRepairModelUrl = localOllama
 
-const primaryModelA   = model_Granite3b
-const primaryModelB   = model_Qwen8b
-const judgeModel      = model_Granite8b
-const tiebreakerModel = model_Granite3b
-const jsonRepairModel = model_Granite3b
+var primaryModelA   = model_Granite3b
+var primaryModelB   = model_Granite3b
+var judgeModel      = model_Granite3b
+var tiebreakerModel = model_Granite3b
+var jsonRepairModel = model_Granite3b
+
+if (mode != MODE_LOCAL) {
+
+    primaryModelA   = model_Granite3b
+    primaryModelB   = model_Qwen8b
+    judgeModel      = model_Granite8b
+    tiebreakerModel = model_Granite3b
+    jsonRepairModel = model_Granite3b
+
+    if (mode == MODE_CALL_MARIA) {
+
+      primaryModelAUrl   = maria14local
+      primaryModelBUrl   = maria24local
+      judgeModelUrl      = maria14local
+      tiebreakerModelUrl = maria24local
+      jsonRepairModelUrl = maria24local
+
+    } else if (mode == MODE_PROXMOX) {
+
+      primaryModelAUrl   = maria14proxmox
+      primaryModelBUrl   = maria24proxmox
+      judgeModelUrl      = maria14proxmox
+      tiebreakerModelUrl = maria24proxmox
+      jsonRepairModelUrl = maria24proxmox
+    }
+}
 
 const HISTORY_LIMIT = 15
 
