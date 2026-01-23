@@ -8,7 +8,7 @@ L’arquitectura està pensada per:
 - Validar les respostes amb un **model jutge**
 - Fer servir **tools (dbQuery)** per accedir a SQLite
 
-## Models petits
+## Models petits i càrrega de feina
 
 Amb poca VRAM, un model gran és lent, difícil de carregar i poc flexible.
 
@@ -18,6 +18,19 @@ Diversos models petits permeten comparar respostes i reduir errors.
 - El jutge selecciona la millor resposta.
 - Consumeixen menys memòria i responen més ràpid.
 - És més fàcil canviar o millorar models individuals.
+
+Distribució de models escollida:
+
+> Maria14 (16 GB VRAM)
+- primaryModelA = granite4:3b → solver ràpid
+- judgeModel = granite3.3:8b → jutge fort 
+
+> Maria24 (24 GB VRAM)
+- primaryModelB = qwen3:8b → solver principal de qualitat
+- tiebreaker = granite4:3b → lleuger, diferent família
+- jsonRepair = granite4:3b → ideal per JSON repair
+
+**Nota**: Pel projecte us donarem una configuració diferent amb un model de visió a *Maria24*
 
 ---
 
@@ -192,7 +205,6 @@ Per fer crides a la MarIA des de l'ordinador personal cal crear un **"Túnel"** 
 
 ```bash
 ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11414:192.168.1.14:11434 apalaci8@ieticloudpro.ieti.cat
-
 ssh -i $HOME/.ssh/id_rsa -p 20127 -L 11424:192.168.1.24:11434 apalaci8@ieticloudpro.ieti.cat
 ```
 

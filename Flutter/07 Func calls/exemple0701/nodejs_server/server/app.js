@@ -21,17 +21,22 @@ const loalOllama = 'http://localhost:11434/api/chat'
 const maria14 = 'http://localhost:11414/api/chat'
 const maria24 = 'http://localhost:11424/api/chat'
 
+const model_Granite3b = 'granite4:3b'
+const model_Granite8b = 'granite3.3:8b'
+const model_Qwen3b    = 'qwen2.5:3b'
+const model_Qwen8b    = 'qwen3:8b'
+
 const primaryModelAUrl   = maria14
 const primaryModelBUrl   = maria24
 const judgeModelUrl      = maria14
 const tiebreakerModelUrl = maria24
 const jsonRepairModelUrl = maria24
 
-const primaryModelA = 'granite3.3:8b' // 'granite4:3b'
-const primaryModelB = 'qwen3:8b'      // 'qwen2.5:3b'
-const judgeModel = 'granite3.3:2b'
-const tiebreakerModel = 'granite4:3b'
-const jsonRepairModel = 'granite4:3b'
+const primaryModelA   = model_Granite3b
+const primaryModelB   = model_Qwen8b
+const judgeModel      = model_Granite8b
+const tiebreakerModel = model_Granite3b
+const jsonRepairModel = model_Granite3b
 
 const HISTORY_LIMIT = 15
 
@@ -182,6 +187,12 @@ app.post('/chat', async (req, res) => {
       '- After you have the needed rows, answer in the user language.',
       '- If you return rows, include a markdown table.',
       '- If the user asks for "all data" / "totes les dades", use SELECT * (or list all columns).',
+      '- Do NOT use LaTeX notation (no \hline, no \begin, no \end, no $...$, etc.).',
+      '- Allowed formatting ONLY:',
+      '  - Plain text',
+      '  - Markdown emphasis: *italic* and **bold**',
+      '  - Markdown tables',
+      '  - Do NOT use any other Markdown features (no code blocks, no headings, no lists, no HTML).',
       '',
       'Database schema (tables and columns):',
       schemaText
