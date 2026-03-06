@@ -150,19 +150,8 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       final bool isWall =
           containsAny(type, <String>['mur', 'wall']) ||
           containsAny(name, <String>['mur', 'wall']);
-      final bool isWater =
-          containsAny(type, <String>['aigua', 'water']) ||
-          containsAny(name, <String>['aigua', 'water']);
-      final bool isBridge =
-          containsAny(type, <String>['pont', 'bridge']) ||
-          containsAny(name, <String>['pont', 'bridge']);
-      final bool isTemporary =
-          containsAny(type, <String>['temporal']) ||
-          containsAny(name, <String>['temporal']) ||
-          gameplayData == 'futur pont' ||
-          gameplayData == 'future bridge';
 
-      if (isWall || (isWater && !isBridge && !isTemporary)) {
+      if (isWall) {
         blockedZoneIndices.add(i);
       }
       if (containsAny(type, <String>['arbre']) ||
