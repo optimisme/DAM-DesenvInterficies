@@ -9,13 +9,16 @@ import 'libgdx_compat/math_types.dart';
 class GameplayControllerTopDown extends GameplayControllerBase {
   static const double moveSpeedPerSecond = 95;
   static const double diagonalNormalize = 0.70710677;
-  static const double collisionResolveStep = 0.5;
-  static const int maxCollisionResolveSteps = 200;
-  static const double minMovementForResolve = 0.0001;
+  static const int maxCollisionSlideIterations = 4;
+  static const int collisionSweepIterations = 12;
+  static const double collisionTimeBackoff = 0.001;
+  static const double collisionProbeSpacing = 1.0;
+  static const double movementEpsilon = 0.0001;
 
   final IntArray blockedZoneIndices = IntArray();
   final IntArray arbreZoneIndices = IntArray();
   final IntArray futureBridgeZoneIndices = IntArray();
+  final IntArray _singleZoneCollisionQuery = IntArray();
   final ObjectSet<String> collectibleArbreTileKeys = ObjectSet<String>();
   final ObjectSet<String> collectedArbreTileKeys = ObjectSet<String>();
   final Rectangle tileRectCache = Rectangle();
@@ -113,9 +116,7 @@ class GameplayControllerTopDown extends GameplayControllerBase {
 
     final double previousX = playerX;
     final double previousY = playerY;
-    playerX += dx;
-    playerY += dy;
-    _resolvePlayerWallCollision(previousX, previousY);
+    _movePlayerWithWallCollisions(previousX, previousY, dx, dy);
 
     moving = left || right || up || down;
     _updatePlayerAnimationSelection();
@@ -171,34 +172,224 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     );
   }
 
-  void _resolvePlayerWallCollision(double previousX, double previousY) {
-    if (!_wouldCollideBlocked(playerX, playerY)) {
-      return;
-    }
+  void _movePlayerWithWallCollisions(
+    double previousX,
+    double previousY,
+    double deltaX,
+    double deltaY,
+  ) {
+    double currentX = previousX;
+    double currentY = previousY;
+    double remainingX = deltaX;
+    double remainingY = deltaY;
 
-    final double moveX = playerX - previousX;
-    final double moveY = playerY - previousY;
-    final double moveLen = math.sqrt(moveX * moveX + moveY * moveY);
-    if (moveLen <= minMovementForResolve) {
-      playerX = previousX;
-      playerY = previousY;
-      return;
-    }
-
-    final double pushX = -moveX / moveLen;
-    final double pushY = -moveY / moveLen;
-    for (int i = 0; i < maxCollisionResolveSteps; i++) {
-      if (!_wouldCollideBlocked(playerX, playerY)) {
-        return;
+    for (int i = 0; i < maxCollisionSlideIterations; i++) {
+      if (remainingX.abs() <= movementEpsilon &&
+          remainingY.abs() <= movementEpsilon) {
+        break;
       }
-      playerX += pushX * collisionResolveStep;
-      playerY += pushY * collisionResolveStep;
+
+      final double targetX = currentX + remainingX;
+      final double targetY = currentY + remainingY;
+      if (!_wouldCollideBlocked(targetX, targetY)) {
+        currentX = targetX;
+        currentY = targetY;
+        break;
+      }
+
+      final double hitT = _findCollisionTimeOnSegment(
+        currentX,
+        currentY,
+        remainingX,
+        remainingY,
+      );
+      final double safeT = clampDouble(hitT - collisionTimeBackoff, 0, 1);
+      final double probeT = clampDouble(hitT + collisionTimeBackoff, 0, 1);
+
+      final double segmentStartX = currentX;
+      final double segmentStartY = currentY;
+      currentX = segmentStartX + remainingX * safeT;
+      currentY = segmentStartY + remainingY * safeT;
+
+      final double probeX = segmentStartX + remainingX * probeT;
+      final double probeY = segmentStartY + remainingY * probeT;
+      final _CollisionNormal normal = _estimateCollisionNormalAt(
+        probeX,
+        probeY,
+        remainingX,
+        remainingY,
+      );
+
+      final double remainingScale = math.max(0, 1 - safeT);
+      double slideX = remainingX * remainingScale;
+      double slideY = remainingY * remainingScale;
+      final double intoWall = slideX * normal.x + slideY * normal.y;
+      if (intoWall < 0) {
+        slideX -= intoWall * normal.x;
+        slideY -= intoWall * normal.y;
+      }
+
+      remainingX = slideX;
+      remainingY = slideY;
     }
 
+    playerX = currentX;
+    playerY = currentY;
     if (_wouldCollideBlocked(playerX, playerY)) {
       playerX = previousX;
       playerY = previousY;
     }
+  }
+
+  double _findCollisionTimeOnSegment(
+    double startX,
+    double startY,
+    double deltaX,
+    double deltaY,
+  ) {
+    if (_wouldCollideBlocked(startX, startY)) {
+      return 0;
+    }
+    final double distance = math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    if (distance <= movementEpsilon) {
+      return 1;
+    }
+
+    final int probeCount = math.max(
+      1,
+      (distance / collisionProbeSpacing).ceil(),
+    );
+    double low = 0;
+    double high = 1;
+    bool hasCollision = false;
+    for (int i = 1; i <= probeCount; i++) {
+      final double t = i / probeCount;
+      final double sampleX = startX + deltaX * t;
+      final double sampleY = startY + deltaY * t;
+      if (_wouldCollideBlocked(sampleX, sampleY)) {
+        high = t;
+        hasCollision = true;
+        break;
+      }
+      low = t;
+    }
+
+    if (!hasCollision) {
+      return 1;
+    }
+
+    for (int i = 0; i < collisionSweepIterations; i++) {
+      final double mid = (low + high) * 0.5;
+      final double midX = startX + deltaX * mid;
+      final double midY = startY + deltaY * mid;
+      if (_wouldCollideBlocked(midX, midY)) {
+        high = mid;
+      } else {
+        low = mid;
+      }
+    }
+    return high;
+  }
+
+  _CollisionNormal _estimateCollisionNormalAt(
+    double x,
+    double y,
+    double movementX,
+    double movementY,
+  ) {
+    final Rectangle playerBounds = playerRectAt(x, y, rectCacheA);
+    final double playerLeft = playerBounds.x;
+    final double playerTop = playerBounds.y;
+    final double playerRight = playerBounds.x + playerBounds.width;
+    final double playerBottom = playerBounds.y + playerBounds.height;
+
+    double bestScore = double.infinity;
+    double bestNormalX = 0;
+    double bestNormalY = 0;
+    for (final int zoneIndex in blockedZoneIndices.iterable()) {
+      if (!_collidesWithZoneAt(zoneIndex, x, y)) {
+        continue;
+      }
+
+      final Rectangle zoneRect = zoneRectAtIndex(zoneIndex, rectCacheB);
+      final double zoneLeft = zoneRect.x;
+      final double zoneTop = zoneRect.y;
+      final double zoneRight = zoneLeft + zoneRect.width;
+      final double zoneBottom = zoneTop + zoneRect.height;
+
+      final double relativeX = movementX - _zoneDeltaX(zoneIndex);
+      final double relativeY = movementY - _zoneDeltaY(zoneIndex);
+      final double relativeSpeedSq =
+          relativeX * relativeX + relativeY * relativeY;
+      final bool hasRelativeMotion =
+          relativeSpeedSq > movementEpsilon * movementEpsilon;
+
+      void consider(double penetration, double normalX, double normalY) {
+        if (!penetration.isFinite || penetration <= movementEpsilon) {
+          return;
+        }
+        double score = penetration;
+        if (hasRelativeMotion) {
+          final double relativeDot = relativeX * normalX + relativeY * normalY;
+          if (relativeDot >= 0) {
+            score += 1000000;
+          }
+        }
+        if (score < bestScore) {
+          bestScore = score;
+          bestNormalX = normalX;
+          bestNormalY = normalY;
+        }
+      }
+
+      consider(playerRight - zoneLeft, -1, 0);
+      consider(zoneRight - playerLeft, 1, 0);
+      consider(playerBottom - zoneTop, 0, -1);
+      consider(zoneBottom - playerTop, 0, 1);
+    }
+
+    if (bestScore.isFinite) {
+      return _CollisionNormal(bestNormalX, bestNormalY);
+    }
+
+    final double moveLen = math.sqrt(
+      movementX * movementX + movementY * movementY,
+    );
+    if (moveLen > movementEpsilon) {
+      return _CollisionNormal(-movementX / moveLen, -movementY / moveLen);
+    }
+    return const _CollisionNormal(0, -1);
+  }
+
+  bool _collidesWithZoneAt(int zoneIndex, double x, double y) {
+    _singleZoneCollisionQuery.clear();
+    _singleZoneCollisionQuery.add(zoneIndex);
+    return spriteOverlapsAnyZoneByHitBoxes(
+      playerSpriteIndex,
+      x,
+      y,
+      _singleZoneCollisionQuery,
+    );
+  }
+
+  double _zoneDeltaX(int zoneIndex) {
+    if (zoneIndex < 0 ||
+        zoneIndex >= zoneRuntimeStates.size ||
+        zoneIndex >= zonePreviousRuntimeStates.size) {
+      return 0;
+    }
+    return zoneRuntimeStates.get(zoneIndex).x -
+        zonePreviousRuntimeStates.get(zoneIndex).x;
+  }
+
+  double _zoneDeltaY(int zoneIndex) {
+    if (zoneIndex < 0 ||
+        zoneIndex >= zoneRuntimeStates.size ||
+        zoneIndex >= zonePreviousRuntimeStates.size) {
+      return 0;
+    }
+    return zoneRuntimeStates.get(zoneIndex).y -
+        zonePreviousRuntimeStates.get(zoneIndex).y;
   }
 
   int _findLayerIndexByName(List<String> tokens) {
@@ -394,6 +585,13 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     }
     setPlayerAnimationOverrideByName(null);
   }
+}
+
+class _CollisionNormal {
+  final double x;
+  final double y;
+
+  const _CollisionNormal(this.x, this.y);
 }
 
 enum _Direction { upLeft, up, upRight, left, right, downLeft, down, downRight }
