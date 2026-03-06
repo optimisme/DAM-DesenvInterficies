@@ -22,17 +22,31 @@ class PlayScreen extends ScreenAdapter {
   static const double fixedStepSeconds = 1 / 120;
   static const double maxFrameSeconds = 0.25;
   static const double hudMargin = 14;
-  static const String hudBackLabel = 'Tornar';
+  static const String hudBackLabel = 'Back';
   static const double hudButtonHeight = 48;
   static const double hudIconSize = 26;
   static const double hudIconTextGap = 8;
   static const double hudBackLabelScale = 1.45;
   static const double hudCounterScale = 1.45;
+  static const double hudGemCounterScale = 1.35;
+  static const double hudScoreScale = 1.8;
   static const double hudLifeTextScale = 1.2;
   static const double hudLifeBarWidth = 210;
   static const double hudLifeBarHeight = 14;
   static const double hudLifeBarTopGap = 8;
   static const double hudRowGap = 10;
+  static const double hudGemRowHeight = 20;
+  static const double hudGemRowGap = 4;
+  static const double hudScoreRowHeight = 26;
+  static const double hudGemIconSize = 18;
+  static const double hudGemTextGap = 4;
+  static const double hudGemRightMargin = 4;
+  static const double hudGemTopMargin = 4;
+  static const int hudGemFrameSize = 15;
+  static const int hudGemPurpleFrame = 0;
+  static const int hudGemGreenFrame = 5;
+  static const int hudGemYellowFrame = 10;
+  static const int hudGemBlueFrame = 15;
   static const double endOverlayReturnDelaySeconds = 1;
   static const double endOverlayTitleScale = 2.4;
   static const double endOverlayPromptScale = 1.25;
@@ -42,6 +56,10 @@ class PlayScreen extends ScreenAdapter {
   static const double cameraFollowSmoothnessPerSecond = 10;
 
   static final ui.Color hudTextColor = colorValueOf('FFFFFF');
+  static final ui.Color hudGreenColor = colorValueOf('7DFF8A');
+  static final ui.Color hudPurpleColor = colorValueOf('D9A4FF');
+  static final ui.Color hudYellowColor = colorValueOf('FFE07A');
+  static final ui.Color hudBlueColor = colorValueOf('8AC7FF');
   static final ui.Color hudLifeBarBg = colorValueOf('5B0D0D');
   static final ui.Color hudLifeBarFill = colorValueOf('3DE67D');
   static final ui.Color hudLifeBarBorder = colorValueOf('E8FFE8');
@@ -539,25 +557,138 @@ class PlayScreen extends ScreenAdapter {
 
     final GameplayControllerTopDown gc =
         gameplayController as GameplayControllerTopDown;
-    final String topRightLabel =
-        'Arbres: ${gc.getCollectedArbresCount()}/${gc.getTotalArbresCount()}';
+    final AssetManager assets = game.getAssetManager();
+    const String gemTexturePath = 'levels/media/gem.png';
+    final double rightEdgeX = hudWidth - hudGemRightMargin;
+    final double row0Top = hudGemTopMargin;
 
+    _drawGemHudRow(
+      batch,
+      font,
+      assets,
+      gemTexturePath,
+      hudGemGreenFrame,
+      gc.getCollectedGreenGemsCount(),
+      rightEdgeX,
+      row0Top,
+      hudGemRowHeight,
+      hudGreenColor,
+    );
+    _drawGemHudRow(
+      batch,
+      font,
+      assets,
+      gemTexturePath,
+      hudGemPurpleFrame,
+      gc.getCollectedPurpleGemsCount(),
+      rightEdgeX,
+      row0Top + hudGemRowHeight + hudGemRowGap,
+      hudGemRowHeight,
+      hudPurpleColor,
+    );
+    _drawGemHudRow(
+      batch,
+      font,
+      assets,
+      gemTexturePath,
+      hudGemYellowFrame,
+      gc.getCollectedYellowGemsCount(),
+      rightEdgeX,
+      row0Top + (hudGemRowHeight + hudGemRowGap) * 2,
+      hudGemRowHeight,
+      hudYellowColor,
+    );
+    _drawGemHudRow(
+      batch,
+      font,
+      assets,
+      gemTexturePath,
+      hudGemBlueFrame,
+      gc.getCollectedBlueGemsCount(),
+      rightEdgeX,
+      row0Top + (hudGemRowHeight + hudGemRowGap) * 3,
+      hudGemRowHeight,
+      hudBlueColor,
+    );
+
+    final String scoreText = '${gc.getGemScore()}';
+    final double scoreRowTop = row0Top + (hudGemRowHeight + hudGemRowGap) * 4;
     font.setColor(hudTextColor);
-    final double rightEdgeX = hudWidth - hudMargin;
-    final double topTextY = hudMargin + hudButtonHeight * 0.72;
-    final double gemsTextY = topTextY;
-
-    font.getData().setScale(hudCounterScale);
-    hudLayout.setText(font, topRightLabel);
-    final double gemsTextX = rightEdgeX - hudLayout.width;
-    font.getData().setScale(1);
-
-    font.getData().setScale(hudCounterScale);
-    hudLayout.setText(font, topRightLabel);
-    font.drawText(topRightLabel, gemsTextX, gemsTextY);
+    font.getData().setScale(hudScoreScale);
+    hudLayout.setText(font, scoreText);
+    final double scoreX = rightEdgeX - hudLayout.width;
+    final double scoreY =
+        scoreRowTop + (hudScoreRowHeight + hudLayout.height) * 0.5;
+    font.drawText(scoreText, scoreX, scoreY);
     font.getData().setScale(1);
 
     batch.end();
+  }
+
+  void _drawGemHudRow(
+    SpriteBatch batch,
+    BitmapFont font,
+    AssetManager assets,
+    String gemTexturePath,
+    int gemFrameIndex,
+    int value,
+    double rightEdgeX,
+    double rowTop,
+    double rowHeight,
+    ui.Color valueColor,
+  ) {
+    final String text = '$value';
+    font.setColor(valueColor);
+    font.getData().setScale(hudGemCounterScale);
+    hudLayout.setText(font, text);
+    final double iconX = rightEdgeX - hudGemIconSize;
+    final double iconY = rowTop + (rowHeight - hudGemIconSize) * 0.5;
+    final double textRightEdge = iconX - hudGemTextGap;
+    final double textX = textRightEdge - hudLayout.width;
+    final double textY = rowTop + (rowHeight + hudLayout.height) * 0.5;
+    _drawGemIcon(
+      batch,
+      assets,
+      gemTexturePath,
+      gemFrameIndex,
+      iconX,
+      iconY,
+      hudGemIconSize,
+    );
+    font.drawText(text, textX, textY);
+    font.getData().setScale(1);
+  }
+
+  void _drawGemIcon(
+    SpriteBatch batch,
+    AssetManager assets,
+    String texturePath,
+    int frameIndex,
+    double x,
+    double y,
+    double size,
+  ) {
+    if (!assets.isLoaded(texturePath, Texture)) {
+      return;
+    }
+    final Texture texture = assets.get(texturePath, Texture);
+    final int cols = texture.width ~/ hudGemFrameSize;
+    final int rows = texture.height ~/ hudGemFrameSize;
+    if (cols <= 0 || rows <= 0) {
+      return;
+    }
+    final int total = cols * rows;
+    final int frame = clampInt(frameIndex, 0, total - 1);
+    final int srcCol = frame % cols;
+    final int srcRow = frame ~/ cols;
+    final ui.Rect src = ui.Rect.fromLTWH(
+      (srcCol * hudGemFrameSize).toDouble(),
+      (srcRow * hudGemFrameSize).toDouble(),
+      hudGemFrameSize.toDouble(),
+      hudGemFrameSize.toDouble(),
+    );
+    final ui.Rect dst = ui.Rect.fromLTWH(x, y, size, size);
+    batch.drawRegion(texture, src, dst);
   }
 
   void _loadHudAssets() {

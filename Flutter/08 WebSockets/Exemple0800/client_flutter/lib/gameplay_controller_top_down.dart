@@ -25,6 +25,9 @@ class GameplayControllerTopDown extends GameplayControllerBase {
   final IntArray blockedZoneIndices = IntArray();
   final IntArray iceZoneIndices = IntArray();
   final IntArray sandZoneIndices = IntArray();
+  late final IntArray gemSpriteIndices;
+  final IntSet collectedGemSpriteIndices = IntSet();
+  final Map<int, _GemType> _gemTypeBySpriteIndex = <int, _GemType>{};
   final IntArray arbreZoneIndices = IntArray();
   final IntArray futureBridgeZoneIndices = IntArray();
   final IntArray _singleZoneCollisionQuery = IntArray();
@@ -39,6 +42,14 @@ class GameplayControllerTopDown extends GameplayControllerBase {
   bool moving = false;
   double velocityX = 0;
   double velocityY = 0;
+  int totalGreenGems = 0;
+  int totalPurpleGems = 0;
+  int totalYellowGems = 0;
+  int totalBlueGems = 0;
+  int collectedGreenGems = 0;
+  int collectedPurpleGems = 0;
+  int collectedYellowGems = 0;
+  int collectedBlueGems = 0;
 
   GameplayControllerTopDown(
     super.levelData,
@@ -57,6 +68,7 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     ]);
 
     _classifyZones();
+    _classifyGemSprites();
     _buildCollectibleArbreTiles();
     _updatePlayerAnimationSelection();
     syncPlayerToSpriteRuntime();
@@ -69,6 +81,20 @@ class GameplayControllerTopDown extends GameplayControllerBase {
   int getTotalArbresCount() {
     return collectibleArbreTileKeys.size;
   }
+
+  int getCollectedGreenGemsCount() => collectedGreenGems;
+  int getTotalGreenGemsCount() => totalGreenGems;
+  int getCollectedPurpleGemsCount() => collectedPurpleGems;
+  int getTotalPurpleGemsCount() => totalPurpleGems;
+  int getCollectedYellowGemsCount() => collectedYellowGems;
+  int getTotalYellowGemsCount() => totalYellowGems;
+  int getCollectedBlueGemsCount() => collectedBlueGems;
+  int getTotalBlueGemsCount() => totalBlueGems;
+  int getGemScore() =>
+      collectedBlueGems +
+      collectedGreenGems * 2 +
+      collectedYellowGems * 3 +
+      collectedPurpleGems * 5;
 
   bool isWin() {
     return collectibleArbreTileKeys.size > 0 &&
@@ -158,6 +184,7 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     final double previousX = playerX;
     final double previousY = playerY;
     _movePlayerWithWallCollisions(previousX, previousY, dx, dy);
+    _collectTouchedGems();
 
     moving =
         velocityX.abs() > movementDirectionThreshold ||
@@ -218,6 +245,115 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       }
       if (gameplayData == 'futur pont' || gameplayData == 'future bridge') {
         futureBridgeZoneIndices.add(i);
+      }
+    }
+  }
+
+  void _classifyGemSprites() {
+    gemSpriteIndices = IntArray();
+    collectedGemSpriteIndices.clear();
+    _gemTypeBySpriteIndex.clear();
+    totalGreenGems = 0;
+    totalPurpleGems = 0;
+    totalYellowGems = 0;
+    totalBlueGems = 0;
+    collectedGreenGems = 0;
+    collectedPurpleGems = 0;
+    collectedYellowGems = 0;
+    collectedBlueGems = 0;
+
+    for (int i = 0; i < levelData.sprites.size; i++) {
+      final LevelSprite sprite = levelData.sprites.get(i);
+      final _GemType? gemType = _resolveGemType(sprite.type, sprite.name);
+      if (gemType == null) {
+        continue;
+      }
+
+      gemSpriteIndices.add(i);
+      _gemTypeBySpriteIndex[i] = gemType;
+      switch (gemType) {
+        case _GemType.green:
+          totalGreenGems++;
+          break;
+        case _GemType.purple:
+          totalPurpleGems++;
+          break;
+        case _GemType.yellow:
+          totalYellowGems++;
+          break;
+        case _GemType.blue:
+          totalBlueGems++;
+          break;
+      }
+    }
+  }
+
+  _GemType? _resolveGemType(String typeRaw, String nameRaw) {
+    final String merged = '${normalize(typeRaw)} ${normalize(nameRaw)}';
+    if (!containsAny(merged, <String>['gem'])) {
+      return null;
+    }
+    if (containsAny(merged, <String>['green', 'gren', 'verd', 'verde'])) {
+      return _GemType.green;
+    }
+    if (containsAny(merged, <String>['purple', 'lila', 'violet'])) {
+      return _GemType.purple;
+    }
+    if (containsAny(merged, <String>['yellow', 'groc', 'amarillo'])) {
+      return _GemType.yellow;
+    }
+    if (containsAny(merged, <String>['blue', 'blau', 'azul'])) {
+      return _GemType.blue;
+    }
+    return null;
+  }
+
+  void _collectTouchedGems() {
+    if (gemSpriteIndices.size <= 0) {
+      return;
+    }
+
+    for (final int spriteIndex in gemSpriteIndices.iterable()) {
+      if (collectedGemSpriteIndices.contains(spriteIndex)) {
+        continue;
+      }
+      if (spriteIndex < 0 || spriteIndex >= spriteRuntimeStates.size) {
+        continue;
+      }
+      final runtime = spriteRuntimeStates.get(spriteIndex);
+      if (!runtime.visible) {
+        continue;
+      }
+      if (!spritesOverlapByHitBoxes(
+        playerSpriteIndex,
+        playerX,
+        playerY,
+        spriteIndex,
+        runtime.worldX,
+        runtime.worldY,
+      )) {
+        continue;
+      }
+
+      collectedGemSpriteIndices.add(spriteIndex);
+      setSpriteVisible(spriteIndex, false);
+      final _GemType? type = _gemTypeBySpriteIndex[spriteIndex];
+      if (type == null) {
+        continue;
+      }
+      switch (type) {
+        case _GemType.green:
+          collectedGreenGems++;
+          break;
+        case _GemType.purple:
+          collectedPurpleGems++;
+          break;
+        case _GemType.yellow:
+          collectedYellowGems++;
+          break;
+        case _GemType.blue:
+          collectedBlueGems++;
+          break;
       }
     }
   }
@@ -743,5 +879,7 @@ class _CollisionNormal {
 
   const _CollisionNormal(this.x, this.y);
 }
+
+enum _GemType { green, purple, yellow, blue }
 
 enum _Direction { upLeft, up, upRight, left, right, downLeft, down, downRight }
