@@ -3,9 +3,12 @@ import 'dart:ui' as ui;
 
 import 'app_data.dart';
 import 'game_app.dart';
+import 'libgdx_compat/asset_manager.dart';
 import 'libgdx_compat/game_framework.dart';
 import 'libgdx_compat/math_types.dart';
 import 'libgdx_compat/viewport.dart';
+import 'level_data.dart';
+import 'level_loader.dart';
 import 'play_screen.dart';
 
 class WaitingRoomScreen extends ScreenAdapter {
@@ -15,7 +18,8 @@ class WaitingRoomScreen extends ScreenAdapter {
   static const double panelPadding = 22;
   static const double rowHeight = 24;
   static const double rowStartTop = 96;
-  static const double gemLegendDotRadius = 11;
+  static const double gemLegendSpriteSize = 28;
+  static const double gemLegendCenterOffsetX = 44;
 
   static final ui.Color background = colorValueOf('070E08');
   static final ui.Color panelFill = colorValueOf('0F1912DD');
@@ -25,10 +29,6 @@ class WaitingRoomScreen extends ScreenAdapter {
   static final ui.Color dimTextColor = colorValueOf('6FA07A');
   static final ui.Color highlightColor = colorValueOf('35FF74');
   static final ui.Color localPlayerColor = colorValueOf('FFE07A');
-  static final ui.Color blueGemColor = colorValueOf('4CCBFF');
-  static final ui.Color greenGemColor = colorValueOf('63FF8F');
-  static final ui.Color yellowGemColor = colorValueOf('FFD85E');
-  static final ui.Color purpleGemColor = colorValueOf('C08BFF');
 
   final GameApp game;
   final int levelIndex;
@@ -38,8 +38,13 @@ class WaitingRoomScreen extends ScreenAdapter {
     OrthographicCamera(),
   );
   final GlyphLayout layout = GlyphLayout();
+  late final LevelData levelData;
+  late final Map<String, LevelSprite> gemTemplateByType;
 
-  WaitingRoomScreen(this.game, this.levelIndex);
+  WaitingRoomScreen(this.game, this.levelIndex) {
+    levelData = LevelLoader.loadLevel(levelIndex);
+    gemTemplateByType = _buildGemTemplates(levelData);
+  }
 
   @override
   void render(double delta) {
@@ -64,21 +69,14 @@ class WaitingRoomScreen extends ScreenAdapter {
     shapes.rect(worldWidth - panelWidth, 0, panelWidth, worldHeight);
     shapes.end();
 
-    final double legendCenterX = (worldWidth - panelWidth) * 0.5;
+    final double legendCenterX =
+        (worldWidth - panelWidth) * 0.5 + gemLegendCenterOffsetX;
     final List<_GemLegendEntry> gemLegend = <_GemLegendEntry>[
-      _GemLegendEntry('Blue gem', 1, blueGemColor),
-      _GemLegendEntry('Green gem', 2, greenGemColor),
-      _GemLegendEntry('Yellow gem', 3, yellowGemColor),
-      _GemLegendEntry('Purple gem', 5, purpleGemColor),
+      _GemLegendEntry('blue', 'Blue gem', 1),
+      _GemLegendEntry('green', 'Green gem', 2),
+      _GemLegendEntry('yellow', 'Yellow gem', 3),
+      _GemLegendEntry('purple', 'Purple gem', 5),
     ];
-    shapes.begin(ShapeType.filled);
-    double legendDotY = worldHeight * 0.71;
-    for (final _GemLegendEntry entry in gemLegend) {
-      shapes.setColor(entry.color);
-      shapes.circle(legendCenterX - 132, legendDotY - 8, gemLegendDotRadius);
-      legendDotY += 42;
-    }
-    shapes.end();
 
     final SpriteBatch batch = game.getBatch();
     final BitmapFont font = game.getFont();
@@ -120,13 +118,19 @@ class WaitingRoomScreen extends ScreenAdapter {
 
     double legendTextY = worldHeight * 0.71;
     for (final _GemLegendEntry entry in gemLegend) {
+      _drawGemLegendSprite(
+        batch,
+        entry.type,
+        legendCenterX - 168,
+        legendTextY - 22,
+      );
       _drawCenteredText(
         batch,
         font,
         '${entry.label}  ${entry.points} pt${entry.points == 1 ? '' : 's'}',
         legendTextY,
         1.05,
-        entry.color,
+        textColor,
       );
       legendTextY += 42;
     }
@@ -242,12 +246,84 @@ class WaitingRoomScreen extends ScreenAdapter {
   void resize(int width, int height) {
     viewport.update(width.toDouble(), height.toDouble(), true);
   }
+
+  Map<String, LevelSprite> _buildGemTemplates(LevelData data) {
+    final Map<String, LevelSprite> templates = <String, LevelSprite>{};
+    for (final LevelSprite sprite in data.sprites.iterable()) {
+      final String type = normalize(sprite.type);
+      if (type.contains('gem purple')) {
+        templates['purple'] = sprite;
+      } else if (type.contains('gem yellow')) {
+        templates['yellow'] = sprite;
+      } else if (type.contains('gem green')) {
+        templates['green'] = sprite;
+      } else if (type.contains('gem blue')) {
+        templates['blue'] = sprite;
+      }
+    }
+    return templates;
+  }
+
+  void _drawGemLegendSprite(
+    SpriteBatch batch,
+    String gemType,
+    double x,
+    double y,
+  ) {
+    final LevelSprite? template =
+        gemTemplateByType[gemType] ?? gemTemplateByType['green'];
+    if (template == null) {
+      return;
+    }
+
+    final AssetManager assets = game.getAssetManager();
+    if (!assets.isLoaded(template.texturePath, Texture)) {
+      return;
+    }
+
+    final Texture texture = assets.get(template.texturePath, Texture);
+    final ui.Rect src = _frameSourceRect(
+      texture,
+      math.max(1, template.width.round()),
+      math.max(1, template.height.round()),
+      math.max(0, template.frameIndex),
+    );
+    final ui.Rect dst = viewport.worldToScreenRect(
+      x,
+      y,
+      gemLegendSpriteSize,
+      gemLegendSpriteSize,
+    );
+    batch.drawRegion(texture, src, dst);
+  }
+
+  ui.Rect _frameSourceRect(
+    Texture texture,
+    int frameWidth,
+    int frameHeight,
+    int frameIndex,
+  ) {
+    final int safeWidth = math.max(1, frameWidth);
+    final int safeHeight = math.max(1, frameHeight);
+    final int cols = math.max(1, texture.width ~/ safeWidth);
+    final int rows = math.max(1, texture.height ~/ safeHeight);
+    final int total = cols * rows;
+    final int safeFrame = clampInt(frameIndex, 0, total - 1);
+    final int srcCol = safeFrame % cols;
+    final int srcRow = safeFrame ~/ cols;
+    return ui.Rect.fromLTWH(
+      (srcCol * safeWidth).toDouble(),
+      (srcRow * safeHeight).toDouble(),
+      safeWidth.toDouble(),
+      safeHeight.toDouble(),
+    );
+  }
 }
 
 class _GemLegendEntry {
+  final String type;
   final String label;
   final int points;
-  final ui.Color color;
 
-  const _GemLegendEntry(this.label, this.points, this.color);
+  const _GemLegendEntry(this.type, this.label, this.points);
 }
