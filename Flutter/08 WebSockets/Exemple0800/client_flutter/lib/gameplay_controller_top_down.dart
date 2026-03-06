@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'libgdx_compat/gdx.dart';
 import 'libgdx_compat/gdx_collections.dart';
 import 'gameplay_controller_base.dart';
@@ -7,6 +9,9 @@ import 'libgdx_compat/math_types.dart';
 class GameplayControllerTopDown extends GameplayControllerBase {
   static const double moveSpeedPerSecond = 95;
   static const double diagonalNormalize = 0.70710677;
+  static const double collisionResolveStep = 0.5;
+  static const int maxCollisionResolveSteps = 200;
+  static const double minMovementForResolve = 0.0001;
 
   final IntArray blockedZoneIndices = IntArray();
   final IntArray arbreZoneIndices = IntArray();
@@ -106,18 +111,11 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     final double dy = inputY * moveSpeedPerSecond * dtSeconds;
     _updateDirection(up, down, left, right);
 
-    if (dx != 0) {
-      final double nextX = playerX + dx;
-      if (!_wouldCollideBlocked(nextX, playerY)) {
-        playerX = nextX;
-      }
-    }
-    if (dy != 0) {
-      final double nextY = playerY + dy;
-      if (!_wouldCollideBlocked(playerX, nextY)) {
-        playerY = nextY;
-      }
-    }
+    final double previousX = playerX;
+    final double previousY = playerY;
+    playerX += dx;
+    playerY += dy;
+    _resolvePlayerWallCollision(previousX, previousY);
 
     moving = left || right || up || down;
     _updatePlayerAnimationSelection();
@@ -171,6 +169,36 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       nextY,
       blockedZoneIndices,
     );
+  }
+
+  void _resolvePlayerWallCollision(double previousX, double previousY) {
+    if (!_wouldCollideBlocked(playerX, playerY)) {
+      return;
+    }
+
+    final double moveX = playerX - previousX;
+    final double moveY = playerY - previousY;
+    final double moveLen = math.sqrt(moveX * moveX + moveY * moveY);
+    if (moveLen <= minMovementForResolve) {
+      playerX = previousX;
+      playerY = previousY;
+      return;
+    }
+
+    final double pushX = -moveX / moveLen;
+    final double pushY = -moveY / moveLen;
+    for (int i = 0; i < maxCollisionResolveSteps; i++) {
+      if (!_wouldCollideBlocked(playerX, playerY)) {
+        return;
+      }
+      playerX += pushX * collisionResolveStep;
+      playerY += pushY * collisionResolveStep;
+    }
+
+    if (_wouldCollideBlocked(playerX, playerY)) {
+      playerX = previousX;
+      playerY = previousY;
+    }
   }
 
   int _findLayerIndexByName(List<String> tokens) {

@@ -36,7 +36,7 @@
           "y": 289
         }
       ],
-      "color": "purple",
+      "color": "pink",
       "groupId": "__main__"
     },
     {
@@ -68,7 +68,7 @@
           "y": 243
         }
       ],
-      "color": "deepOrange",
+      "color": "orange",
       "groupId": "__main__"
     },
     {
@@ -104,7 +104,7 @@
           "y": 118
         }
       ],
-      "color": "amber",
+      "color": "blue",
       "groupId": "__main__"
     },
     {
@@ -140,7 +140,7 @@
           "y": 457
         }
       ],
-      "color": "blue",
+      "color": "teal",
       "groupId": "__main__"
     }
   ],
@@ -186,26 +186,6 @@
       "durationMs": 15000
     },
     {
-      "id": "path_binding_5",
-      "pathId": "path_3",
-      "targetType": "layer",
-      "targetIndex": 3,
-      "behavior": "ping_pong",
-      "enabled": true,
-      "relativeToInitialPosition": true,
-      "durationMs": 15000
-    },
-    {
-      "id": "path_binding_6",
-      "pathId": "path_3",
-      "targetType": "zone",
-      "targetIndex": 7,
-      "behavior": "ping_pong",
-      "enabled": true,
-      "relativeToInitialPosition": true,
-      "durationMs": 15000
-    },
-    {
       "id": "path_binding_7",
       "pathId": "path_4",
       "targetType": "layer",
@@ -218,6 +198,26 @@
     {
       "id": "path_binding_8",
       "pathId": "path_4",
+      "targetType": "zone",
+      "targetIndex": 7,
+      "behavior": "ping_pong",
+      "enabled": true,
+      "relativeToInitialPosition": true,
+      "durationMs": 15000
+    },
+    {
+      "id": "path_binding_5",
+      "pathId": "path_3",
+      "targetType": "layer",
+      "targetIndex": 3,
+      "behavior": "ping_pong",
+      "enabled": true,
+      "relativeToInitialPosition": true,
+      "durationMs": 15000
+    },
+    {
+      "id": "path_binding_6",
+      "pathId": "path_3",
       "targetType": "zone",
       "targetIndex": 6,
       "behavior": "ping_pong",
