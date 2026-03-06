@@ -6,7 +6,6 @@ import 'debug_overlay.dart';
 import 'game_app.dart';
 import 'libgdx_compat/game_framework.dart';
 import 'gameplay_controller.dart';
-import 'gameplay_controller_platformer.dart';
 import 'gameplay_controller_top_down.dart';
 import 'libgdx_compat/gdx.dart';
 import 'libgdx_compat/gdx_collections.dart';
@@ -511,7 +510,6 @@ class PlayScreen extends ScreenAdapter {
   }
 
   void _renderHud() {
-    final ShapeRenderer shapes = game.getShapeRenderer();
     final SpriteBatch batch = game.getBatch();
     final BitmapFont font = game.getFont();
     final double hudWidth = Gdx.graphics.getWidth().toDouble();
@@ -539,87 +537,25 @@ class PlayScreen extends ScreenAdapter {
     font.drawText(hudBackLabel, backTextX, hudMargin + hudButtonHeight * 0.72);
     font.getData().setScale(1);
 
-    final GameplayController gc = gameplayController;
-    String? topRightLabel;
-    bool showLifeBar = false;
-    double lifePercent = 0;
-    if (gc is GameplayControllerTopDown) {
-      topRightLabel =
-          'Arbres: ${gc.getCollectedArbresCount()}/${gc.getTotalArbresCount()}';
-    } else if (gc is GameplayControllerPlatformer) {
-      topRightLabel =
-          'Gems: ${gc.getCollectedGemsCount()}/${gc.getTotalGemsCount()}';
-      showLifeBar = true;
-      lifePercent = clampDouble(gc.getLifePercent(), 0, 100);
-    }
+    final GameplayControllerTopDown gc =
+        gameplayController as GameplayControllerTopDown;
+    final String topRightLabel =
+        'Arbres: ${gc.getCollectedArbresCount()}/${gc.getTotalArbresCount()}';
 
     font.setColor(hudTextColor);
     final double rightEdgeX = hudWidth - hudMargin;
     final double topTextY = hudMargin + hudButtonHeight * 0.72;
-    double gemsTextX = 0;
-    double gemsTextY = topTextY;
-    double gemsTextHeight = 0;
-    double lifeTextX = 0;
-    double lifeTextY = topTextY;
-    final String lifeText = 'Life ${lifePercent.round()}%';
-    final double lifeBarX = rightEdgeX - hudLifeBarWidth;
-    double lifeBarY = 0;
+    final double gemsTextY = topTextY;
 
-    if (topRightLabel != null) {
-      font.getData().setScale(hudCounterScale);
-      hudLayout.setText(font, topRightLabel);
-      gemsTextX = rightEdgeX - hudLayout.width;
-      gemsTextHeight = hudLayout.height;
-      font.getData().setScale(1);
-    }
+    font.getData().setScale(hudCounterScale);
+    hudLayout.setText(font, topRightLabel);
+    final double gemsTextX = rightEdgeX - hudLayout.width;
+    font.getData().setScale(1);
 
-    if (showLifeBar) {
-      font.getData().setScale(hudLifeTextScale);
-      hudLayout.setText(font, lifeText);
-      lifeTextX = rightEdgeX - hudLayout.width;
-      lifeBarY = lifeTextY + hudLifeBarTopGap;
-      if (topRightLabel != null) {
-        gemsTextY = lifeBarY + hudLifeBarHeight + hudRowGap + gemsTextHeight;
-      }
-      font.getData().setScale(1);
-    }
-
-    if (showLifeBar) {
-      batch.end();
-
-      shapes.begin(ShapeType.filled);
-      shapes.setColor(hudLifeBarBg);
-      shapes.rect(lifeBarX, lifeBarY, hudLifeBarWidth, hudLifeBarHeight);
-      shapes.setColor(hudLifeBarFill);
-      shapes.rect(
-        lifeBarX,
-        lifeBarY,
-        hudLifeBarWidth * (lifePercent / 100),
-        hudLifeBarHeight,
-      );
-      shapes.end();
-
-      shapes.begin(ShapeType.line);
-      shapes.setColor(hudLifeBarBorder);
-      shapes.rect(lifeBarX, lifeBarY, hudLifeBarWidth, hudLifeBarHeight);
-      shapes.end();
-
-      batch.begin();
-    }
-
-    if (topRightLabel != null) {
-      font.getData().setScale(hudCounterScale);
-      hudLayout.setText(font, topRightLabel);
-      font.drawText(topRightLabel, gemsTextX, gemsTextY);
-      font.getData().setScale(1);
-    }
-
-    if (showLifeBar) {
-      font.getData().setScale(hudLifeTextScale);
-      hudLayout.setText(font, lifeText);
-      font.drawText(lifeText, lifeTextX, lifeTextY);
-      font.getData().setScale(1);
-    }
+    font.getData().setScale(hudCounterScale);
+    hudLayout.setText(font, topRightLabel);
+    font.drawText(topRightLabel, gemsTextX, gemsTextY);
+    font.getData().setScale(1);
 
     batch.end();
   }
@@ -724,17 +660,10 @@ class PlayScreen extends ScreenAdapter {
       return;
     }
 
-    final GameplayController gc = gameplayController;
-    if (gc is GameplayControllerTopDown) {
-      if (gc.isWin()) {
-        _endOverlayState = _EndOverlayState.level0Win;
-      }
-    } else if (gc is GameplayControllerPlatformer) {
-      if (gc.isGameOver()) {
-        _endOverlayState = _EndOverlayState.level1Lose;
-      } else if (gc.isWin()) {
-        _endOverlayState = _EndOverlayState.level1Win;
-      }
+    final GameplayControllerTopDown gc =
+        gameplayController as GameplayControllerTopDown;
+    if (gc.isWin()) {
+      _endOverlayState = _EndOverlayState.level0Win;
     }
 
     if (_isEndOverlayActive()) {
@@ -890,17 +819,6 @@ class PlayScreen extends ScreenAdapter {
   }
 
   GameplayController _createGameplayController() {
-    if (_isPlatformerLevel(levelData)) {
-      Gdx.app.log('PlayScreen', 'Gameplay mode: platformer');
-      return GameplayControllerPlatformer(
-        levelData,
-        spriteRuntimeStates,
-        layerVisibilityStates,
-        zoneRuntimeStates,
-        zonePreviousRuntimeStates,
-      );
-    }
-
     Gdx.app.log('PlayScreen', 'Gameplay mode: topdown');
     return GameplayControllerTopDown(
       levelData,
@@ -909,18 +827,6 @@ class PlayScreen extends ScreenAdapter {
       zoneRuntimeStates,
       zonePreviousRuntimeStates,
     );
-  }
-
-  bool _isPlatformerLevel(LevelData levelData) {
-    for (final LevelZone zone in levelData.zones.iterable()) {
-      final String type = normalize(zone.type);
-      final String name = normalize(zone.name);
-      if (containsAny(type, <String>['floor', 'death']) ||
-          containsAny(name, <String>['floor', 'death'])) {
-        return true;
-      }
-    }
-    return false;
   }
 
   Viewport _createViewport(LevelData levelData, OrthographicCamera camera) {
