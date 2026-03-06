@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'app_data.dart';
+import 'debug_overlay.dart';
 import 'game_app.dart';
 import 'libgdx_compat/asset_manager.dart';
 import 'libgdx_compat/game_framework.dart';
@@ -36,6 +37,7 @@ class PlayScreen extends ScreenAdapter {
   final int levelIndex;
   final OrthographicCamera camera = OrthographicCamera();
   final LevelRenderer levelRenderer = LevelRenderer();
+  final DebugOverlay debugOverlay = DebugOverlay();
   final GlyphLayout layout = GlyphLayout();
 
   late final LevelData levelData;
@@ -43,11 +45,13 @@ class PlayScreen extends ScreenAdapter {
   late final List<bool> layerVisibilityStates;
   late final Array<SpriteRuntimeState> spriteRuntimeStates;
   late final Array<RuntimeTransform> layerRuntimeStates;
+  late final Array<RuntimeTransform> zoneRuntimeStates;
   late final LevelSprite playerTemplate;
   late final Map<String, LevelSprite> gemTemplateByType;
 
   double elapsedSeconds = 0;
   String _lastSubmittedDirection = 'none';
+  bool _showDebugOverlay = false;
   ui.Offset? _localPlayerHighlightCenter;
   double? _localPlayerHighlightRadius;
 
@@ -57,6 +61,7 @@ class PlayScreen extends ScreenAdapter {
     layerVisibilityStates = _buildInitialLayerVisibility(levelData);
     spriteRuntimeStates = _createHiddenTemplateRuntimes(levelData);
     layerRuntimeStates = _createLayerRuntimeStates(levelData);
+    zoneRuntimeStates = _createZoneRuntimeStates(levelData);
     playerTemplate = _findPlayerTemplate(levelData);
     gemTemplateByType = _buildGemTemplates(levelData);
     _applyInitialCameraFromLevel();
@@ -79,8 +84,13 @@ class PlayScreen extends ScreenAdapter {
       return;
     }
 
+    if (Gdx.input.isKeyJustPressed(Input.keys.f3)) {
+      _showDebugOverlay = !_showDebugOverlay;
+    }
+
     _submitDirection(appData, _readCurrentDirection());
     _applyServerLayerTransforms(appData.layerTransforms);
+    _applyServerZoneTransforms(appData.zoneTransforms);
     _updateCameraForGameplay(appData.localPlayer);
 
     viewport.apply();
@@ -101,6 +111,16 @@ class PlayScreen extends ScreenAdapter {
     _renderGems(batch, appData.gems);
     _renderPlayers(batch, appData.sortedPlayers, appData.playerId);
     batch.end();
+    if (_showDebugOverlay) {
+      debugOverlay.render(
+        levelData,
+        camera,
+        true,
+        true,
+        zoneRuntimeStates,
+        viewport,
+      );
+    }
     _renderLocalPlayerHighlight();
 
     _renderLeaderboard(appData);
@@ -118,6 +138,7 @@ class PlayScreen extends ScreenAdapter {
   @override
   void dispose() {
     _submitDirection(game.getAppData(), 'none');
+    debugOverlay.dispose();
   }
 
   void _renderPlayers(
@@ -127,16 +148,16 @@ class PlayScreen extends ScreenAdapter {
   ) {
     _localPlayerHighlightCenter = null;
     _localPlayerHighlightRadius = null;
-    final List<MultiplayerPlayer> orderedPlayers = List<MultiplayerPlayer>.from(
-      players,
-    )..sort((MultiplayerPlayer a, MultiplayerPlayer b) {
-        final bool aIsLocal = a.id == localPlayerId;
-        final bool bIsLocal = b.id == localPlayerId;
-        if (aIsLocal == bIsLocal) {
-          return 0;
-        }
-        return aIsLocal ? 1 : -1;
-      });
+    final List<MultiplayerPlayer> orderedPlayers =
+        List<MultiplayerPlayer>.from(players)
+          ..sort((MultiplayerPlayer a, MultiplayerPlayer b) {
+            final bool aIsLocal = a.id == localPlayerId;
+            final bool bIsLocal = b.id == localPlayerId;
+            if (aIsLocal == bIsLocal) {
+              return 0;
+            }
+            return aIsLocal ? 1 : -1;
+          });
 
     for (final MultiplayerPlayer player in orderedPlayers) {
       final _AnimatedSpriteFrame frame = _playerFrameFor(player);
@@ -506,12 +527,32 @@ class PlayScreen extends ScreenAdapter {
     return runtimes;
   }
 
+  Array<RuntimeTransform> _createZoneRuntimeStates(LevelData data) {
+    final Array<RuntimeTransform> runtimes = Array<RuntimeTransform>();
+    for (int i = 0; i < data.zones.size; i++) {
+      final LevelZone zone = data.zones.get(i);
+      runtimes.add(RuntimeTransform(zone.x, zone.y));
+    }
+    return runtimes;
+  }
+
   void _applyServerLayerTransforms(List<TransformSnapshot> transforms) {
     for (final TransformSnapshot transform in transforms) {
       if (transform.index < 0 || transform.index >= layerRuntimeStates.size) {
         continue;
       }
       final RuntimeTransform runtime = layerRuntimeStates.get(transform.index);
+      runtime.x = transform.x;
+      runtime.y = transform.y;
+    }
+  }
+
+  void _applyServerZoneTransforms(List<TransformSnapshot> transforms) {
+    for (final TransformSnapshot transform in transforms) {
+      if (transform.index < 0 || transform.index >= zoneRuntimeStates.size) {
+        continue;
+      }
+      final RuntimeTransform runtime = zoneRuntimeStates.get(transform.index);
       runtime.x = transform.x;
       runtime.y = transform.y;
     }
