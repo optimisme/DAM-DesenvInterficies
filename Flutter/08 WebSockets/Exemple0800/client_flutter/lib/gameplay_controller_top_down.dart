@@ -322,46 +322,60 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       return;
     }
 
-    final String prefix = moving ? 'Heroi Camina ' : 'Heroi Aturat ';
+    final List<String> prefixes = moving
+        ? <String>['Character  Walk ', 'Character Walk ']
+        : <String>['Character Idle '];
     String suffix;
     bool flipX;
     switch (_direction) {
       case _Direction.upLeft:
-        suffix = 'Amunt-Dreta';
+        suffix = 'Up-Right';
         flipX = true;
         break;
       case _Direction.up:
-        suffix = 'Amunt';
+        suffix = 'Up';
         flipX = false;
         break;
       case _Direction.upRight:
-        suffix = 'Amunt-Dreta';
+        suffix = 'Up-Right';
         flipX = false;
         break;
       case _Direction.left:
-        suffix = 'Dreta';
+        suffix = 'Right';
         flipX = true;
         break;
       case _Direction.right:
-        suffix = 'Dreta';
+        suffix = 'Right';
         flipX = false;
         break;
       case _Direction.downLeft:
-        suffix = 'Avall-Dreta';
+        suffix = 'Down-Right';
         flipX = true;
         break;
       case _Direction.downRight:
-        suffix = 'Avall-Dreta';
+        suffix = 'Down-Right';
         flipX = false;
         break;
       case _Direction.down:
-        suffix = 'Avall';
+        suffix = 'Down';
         flipX = false;
         break;
     }
 
     setPlayerFlip(flipX, false);
-    setPlayerAnimationOverrideByName('$prefix$suffix');
+    _setPlayerAnimationFromCandidates(
+      prefixes.map((String prefix) => '$prefix$suffix').toList(),
+    );
+  }
+
+  void _setPlayerAnimationFromCandidates(List<String> animationNames) {
+    for (final String animationName in animationNames) {
+      if (findAnimationIdByName(animationName) != null) {
+        setPlayerAnimationOverrideByName(animationName);
+        return;
+      }
+    }
+    setPlayerAnimationOverrideByName(null);
   }
 }
 

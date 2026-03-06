@@ -209,6 +209,7 @@ class GameApp extends Game {
 
     final ObjectSet<String> spriteTokens = ObjectSet<String>();
     final ObjectSet<String> animationGroups = ObjectSet<String>();
+    bool hasPlayerLikeSprite = false;
 
     for (final dynamic rawSprite in sprites) {
       final Map<String, dynamic>? sprite = rawSprite as Map<String, dynamic>?;
@@ -227,8 +228,13 @@ class GameApp extends Game {
         animationGroups.add(groupId);
       }
 
-      _addTokens(spriteTokens, (sprite['type'] as String?) ?? '');
-      _addTokens(spriteTokens, (sprite['name'] as String?) ?? '');
+      final String spriteType = (sprite['type'] as String?) ?? '';
+      final String spriteName = (sprite['name'] as String?) ?? '';
+      _addTokens(spriteTokens, spriteType);
+      _addTokens(spriteTokens, spriteName);
+      if (_looksPlayerLike(spriteType) || _looksPlayerLike(spriteName)) {
+        hasPlayerLikeSprite = true;
+      }
     }
 
     for (final String groupId in animationGroups.iterable()) {
@@ -253,6 +259,25 @@ class GameApp extends Game {
         continue;
       }
       if (!_containsAnyToken(entry.normalizedName, spriteTokens)) {
+        continue;
+      }
+      if (!levelImageFiles.contains(entry.mediaFile, false)) {
+        levelImageFiles.add(entry.mediaFile);
+      }
+    }
+
+    if (!hasPlayerLikeSprite) {
+      return;
+    }
+
+    final ObjectSet<String> playerAnimationTokens = ObjectSet<String>();
+    _addTokens(playerAnimationTokens, 'character hero heroi player foxy');
+    for (final _AnimationMediaEntry entry
+        in _animationMediaEntries.iterable()) {
+      if (entry.normalizedName.isEmpty) {
+        continue;
+      }
+      if (!_containsAnyToken(entry.normalizedName, playerAnimationTokens)) {
         continue;
       }
       if (!levelImageFiles.contains(entry.mediaFile, false)) {
@@ -325,6 +350,14 @@ class GameApp extends Game {
         tokens.add(token);
       }
     }
+  }
+
+  bool _looksPlayerLike(String rawValue) {
+    final String normalized = _normalize(rawValue);
+    return normalized.contains('player') ||
+        normalized.contains('hero') ||
+        normalized.contains('heroi') ||
+        normalized.contains('foxy');
   }
 
   String _normalize(String value) => value.trim().toLowerCase();
