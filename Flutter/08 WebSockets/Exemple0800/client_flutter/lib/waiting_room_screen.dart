@@ -15,6 +15,7 @@ class WaitingRoomScreen extends ScreenAdapter {
   static const double panelPadding = 22;
   static const double rowHeight = 24;
   static const double rowStartTop = 96;
+  static const double gemLegendDotRadius = 11;
 
   static final ui.Color background = colorValueOf('070E08');
   static final ui.Color panelFill = colorValueOf('0F1912DD');
@@ -24,6 +25,10 @@ class WaitingRoomScreen extends ScreenAdapter {
   static final ui.Color dimTextColor = colorValueOf('6FA07A');
   static final ui.Color highlightColor = colorValueOf('35FF74');
   static final ui.Color localPlayerColor = colorValueOf('FFE07A');
+  static final ui.Color blueGemColor = colorValueOf('4CCBFF');
+  static final ui.Color greenGemColor = colorValueOf('63FF8F');
+  static final ui.Color yellowGemColor = colorValueOf('FFD85E');
+  static final ui.Color purpleGemColor = colorValueOf('C08BFF');
 
   final GameApp game;
   final int levelIndex;
@@ -59,6 +64,22 @@ class WaitingRoomScreen extends ScreenAdapter {
     shapes.rect(worldWidth - panelWidth, 0, panelWidth, worldHeight);
     shapes.end();
 
+    final double legendCenterX = (worldWidth - panelWidth) * 0.5;
+    final List<_GemLegendEntry> gemLegend = <_GemLegendEntry>[
+      _GemLegendEntry('Blue gem', 1, blueGemColor),
+      _GemLegendEntry('Green gem', 2, greenGemColor),
+      _GemLegendEntry('Yellow gem', 3, yellowGemColor),
+      _GemLegendEntry('Purple gem', 5, purpleGemColor),
+    ];
+    shapes.begin(ShapeType.filled);
+    double legendDotY = worldHeight * 0.71;
+    for (final _GemLegendEntry entry in gemLegend) {
+      shapes.setColor(entry.color);
+      shapes.circle(legendCenterX - 132, legendDotY - 8, gemLegendDotRadius);
+      legendDotY += 42;
+    }
+    shapes.end();
+
     final SpriteBatch batch = game.getBatch();
     final BitmapFont font = game.getFont();
     batch.begin();
@@ -88,25 +109,27 @@ class WaitingRoomScreen extends ScreenAdapter {
       highlightColor,
     );
 
-    final String statusText = appData.isConnected
-        ? '${appData.players.length} player(s) connected'
-        : 'Connecting to ${game.getSelectedServerLabel()}';
     _drawCenteredText(
       batch,
       font,
-      statusText,
+      'Collect as many gems as you can.',
       worldHeight * 0.62,
       1.3,
       textColor,
     );
-    _drawCenteredText(
-      batch,
-      font,
-      'Gameplay appears automatically when the counter reaches zero.',
-      worldHeight * 0.69,
-      1.0,
-      dimTextColor,
-    );
+
+    double legendTextY = worldHeight * 0.71;
+    for (final _GemLegendEntry entry in gemLegend) {
+      _drawCenteredText(
+        batch,
+        font,
+        '${entry.label}  ${entry.points} pt${entry.points == 1 ? '' : 's'}',
+        legendTextY,
+        1.05,
+        entry.color,
+      );
+      legendTextY += 42;
+    }
 
     _drawLeftAlignedText(
       batch,
@@ -219,4 +242,12 @@ class WaitingRoomScreen extends ScreenAdapter {
   void resize(int width, int height) {
     viewport.update(width.toDouble(), height.toDouble(), true);
   }
+}
+
+class _GemLegendEntry {
+  final String label;
+  final int points;
+  final ui.Color color;
+
+  const _GemLegendEntry(this.label, this.points, this.color);
 }
