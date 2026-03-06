@@ -10,13 +10,13 @@ import 'libgdx_compat/viewport.dart';
 import 'level_data.dart';
 import 'level_loader.dart';
 import 'play_screen.dart';
+import 'player_list_renderer.dart';
 
 class WaitingRoomScreen extends ScreenAdapter {
   static const double worldWidth = 1280;
   static const double worldHeight = 720;
   static const double panelWidth = 340;
   static const double panelPadding = 22;
-  static const double rowHeight = 24;
   static const double rowStartTop = 96;
   static const double gemLegendSpriteSize = 28;
   static const double gemLegendCenterOffsetX = 44;
@@ -112,7 +112,7 @@ class WaitingRoomScreen extends ScreenAdapter {
       font,
       'Collect as many gems as you can.',
       worldHeight * 0.62,
-      1.3,
+      1.55,
       textColor,
     );
 
@@ -129,7 +129,7 @@ class WaitingRoomScreen extends ScreenAdapter {
         font,
         '${entry.label}  ${entry.points} pt${entry.points == 1 ? '' : 's'}',
         legendTextY,
-        1.05,
+        1.22,
         textColor,
       );
       legendTextY += 42;
@@ -145,33 +145,21 @@ class WaitingRoomScreen extends ScreenAdapter {
       titleColor,
     );
 
-    double rowTop = rowStartTop;
-    int rank = 1;
-    for (final MultiplayerPlayer player in appData.sortedPlayers) {
-      final bool isLocalPlayer = player.id == appData.playerId;
-      final ui.Color rowColor = isLocalPlayer ? localPlayerColor : textColor;
-      final String label = '$rank. ${_truncatePlayerName(player.name, 18)}';
-      _drawLeftAlignedText(
-        batch,
-        font,
-        label,
-        worldWidth - panelWidth + panelPadding,
-        rowTop + rowHeight * 0.72,
-        0.82,
-        rowColor,
-      );
-      _drawRightAlignedText(
-        batch,
-        font,
-        '${player.score}',
-        worldWidth - panelPadding,
-        rowTop + rowHeight * 0.72,
-        0.82,
-        rowColor,
-      );
-      rowTop += rowHeight;
-      rank++;
-    }
+    PlayerListRenderer.render(
+      batch: batch,
+      font: font,
+      layout: layout,
+      players: appData.sortedPlayers,
+      localPlayerId: appData.playerId,
+      left: worldWidth - panelWidth + panelPadding,
+      right: worldWidth - panelPadding,
+      startY: rowStartTop + 21,
+      textColor: textColor,
+      localPlayerColor: localPlayerColor,
+      drawLeftAlignedText: _drawLeftAlignedText,
+      drawRightAlignedText: _drawRightAlignedText,
+      style: PlayerListRenderer.waitingRoomStyle,
+    );
 
     if (appData.sortedPlayers.isEmpty) {
       _drawLeftAlignedText(
@@ -233,13 +221,6 @@ class WaitingRoomScreen extends ScreenAdapter {
     layout.setText(font, text);
     font.draw(batch, layout, right - layout.width, y);
     font.getData().setScale(1);
-  }
-
-  String _truncatePlayerName(String text, int maxChars) {
-    if (text.length <= maxChars) {
-      return text;
-    }
-    return '${text.substring(0, math.max(0, maxChars - 3))}...';
   }
 
   @override

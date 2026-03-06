@@ -13,6 +13,7 @@ import 'libgdx_compat/viewport.dart';
 import 'level_data.dart';
 import 'level_loader.dart';
 import 'level_renderer.dart';
+import 'player_list_renderer.dart';
 import 'runtime_transform.dart';
 import 'waiting_room_screen.dart';
 
@@ -298,32 +299,21 @@ class PlayScreen extends ScreenAdapter {
       dimTextColor,
     );
 
-    double rowY = leaderboardStartY;
-    int rank = 1;
-    for (final MultiplayerPlayer player in appData.sortedPlayers) {
-      final bool isLocalPlayer = player.id == appData.playerId;
-      final ui.Color rowColor = isLocalPlayer ? localPlayerColor : textColor;
-      _drawLeftAlignedText(
-        batch,
-        font,
-        '$rank. ${_truncatePlayerName(player.name, 18)}',
-        screenWidth - leaderboardWidth + leaderboardPadding,
-        rowY,
-        0.82,
-        rowColor,
-      );
-      _drawRightAlignedText(
-        batch,
-        font,
-        '${player.score}',
-        screenWidth - leaderboardPadding,
-        rowY,
-        0.82,
-        rowColor,
-      );
-      rowY += leaderboardRowHeight;
-      rank++;
-    }
+    PlayerListRenderer.render(
+      batch: batch,
+      font: font,
+      layout: layout,
+      players: appData.sortedPlayers,
+      localPlayerId: appData.playerId,
+      left: screenWidth - leaderboardWidth + leaderboardPadding,
+      right: screenWidth - leaderboardPadding,
+      startY: leaderboardStartY,
+      textColor: textColor,
+      localPlayerColor: localPlayerColor,
+      drawLeftAlignedText: _drawLeftAlignedText,
+      drawRightAlignedText: _drawRightAlignedText,
+      style: PlayerListRenderer.gameplayStyle,
+    );
 
     if (appData.sortedPlayers.isEmpty) {
       _drawLeftAlignedText(
@@ -776,13 +766,6 @@ class PlayScreen extends ScreenAdapter {
     layout.setText(font, text);
     font.draw(batch, layout, right - layout.width, y);
     font.getData().setScale(1);
-  }
-
-  String _truncatePlayerName(String text, int maxChars) {
-    if (text.length <= maxChars) {
-      return text;
-    }
-    return '${text.substring(0, math.max(0, maxChars - 3))}...';
   }
 }
 
