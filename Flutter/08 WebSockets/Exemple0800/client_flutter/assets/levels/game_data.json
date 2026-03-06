@@ -245,6 +245,10 @@
     {
       "name": "Ice",
       "color": "cyan"
+    },
+    {
+      "name": "Sand",
+      "color": "orange"
     }
   ],
   "animationsFile": "animations/animations.json"

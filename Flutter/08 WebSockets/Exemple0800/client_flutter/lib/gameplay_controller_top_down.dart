@@ -9,6 +9,13 @@ import 'libgdx_compat/math_types.dart';
 class GameplayControllerTopDown extends GameplayControllerBase {
   static const double moveSpeedPerSecond = 95;
   static const double diagonalNormalize = 0.70710677;
+  static const double normalAccelerationPerSecond = 900;
+  static const double normalDecelerationPerSecond = 1200;
+  static const double iceAccelerationPerSecond = 230;
+  static const double iceDecelerationPerSecond = 75;
+  static const double sandSpeedMultiplier = 0.48;
+  static const double movementDirectionThreshold = 2;
+  static const double velocityStopThreshold = 0.5;
   static const int maxCollisionSlideIterations = 4;
   static const int collisionSweepIterations = 12;
   static const double collisionTimeBackoff = 0.001;
@@ -16,6 +23,8 @@ class GameplayControllerTopDown extends GameplayControllerBase {
   static const double movementEpsilon = 0.0001;
 
   final IntArray blockedZoneIndices = IntArray();
+  final IntArray iceZoneIndices = IntArray();
+  final IntArray sandZoneIndices = IntArray();
   final IntArray arbreZoneIndices = IntArray();
   final IntArray futureBridgeZoneIndices = IntArray();
   final IntArray _singleZoneCollisionQuery = IntArray();
@@ -28,6 +37,8 @@ class GameplayControllerTopDown extends GameplayControllerBase {
   bool wasInsideFutureBridgeZone = false;
   _Direction _direction = _Direction.down;
   bool moving = false;
+  double velocityX = 0;
+  double velocityY = 0;
 
   GameplayControllerTopDown(
     super.levelData,
@@ -110,15 +121,47 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       inputY *= diagonalNormalize;
     }
 
-    final double dx = inputX * moveSpeedPerSecond * dtSeconds;
-    final double dy = inputY * moveSpeedPerSecond * dtSeconds;
-    _updateDirection(up, down, left, right);
+    final bool onIce = _isPlayerOnIce();
+    final bool onSand = _isPlayerOnSand();
+    final double speedMultiplier = onSand ? sandSpeedMultiplier : 1;
+    final double targetVelocityX =
+        inputX * moveSpeedPerSecond * speedMultiplier;
+    final double targetVelocityY =
+        inputY * moveSpeedPerSecond * speedMultiplier;
+    final bool hasInput = inputX != 0 || inputY != 0;
+    final double acceleration = onIce
+        ? iceAccelerationPerSecond
+        : normalAccelerationPerSecond;
+    final double deceleration = onIce
+        ? iceDecelerationPerSecond
+        : normalDecelerationPerSecond;
+    final double maxVelocityDelta =
+        (hasInput ? acceleration : deceleration) * dtSeconds;
+    velocityX = _approach(velocityX, targetVelocityX, maxVelocityDelta);
+    velocityY = _approach(velocityY, targetVelocityY, maxVelocityDelta);
+    if (velocityX.abs() < velocityStopThreshold) {
+      velocityX = 0;
+    }
+    if (velocityY.abs() < velocityStopThreshold) {
+      velocityY = 0;
+    }
+
+    final bool movingLeft = velocityX < -movementDirectionThreshold;
+    final bool movingRight = velocityX > movementDirectionThreshold;
+    final bool movingUp = velocityY < -movementDirectionThreshold;
+    final bool movingDown = velocityY > movementDirectionThreshold;
+    _updateDirection(movingUp, movingDown, movingLeft, movingRight);
+
+    final double dx = velocityX * dtSeconds;
+    final double dy = velocityY * dtSeconds;
 
     final double previousX = playerX;
     final double previousY = playerY;
     _movePlayerWithWallCollisions(previousX, previousY, dx, dy);
 
-    moving = left || right || up || down;
+    moving =
+        velocityX.abs() > movementDirectionThreshold ||
+        velocityY.abs() > movementDirectionThreshold;
     _updatePlayerAnimationSelection();
 
     _revealHiddenBridgeIfNeeded();
@@ -132,12 +175,16 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     wasInsideFutureBridgeZone = false;
     _direction = _Direction.down;
     moving = false;
+    velocityX = 0;
+    velocityY = 0;
     setPlayerFlip(false, false);
     _updatePlayerAnimationSelection();
   }
 
   void _classifyZones() {
     blockedZoneIndices.clear();
+    iceZoneIndices.clear();
+    sandZoneIndices.clear();
     arbreZoneIndices.clear();
     futureBridgeZoneIndices.clear();
 
@@ -149,9 +196,21 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       final bool isWall =
           containsAny(type, <String>['mur', 'wall']) ||
           containsAny(name, <String>['mur', 'wall']);
+      final bool isIce =
+          containsAny(type, <String>['ice', 'gel', 'hielo']) ||
+          containsAny(name, <String>['ice', 'gel', 'hielo']);
+      final bool isSand =
+          containsAny(type, <String>['sand', 'sorra', 'arena']) ||
+          containsAny(name, <String>['sand', 'sorra', 'arena']);
 
       if (isWall) {
         blockedZoneIndices.add(i);
+      }
+      if (isIce) {
+        iceZoneIndices.add(i);
+      }
+      if (isSand) {
+        sandZoneIndices.add(i);
       }
       if (containsAny(type, <String>['arbre']) ||
           containsAny(name, <String>['arbre', 'tree'])) {
@@ -169,6 +228,30 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       nextX,
       nextY,
       blockedZoneIndices,
+    );
+  }
+
+  bool _isPlayerOnIce() {
+    if (iceZoneIndices.size <= 0) {
+      return false;
+    }
+    return spriteOverlapsAnyZoneByHitBoxes(
+      playerSpriteIndex,
+      playerX,
+      playerY,
+      iceZoneIndices,
+    );
+  }
+
+  bool _isPlayerOnSand() {
+    if (sandZoneIndices.size <= 0) {
+      return false;
+    }
+    return spriteOverlapsAnyZoneByHitBoxes(
+      playerSpriteIndex,
+      playerX,
+      playerY,
+      sandZoneIndices,
     );
   }
 
@@ -447,6 +530,16 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     }
     return zoneRuntimeStates.get(zoneIndex).y -
         zonePreviousRuntimeStates.get(zoneIndex).y;
+  }
+
+  double _approach(double current, double target, double maxDelta) {
+    if (current < target) {
+      return math.min(current + maxDelta, target);
+    }
+    if (current > target) {
+      return math.max(current - maxDelta, target);
+    }
+    return target;
   }
 
   int _findLayerIndexByName(List<String> tokens) {
