@@ -1,0 +1,99 @@
+{
+  "zoneGroups": [
+    {
+      "id": "__main__",
+      "name": "Main",
+      "collapsed": false
+    }
+  ],
+  "zones": [
+    {
+      "name": "Wall Top",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 0,
+      "y": 0,
+      "width": 1024,
+      "height": 15,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Wall Bottom",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 0,
+      "y": 505,
+      "width": 1024,
+      "height": 7,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Wall Left",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 1,
+      "y": 0,
+      "width": 10,
+      "height": 512,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Wall Right",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 1014,
+      "y": 0,
+      "width": 10,
+      "height": 512,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Moving Wall 0",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 328,
+      "y": 91,
+      "width": 17,
+      "height": 64,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Moving Wall 1",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 536,
+      "y": 412,
+      "width": 17,
+      "height": 64,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Moving Wall 2",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 57,
+      "y": 411,
+      "width": 63,
+      "height": 17,
+      "color": "red",
+      "groupId": "__main__"
+    },
+    {
+      "name": "Moving Wall 3",
+      "type": "Wall",
+      "gameplayData": "",
+      "x": 665,
+      "y": 91,
+      "width": 63,
+      "height": 17,
+      "color": "red",
+      "groupId": "__main__"
+    }
+  ]
+}
