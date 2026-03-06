@@ -16,7 +16,6 @@ class GameApp extends Game {
   final NetworkConfig networkConfig;
   final AppData appData;
   final AssetManager assetManager = AssetManager();
-  final Array<String> menuOptions = Array<String>();
   final Array<String> levelNames = Array<String>();
   final Array<Array<String>> referencedImageFilesByLevel =
       Array<Array<String>>();
@@ -53,8 +52,6 @@ class GameApp extends Game {
   BitmapFont getFont() => font!;
 
   AssetManager getAssetManager() => assetManager;
-
-  Array<String> getMenuOptions() => menuOptions;
 
   String getLevelName(int levelIndex) {
     if (levelIndex < 0 || levelIndex >= levelNames.size) {
@@ -114,7 +111,6 @@ class GameApp extends Game {
   }
 
   Future<void> _loadProjectData() async {
-    menuOptions.clear();
     levelNames.clear();
     referencedImageFilesByLevel.clear();
     animationMediaById.clear();
@@ -145,7 +141,6 @@ class GameApp extends Game {
 
         final String levelName = (level['name'] as String?) ?? 'Level $index';
         levelNames.add(levelName);
-        menuOptions.add('LEVEL $index');
         final Array<String> levelImageFiles = Array<String>();
         _collectImageFiles(level, levelImageFiles);
         _collectAnimationMediaForLevel(level, levelImageFiles);
@@ -161,8 +156,6 @@ class GameApp extends Game {
   void _addFallbackLevels() {
     levelNames.add('Level 0');
     levelNames.add('Level 1');
-    menuOptions.add('LEVEL 0');
-    menuOptions.add('LEVEL 1');
     referencedImageFilesByLevel.add(Array<String>());
     referencedImageFilesByLevel.add(Array<String>());
   }
