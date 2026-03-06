@@ -7,8 +7,10 @@ import 'libgdx_compat/game_framework.dart';
 import 'libgdx_compat/gdx.dart';
 import 'libgdx_compat/gdx_collections.dart';
 import 'menu_screen.dart';
+import 'network_config.dart';
 
 class GameApp extends Game {
+  final NetworkConfig networkConfig;
   final AssetManager assetManager = AssetManager();
   final Array<String> menuOptions = Array<String>();
   final Array<String> levelNames = Array<String>();
@@ -27,6 +29,8 @@ class GameApp extends Game {
   SpriteBatch? batch;
   ShapeRenderer? shapeRenderer;
   BitmapFont? font;
+
+  GameApp({required this.networkConfig});
 
   Future<void> create() async {
     batch = SpriteBatch();
@@ -53,6 +57,10 @@ class GameApp extends Game {
     }
     return levelNames.get(levelIndex);
   }
+
+  String getPlayerName() => networkConfig.playerName;
+
+  String getSelectedServerLabel() => networkConfig.serverLabel;
 
   void queueReferencedAssetsForLevel(int levelIndex) {
     if (levelIndex < 0 || levelIndex >= referencedImageFilesByLevel.size) {

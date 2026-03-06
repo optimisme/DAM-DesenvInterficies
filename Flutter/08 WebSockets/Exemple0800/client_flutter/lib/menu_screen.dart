@@ -178,6 +178,14 @@ class MenuScreen extends ScreenAdapter {
       1.1,
       footer,
     );
+    _drawCenteredText(
+      batch,
+      font,
+      'PLAYER: ${game.getPlayerName()}   SERVER: ${game.getSelectedServerLabel()}',
+      16,
+      0.95,
+      dim,
+    );
   }
 
   void _drawCenteredText(

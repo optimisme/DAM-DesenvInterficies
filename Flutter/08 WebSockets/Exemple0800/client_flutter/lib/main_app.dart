@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'game_app.dart';
 import 'libgdx_compat/gdx.dart';
 import 'level_loader.dart';
+import 'network_config.dart';
 import 'play_screen.dart';
 import 'window_config.dart';
 
@@ -19,24 +20,168 @@ class MainApp {
   }
 }
 
-class _GameRoot extends StatelessWidget {
+class _GameRoot extends StatefulWidget {
   const _GameRoot();
 
   @override
+  State<_GameRoot> createState() => _GameRootState();
+}
+
+class _GameRootState extends State<_GameRoot> {
+  NetworkConfig? _networkConfig;
+
+  void _handleStartGame(NetworkConfig config) {
+    setState(() {
+      _networkConfig = config;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Game Example - Flutter',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: SafeArea(child: _GameView())),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+      ),
+      home: Scaffold(
+        body: SafeArea(
+          child: _networkConfig == null
+              ? _ConfigurationScreen(onStart: _handleStartGame)
+              : _GameView(networkConfig: _networkConfig!),
+        ),
+      ),
     );
   }
 }
 
 class _GameView extends StatefulWidget {
-  const _GameView();
+  final NetworkConfig networkConfig;
+
+  const _GameView({required this.networkConfig});
 
   @override
   State<_GameView> createState() => _GameViewState();
+}
+
+class _ConfigurationScreen extends StatefulWidget {
+  final ValueChanged<NetworkConfig> onStart;
+
+  const _ConfigurationScreen({required this.onStart});
+
+  @override
+  State<_ConfigurationScreen> createState() => _ConfigurationScreenState();
+}
+
+class _ConfigurationScreenState extends State<_ConfigurationScreen> {
+  ServerOption _serverOption = ServerOption.local;
+  final TextEditingController _playerNameController = TextEditingController(
+    text: NetworkConfig.defaults.playerName,
+  );
+  String? _nameError;
+
+  @override
+  void dispose() {
+    _playerNameController.dispose();
+    super.dispose();
+  }
+
+  void _startGame() {
+    final String playerName = _playerNameController.text.trim();
+    if (playerName.isEmpty) {
+      setState(() {
+        _nameError = 'Player name is required';
+      });
+      return;
+    }
+
+    setState(() {
+      _nameError = null;
+    });
+    widget.onStart(
+      NetworkConfig(serverOption: _serverOption, playerName: playerName),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    'Game Configuration',
+                    style: theme.textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Server',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  SegmentedButton<ServerOption>(
+                    segments: const <ButtonSegment<ServerOption>>[
+                      ButtonSegment<ServerOption>(
+                        value: ServerOption.local,
+                        label: Text('Local'),
+                      ),
+                      ButtonSegment<ServerOption>(
+                        value: ServerOption.remote,
+                        label: Text('Remote'),
+                      ),
+                    ],
+                    selected: <ServerOption>{_serverOption},
+                    onSelectionChanged: (Set<ServerOption> selected) {
+                      if (selected.isEmpty) {
+                        return;
+                      }
+                      setState(() {
+                        _serverOption = selected.first;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _serverOption == ServerOption.local
+                        ? 'localhost:3000'
+                        : 'https://nomUsuari.ieti.site:443',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _playerNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Player name',
+                      errorText: _nameError,
+                      border: const OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _startGame(),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _startGame,
+                    child: const Text('Start Game'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _GameViewState extends State<_GameView>
@@ -45,7 +190,7 @@ class _GameViewState extends State<_GameView>
   static const double _virtualHeight = 720;
 
   final FocusNode _focusNode = FocusNode();
-  final GameApp _game = GameApp();
+  late final GameApp _game;
 
   Ticker? _ticker;
   Duration? _lastTick;
@@ -62,6 +207,7 @@ class _GameViewState extends State<_GameView>
   @override
   void initState() {
     super.initState();
+    _game = GameApp(networkConfig: widget.networkConfig);
     _initialize();
   }
 
