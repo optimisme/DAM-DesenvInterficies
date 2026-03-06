@@ -186,9 +186,10 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     _movePlayerWithWallCollisions(previousX, previousY, dx, dy);
     _collectTouchedGems();
 
-    moving =
+    final bool hasDirectionalVelocity =
         velocityX.abs() > movementDirectionThreshold ||
         velocityY.abs() > movementDirectionThreshold;
+    moving = hasInput && hasDirectionalVelocity;
     _updatePlayerAnimationSelection();
 
     _revealHiddenBridgeIfNeeded();
@@ -313,6 +314,8 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       return;
     }
 
+    int bestSpriteIndex = -1;
+    double bestDepth = -double.infinity;
     for (final int spriteIndex in gemSpriteIndices.iterable()) {
       if (collectedGemSpriteIndices.contains(spriteIndex)) {
         continue;
@@ -335,26 +338,46 @@ class GameplayControllerTopDown extends GameplayControllerBase {
         continue;
       }
 
-      collectedGemSpriteIndices.add(spriteIndex);
-      setSpriteVisible(spriteIndex, false);
-      final _GemType? type = _gemTypeBySpriteIndex[spriteIndex];
-      if (type == null) {
-        continue;
+      final double spriteDepth = levelData.sprites.get(spriteIndex).depth;
+      final bool isBetter =
+          bestSpriteIndex < 0 ||
+          spriteDepth > bestDepth ||
+          (spriteDepth == bestDepth && spriteIndex > bestSpriteIndex);
+      if (isBetter) {
+        bestSpriteIndex = spriteIndex;
+        bestDepth = spriteDepth;
       }
-      switch (type) {
-        case _GemType.green:
-          collectedGreenGems++;
-          break;
-        case _GemType.purple:
-          collectedPurpleGems++;
-          break;
-        case _GemType.yellow:
-          collectedYellowGems++;
-          break;
-        case _GemType.blue:
-          collectedBlueGems++;
-          break;
-      }
+    }
+
+    if (bestSpriteIndex >= 0) {
+      _collectGemSprite(bestSpriteIndex);
+    }
+  }
+
+  void _collectGemSprite(int spriteIndex) {
+    if (collectedGemSpriteIndices.contains(spriteIndex)) {
+      return;
+    }
+    collectedGemSpriteIndices.add(spriteIndex);
+    setSpriteVisible(spriteIndex, false);
+
+    final _GemType? type = _gemTypeBySpriteIndex[spriteIndex];
+    if (type == null) {
+      return;
+    }
+    switch (type) {
+      case _GemType.green:
+        collectedGreenGems++;
+        break;
+      case _GemType.purple:
+        collectedPurpleGems++;
+        break;
+      case _GemType.yellow:
+        collectedYellowGems++;
+        break;
+      case _GemType.blue:
+        collectedBlueGems++;
+        break;
     }
   }
 

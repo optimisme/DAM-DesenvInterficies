@@ -47,6 +47,10 @@ class PlayScreen extends ScreenAdapter {
   static const int hudGemGreenFrame = 5;
   static const int hudGemYellowFrame = 10;
   static const int hudGemBlueFrame = 15;
+  static const int spawnPurpleGemsCount = 50;
+  static const int spawnYellowGemsCount = 100;
+  static const int spawnGreenGemsCount = 250;
+  static const int spawnBlueGemsCount = 500;
   static const double endOverlayReturnDelaySeconds = 1;
   static const double endOverlayTitleScale = 2.4;
   static const double endOverlayPromptScale = 1.25;
@@ -101,6 +105,7 @@ class PlayScreen extends ScreenAdapter {
 
   PlayScreen(this.game, this.levelIndex) {
     levelData = LevelLoader.loadLevel(levelIndex);
+    _populateRandomGemsInGemsZone();
     layerVisibilityStates = _buildInitialLayerVisibility(levelData);
     viewport = _createViewport(levelData, camera);
     camera.setPosition(0, 0);
@@ -120,6 +125,197 @@ class PlayScreen extends ScreenAdapter {
       true,
     );
     _loadHudAssets();
+  }
+
+  void _populateRandomGemsInGemsZone() {
+    final LevelLayer? gemsZoneLayer = _findGemsZoneLayer();
+    if (gemsZoneLayer == null) {
+      return;
+    }
+
+    final List<_GemSpawnCell> spawnCells = _collectGemSpawnCells(gemsZoneLayer);
+    if (spawnCells.isEmpty) {
+      return;
+    }
+
+    final Map<_GemSpawnType, LevelSprite> templates = _findGemTemplates();
+    if (!templates.containsKey(_GemSpawnType.purple) ||
+        !templates.containsKey(_GemSpawnType.yellow) ||
+        !templates.containsKey(_GemSpawnType.green) ||
+        !templates.containsKey(_GemSpawnType.blue)) {
+      return;
+    }
+
+    final List<LevelSprite> nonGemSprites = <LevelSprite>[];
+    for (final LevelSprite sprite in levelData.sprites.iterable()) {
+      if (_resolveGemSpawnType(sprite) == null) {
+        nonGemSprites.add(sprite);
+      }
+    }
+
+    levelData.sprites.clear();
+    for (final LevelSprite sprite in nonGemSprites) {
+      levelData.sprites.add(sprite);
+    }
+
+    final math.Random random = math.Random();
+    final List<int> shuffledCellIndices = List<int>.generate(
+      spawnCells.length,
+      (int i) => i,
+    )..shuffle(random);
+    int nextCellCursor = 0;
+
+    int? nextCellIndex() {
+      if (nextCellCursor >= shuffledCellIndices.length) {
+        return null;
+      }
+      final int index = shuffledCellIndices[nextCellCursor++];
+      return index;
+    }
+
+    void spawnType(_GemSpawnType type, int count) {
+      final LevelSprite? template = templates[type];
+      if (template == null || count <= 0) {
+        return;
+      }
+      for (int i = 0; i < count; i++) {
+        final int? cellIndex = nextCellIndex();
+        if (cellIndex == null) {
+          break;
+        }
+        final _GemSpawnCell cell = spawnCells[cellIndex];
+        final double x = _randomAnchoredXInCell(template, cell, random);
+        final double y = _randomAnchoredYInCell(template, cell, random);
+        levelData.sprites.add(_copySpriteAt(template, x, y));
+      }
+    }
+
+    spawnType(_GemSpawnType.purple, spawnPurpleGemsCount);
+    spawnType(_GemSpawnType.yellow, spawnYellowGemsCount);
+    spawnType(_GemSpawnType.green, spawnGreenGemsCount);
+    spawnType(_GemSpawnType.blue, spawnBlueGemsCount);
+  }
+
+  double _randomAnchoredXInCell(
+    LevelSprite sprite,
+    _GemSpawnCell cell,
+    math.Random random,
+  ) {
+    final double minX = cell.x + sprite.width * sprite.anchorX;
+    final double maxX =
+        cell.x + cell.width - sprite.width * (1 - sprite.anchorX);
+    if (maxX <= minX) {
+      return cell.x + cell.width * 0.5;
+    }
+    return minX + random.nextDouble() * (maxX - minX);
+  }
+
+  double _randomAnchoredYInCell(
+    LevelSprite sprite,
+    _GemSpawnCell cell,
+    math.Random random,
+  ) {
+    final double minY = cell.y + sprite.height * sprite.anchorY;
+    final double maxY =
+        cell.y + cell.height - sprite.height * (1 - sprite.anchorY);
+    if (maxY <= minY) {
+      return cell.y + cell.height * 0.5;
+    }
+    return minY + random.nextDouble() * (maxY - minY);
+  }
+
+  LevelLayer? _findGemsZoneLayer() {
+    for (int i = 0; i < levelData.layers.size; i++) {
+      final LevelLayer layer = levelData.layers.get(i);
+      final String layerName = layer.name.trim().toLowerCase();
+      if (layerName == 'gems zone') {
+        return layer;
+      }
+    }
+    return null;
+  }
+
+  List<_GemSpawnCell> _collectGemSpawnCells(LevelLayer layer) {
+    final List<_GemSpawnCell> cells = <_GemSpawnCell>[];
+    if (layer.tileWidth <= 0 || layer.tileHeight <= 0) {
+      return cells;
+    }
+    for (int tileY = 0; tileY < layer.tileMap.length; tileY++) {
+      final List<int> row = layer.tileMap[tileY];
+      for (int tileX = 0; tileX < row.length; tileX++) {
+        cells.add(
+          _GemSpawnCell(
+            layer.x + tileX * layer.tileWidth,
+            layer.y + tileY * layer.tileHeight,
+            layer.tileWidth.toDouble(),
+            layer.tileHeight.toDouble(),
+          ),
+        );
+      }
+    }
+    return cells;
+  }
+
+  Map<_GemSpawnType, LevelSprite> _findGemTemplates() {
+    final Map<_GemSpawnType, LevelSprite> templates =
+        <_GemSpawnType, LevelSprite>{};
+    for (final LevelSprite sprite in levelData.sprites.iterable()) {
+      final _GemSpawnType? type = _resolveGemSpawnType(sprite);
+      if (type == null || templates.containsKey(type)) {
+        continue;
+      }
+      templates[type] = sprite;
+    }
+    return templates;
+  }
+
+  _GemSpawnType? _resolveGemSpawnType(LevelSprite sprite) {
+    final String merged =
+        '${sprite.name.toLowerCase()} ${sprite.type.toLowerCase()}';
+    if (!merged.contains('gem')) {
+      return null;
+    }
+    if (merged.contains('purple') ||
+        merged.contains('lila') ||
+        merged.contains('violet')) {
+      return _GemSpawnType.purple;
+    }
+    if (merged.contains('yellow') ||
+        merged.contains('groc') ||
+        merged.contains('amarillo')) {
+      return _GemSpawnType.yellow;
+    }
+    if (merged.contains('green') ||
+        merged.contains('gren') ||
+        merged.contains('verd') ||
+        merged.contains('verde')) {
+      return _GemSpawnType.green;
+    }
+    if (merged.contains('blue') ||
+        merged.contains('blau') ||
+        merged.contains('azul')) {
+      return _GemSpawnType.blue;
+    }
+    return null;
+  }
+
+  LevelSprite _copySpriteAt(LevelSprite sprite, double x, double y) {
+    return LevelSprite(
+      sprite.name,
+      sprite.type,
+      sprite.depth,
+      x,
+      y,
+      sprite.width,
+      sprite.height,
+      sprite.anchorX,
+      sprite.anchorY,
+      sprite.flipX,
+      sprite.flipY,
+      sprite.frameIndex,
+      sprite.texturePath,
+      sprite.animationId,
+    );
   }
 
   @override
@@ -1107,6 +1303,17 @@ class _PathSample {
 
   _PathSample(this.x, this.y);
 }
+
+class _GemSpawnCell {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+
+  _GemSpawnCell(this.x, this.y, this.width, this.height);
+}
+
+enum _GemSpawnType { purple, yellow, green, blue }
 
 enum _DebugOverlayMode { none, zones, paths, both }
 
