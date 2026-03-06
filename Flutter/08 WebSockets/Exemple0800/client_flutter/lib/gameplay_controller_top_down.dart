@@ -95,6 +95,15 @@ class GameplayControllerTopDown extends GameplayControllerBase {
       collectedGreenGems * 2 +
       collectedYellowGems * 3 +
       collectedPurpleGems * 5;
+  int getRemainingGemsCount() =>
+      totalGreenGems +
+      totalPurpleGems +
+      totalYellowGems +
+      totalBlueGems -
+      collectedGreenGems -
+      collectedPurpleGems -
+      collectedYellowGems -
+      collectedBlueGems;
 
   bool isWin() {
     return collectibleArbreTileKeys.size > 0 &&

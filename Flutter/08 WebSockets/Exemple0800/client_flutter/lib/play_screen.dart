@@ -30,6 +30,7 @@ class PlayScreen extends ScreenAdapter {
   static const double hudCounterScale = 1.45;
   static const double hudGemCounterScale = 1.35;
   static const double hudScoreScale = 1.8;
+  static const double hudRemainingScale = 1.1;
   static const double hudLifeTextScale = 1.2;
   static const double hudLifeBarWidth = 210;
   static const double hudLifeBarHeight = 14;
@@ -38,6 +39,7 @@ class PlayScreen extends ScreenAdapter {
   static const double hudGemRowHeight = 20;
   static const double hudGemRowGap = 4;
   static const double hudScoreRowHeight = 26;
+  static const double hudRemainingRowHeight = 20;
   static const double hudGemIconSize = 18;
   static const double hudGemTextGap = 4;
   static const double hudGemRightMargin = 4;
@@ -816,6 +818,17 @@ class PlayScreen extends ScreenAdapter {
     final double scoreY =
         scoreRowTop + (hudScoreRowHeight + hudLayout.height) * 0.5;
     font.drawText(scoreText, scoreX, scoreY);
+
+    final String remainingText = '${gc.getRemainingGemsCount()}';
+    final double remainingRowTop =
+        scoreRowTop + hudScoreRowHeight + hudGemRowGap;
+    font.setColor(hudTextColor);
+    font.getData().setScale(hudRemainingScale);
+    hudLayout.setText(font, remainingText);
+    final double remainingX = rightEdgeX - hudLayout.width;
+    final double remainingY =
+        remainingRowTop + (hudRemainingRowHeight + hudLayout.height) * 0.5;
+    font.drawText(remainingText, remainingX, remainingY);
     font.getData().setScale(1);
 
     batch.end();
