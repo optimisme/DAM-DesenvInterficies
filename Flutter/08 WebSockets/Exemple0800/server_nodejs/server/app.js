@@ -3,8 +3,8 @@ const GameLogic = require('./gameLogic.js');
 const webSockets = require('./utilsWebSockets.js');
 const GameLoop = require('./utilsGameLoop.js');
 
-const debug = true;
-const port = process.env.PORT || 8888;
+const debug = process.env.DEBUG_WS === '1';
+const port = process.env.PORT || 3000;
 
 // Inicialitzar WebSockets i la lògica del joc
 const ws = new webSockets();
@@ -42,6 +42,8 @@ ws.init(httpServer, port);
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
     game.addClient(id);
+    socket.send(JSON.stringify({ type: "initial", initialState: game.getInitialState() }));
+    socket.send(JSON.stringify({ type: "gameplay", gameState: game.getGameplayState() }));
 };
 
 ws.onMessage = (socket, id, msg) => {
@@ -58,7 +60,11 @@ ws.onClose = (socket, id) => {
 // **Game Loop**
 gameLoop.run = (fps) => {
     game.updateGame(fps);
-    ws.broadcast(JSON.stringify({ type: "update", gameState: game.getGameState() }));
+    const initialState = game.consumeInitialState();
+    if (initialState) {
+        ws.broadcast(JSON.stringify({ type: "initial", initialState }));
+    }
+    ws.broadcast(JSON.stringify({ type: "gameplay", gameState: game.getGameplayState() }));
 };
 gameLoop.start();
 

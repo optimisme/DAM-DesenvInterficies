@@ -69,12 +69,19 @@ class SpriteBatch {
     bool flipY = false,
     double pivotX = 0.5,
     double pivotY = 0.5,
+    double opacity = 1,
   }) {
     if (!_inBatch) {
       return;
     }
     final ui.Canvas canvas = Gdx.graphics.getCanvas();
     final ui.Paint paint = ui.Paint()
+      ..color = ui.Color.fromARGB(
+        (clampDouble(opacity, 0, 1) * 255).round(),
+        255,
+        255,
+        255,
+      )
       ..isAntiAlias = false
       ..filterQuality = ui.FilterQuality.none;
     if (!flipX && !flipY) {

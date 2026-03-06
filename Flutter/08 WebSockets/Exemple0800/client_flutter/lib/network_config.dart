@@ -14,7 +14,7 @@ class NetworkConfig {
   String get serverHost {
     switch (serverOption) {
       case ServerOption.local:
-        return 'localhost';
+        return '127.0.0.1';
       case ServerOption.remote:
         return 'nomUsuari.ieti.site';
     }
@@ -41,7 +41,7 @@ class NetworkConfig {
   String get serverLabel {
     switch (serverOption) {
       case ServerOption.local:
-        return 'Local (localhost:3000)';
+        return 'Local (127.0.0.1:3000)';
       case ServerOption.remote:
         return 'Remote (https://nomUsuari.ieti.site:443)';
     }

@@ -154,7 +154,7 @@ class _ConfigurationScreenState extends State<_ConfigurationScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _serverOption == ServerOption.local
-                        ? 'localhost:3000'
+                        ? '127.0.0.1:3000'
                         : 'https://nomUsuari.ieti.site:443',
                     style: theme.textTheme.bodyMedium,
                   ),

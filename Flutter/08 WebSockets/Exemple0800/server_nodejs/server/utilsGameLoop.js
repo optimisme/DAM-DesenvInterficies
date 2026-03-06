@@ -1,6 +1,7 @@
 'use strict';
 
-const TARGET_FPS = 35;
+// Target server update/broadcast cadence used by the main loop scheduler.
+const TARGET_FPS = 60;
 const TARGET_MS = 1000 / TARGET_FPS;
 
 class GameLoop {

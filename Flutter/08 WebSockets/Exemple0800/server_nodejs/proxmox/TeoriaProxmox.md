@@ -169,3 +169,125 @@ Exemple:
 ```
 
 L'arxiu queda a l'arrel del servidor.
+
+# MySQL al Proxmox
+
+Al servidor remot "Proxmox" es pot instal·lar un MySQL, per accedir-hi caldrà fer un "túnel" entre el vostre ordinador i el servidor.
+
+## Instal·lar MySQL al servidor remot
+
+Des de la consola local, connectar amb el servidor:
+
+```bash
+./proxmoxConnect.sh
+```
+
+Un cop connectats, des de la consola remota instal·lar MySQL. Les següents comandes poden anar lentes, no talleu la connexió i llegiu bé els missatges d'error en cas que n'hi hagin:
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+sudo systemctl status mysql
+
+# Connectar a la base de dades des del propi servidor remot i crear l'usuari 'super':
+
+sudo mysql
+CREATE USER 'super'@'localhost' IDENTIFIED WITH caching_sha2_password BY '1234';
+GRANT ALL PRIVILEGES ON *.* TO 'super'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+quit
+```
+
+## Connectar a la base de dades MySQL del servidor remot (túnel)
+
+Des del vostre ordinador, primer cal configurar el **"túnel"** entre el vostre ordinador i el servidor remot, executa la següent comanda per **obrir el túnel**:
+
+```bash
+./proxmoxTunelStart.sh
+```
+
+Executa la següent comanda per **saber si el túnel està obert**:
+
+```bash
+./proxmoxTunelStatus.sh
+```
+
+Executa la següent comanda per **aturar el túnel**:
+
+```bash
+./proxmoxTunelStop.sh
+```
+
+Amb el túnel funcionant, podeu connectar-vos a la base de dades remota, però ho heu de fer a la ip local **127.0.0.1** i port **3306**!
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u super -p
+```
+
+Demana el codi (abans hem posat 1234)
+
+```text
+1234
+```
+
+Des de la consola 'MySQL' remota:
+```text
+SHOW DATABASES;
+quit
+```
+
+Si la comanda anterior ja us funciona, podeu configurar **"MySQLWorkbench"** (o la eina gràfica que volgueu)
+
+```text
+Host: 127.0.0.1
+Port: 2207
+User: super
+Password: 1234
+```
+
+Evidentment, **només funcionarà amb el tunel activat**
+
+## Clonar una base de dades local cap al servidor remot
+
+Si teniu una base de dades al MySQL local i la voleu enviar al servidor remot
+
+**Nota:** *canvieu 'nom_db' pel nom de la vostre base de dades*
+
+1 - Obrir el túnel
+
+2 - Crear una còpia de la base de dades local cap a l'arxiu 'dump.sql'
+
+```bash
+mysqldump -h 127.0.0.1 -P 3306 -u super -p nom_db > dump.sql
+```
+
+3 - Crear la base de dades al servidor remot
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u super -p -e "CREATE DATABASE IF NOT EXISTS nom_db;"
+```
+
+4 - Enviar les dades de l'arxiu 'dump.sql' a la base de dades remota
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u super -p nom_db < dump.sql
+```
+
+5 - Connectar a la base de dades remota, directament a la base de dades creada/clonada 'nom_db'
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u super -p nom_db
+```
+
+Demana el codi (abans hem posat 1234)
+
+```text
+1234
+```
+
+6 - Des de la consola MySQL remota, comprovar que hi ha les dades/taules esperades al servidor MySQL remot.
+
+```sql
+SHOW TABLES;
+quit
+```

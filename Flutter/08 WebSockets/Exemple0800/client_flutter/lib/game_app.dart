@@ -2,15 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import 'app_data.dart';
 import 'libgdx_compat/asset_manager.dart';
 import 'libgdx_compat/game_framework.dart';
 import 'libgdx_compat/gdx.dart';
 import 'libgdx_compat/gdx_collections.dart';
-import 'menu_screen.dart';
+import 'loading_screen.dart';
 import 'network_config.dart';
 
 class GameApp extends Game {
+  static const int multiplayerLevelIndex = 0;
+
   final NetworkConfig networkConfig;
+  final AppData appData;
   final AssetManager assetManager = AssetManager();
   final Array<String> menuOptions = Array<String>();
   final Array<String> levelNames = Array<String>();
@@ -30,7 +34,8 @@ class GameApp extends Game {
   ShapeRenderer? shapeRenderer;
   BitmapFont? font;
 
-  GameApp({required this.networkConfig});
+  GameApp({required this.networkConfig})
+    : appData = AppData(initialConfig: networkConfig);
 
   Future<void> create() async {
     batch = SpriteBatch();
@@ -38,7 +43,7 @@ class GameApp extends Game {
     font = BitmapFont();
     font!.getData().markupEnabled = false;
     await _loadProjectData();
-    setScreen(MenuScreen(this));
+    setScreen(LoadingScreen(this, multiplayerLevelIndex));
   }
 
   SpriteBatch getBatch() => batch!;
@@ -62,6 +67,8 @@ class GameApp extends Game {
 
   String getSelectedServerLabel() => networkConfig.serverLabel;
 
+  AppData getAppData() => appData;
+
   void queueReferencedAssetsForLevel(int levelIndex) {
     if (levelIndex < 0 || levelIndex >= referencedImageFilesByLevel.size) {
       return;
@@ -78,6 +85,15 @@ class GameApp extends Game {
       }
     }
     assetManager.load('other/enrrere.png', Texture);
+  }
+
+  @override
+  void dispose() {
+    appData.dispose();
+    assetManager.dispose();
+    font?.dispose();
+    shapeRenderer?.dispose();
+    super.dispose();
   }
 
   void unloadReferencedAssetsForLevel(int levelIndex) {
@@ -369,14 +385,6 @@ class GameApp extends Game {
   }
 
   String _normalize(String value) => value.trim().toLowerCase();
-
-  @override
-  void dispose() {
-    super.dispose();
-    assetManager.dispose();
-    font?.dispose();
-    shapeRenderer?.dispose();
-  }
 }
 
 class _AnimationMediaEntry {
