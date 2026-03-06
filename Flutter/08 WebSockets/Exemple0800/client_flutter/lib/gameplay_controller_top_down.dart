@@ -238,6 +238,63 @@ class GameplayControllerTopDown extends GameplayControllerBase {
     if (_wouldCollideBlocked(playerX, playerY)) {
       playerX = previousX;
       playerY = previousY;
+      _resolveWallPenetration();
+    }
+  }
+
+  void _resolveWallPenetration() {
+    if (!_wouldCollideBlocked(playerX, playerY)) {
+      return;
+    }
+
+    for (final int zoneIndex in blockedZoneIndices.iterable()) {
+      if (!_collidesWithZoneAt(zoneIndex, playerX, playerY)) {
+        continue;
+      }
+
+      final Rectangle zoneRect = zoneRectAtIndex(zoneIndex, rectCacheB);
+      final double zoneLeft = zoneRect.x;
+      final double zoneTop = zoneRect.y;
+      final double zoneRight = zoneLeft + zoneRect.width;
+      final double zoneBottom = zoneTop + zoneRect.height;
+
+      final Rectangle pb = playerRectAt(playerX, playerY, rectCacheA);
+      final double playerLeft = pb.x;
+      final double playerTop = pb.y;
+      final double playerRight = playerLeft + pb.width;
+      final double playerBottom = playerTop + pb.height;
+
+      final double penLeft = playerRight - zoneLeft;
+      final double penRight = zoneRight - playerLeft;
+      final double penTop = playerBottom - zoneTop;
+      final double penBottom = zoneBottom - playerTop;
+
+      double minPen = penLeft;
+      double pushX = -penLeft;
+      double pushY = 0;
+
+      if (penRight < minPen) {
+        minPen = penRight;
+        pushX = penRight;
+        pushY = 0;
+      }
+      if (penTop < minPen) {
+        minPen = penTop;
+        pushX = 0;
+        pushY = -penTop;
+      }
+      if (penBottom < minPen) {
+        minPen = penBottom;
+        pushX = 0;
+        pushY = penBottom;
+      }
+
+      playerX += pushX;
+      playerY += pushY;
+
+      if (!_wouldCollideBlocked(playerX, playerY)) {
+        return;
+      }
     }
   }
 
