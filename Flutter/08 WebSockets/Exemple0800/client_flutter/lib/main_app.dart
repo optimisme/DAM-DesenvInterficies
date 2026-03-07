@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 
+import 'app_data.dart';
 import 'game_app.dart';
 import 'libgdx_compat/gdx.dart';
 import 'level_loader.dart';
@@ -338,6 +339,10 @@ class _GameViewState extends State<_GameView>
       return const ColoredBox(color: Colors.black);
     }
 
+    final AppData appData = _game.getAppData();
+    final bool showRestartOverlay =
+        _game.getScreen() is PlayScreen && appData.phase == MatchPhase.finished;
+
     return Focus(
       focusNode: _focusNode,
       autofocus: true,
@@ -352,63 +357,106 @@ class _GameViewState extends State<_GameView>
             _offsetX = 0;
             _offsetY = 0;
           }
+          final double reservedRightWidth =
+              constraints.maxWidth > (PlayScreen.leaderboardWidth + 180)
+              ? PlayScreen.leaderboardWidth
+              : 0;
+          final double overlayAreaWidth = math.max(
+            0,
+            constraints.maxWidth - reservedRightWidth,
+          );
+          final double restartButtonWidth = math.min(
+            280,
+            math.max(180, overlayAreaWidth - 48),
+          );
+          final double restartButtonLeft = math.max(
+            24,
+            (overlayAreaWidth - restartButtonWidth) * 0.5,
+          );
+          final double restartButtonTop = math.min(
+            constraints.maxHeight - 84,
+            constraints.maxHeight * 0.64,
+          );
           return Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: _onPointerDown,
-            onPointerMove: _onPointerMove,
-            onPointerUp: _onPointerUp,
-            child: CustomPaint(
-              painter: _GamePainter(
-                onPaint: (Canvas canvas, Size size) {
-                  final bool letterboxedMode = _isLetterboxedMode();
-                  final int gameWidth;
-                  final int gameHeight;
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: _onPointerDown,
+                  onPointerMove: _onPointerMove,
+                  onPointerUp: _onPointerUp,
+                  child: CustomPaint(
+                    painter: _GamePainter(
+                      onPaint: (Canvas canvas, Size size) {
+                        final bool letterboxedMode = _isLetterboxedMode();
+                        final int gameWidth;
+                        final int gameHeight;
 
-                  if (letterboxedMode) {
-                    _updateLetterbox(size);
-                    gameWidth = _virtualWidth.round();
-                    gameHeight = _virtualHeight.round();
-                  } else {
-                    _scale = 1;
-                    _offsetX = 0;
-                    _offsetY = 0;
-                    gameWidth = math.max(1, size.width.round());
-                    gameHeight = math.max(1, size.height.round());
-                  }
+                        if (letterboxedMode) {
+                          _updateLetterbox(size);
+                          gameWidth = _virtualWidth.round();
+                          gameHeight = _virtualHeight.round();
+                        } else {
+                          _scale = 1;
+                          _offsetX = 0;
+                          _offsetY = 0;
+                          gameWidth = math.max(1, size.width.round());
+                          gameHeight = math.max(1, size.height.round());
+                        }
 
-                  _resizeGameIfNeeded(gameWidth, gameHeight, letterboxedMode);
+                        _resizeGameIfNeeded(
+                          gameWidth,
+                          gameHeight,
+                          letterboxedMode,
+                        );
 
-                  if (letterboxedMode) {
-                    canvas.drawRect(
-                      Offset.zero & size,
-                      Paint()..color = Colors.black,
-                    );
-                    canvas.save();
-                    canvas.translate(_offsetX, _offsetY);
-                    canvas.scale(_scale, _scale);
-                    Gdx.graphics.beginFrame(
-                      canvas,
-                      gameWidth,
-                      gameHeight,
-                      _delta,
-                    );
-                    _game.render(_delta);
-                    Gdx.graphics.endFrame();
-                    canvas.restore();
-                  } else {
-                    Gdx.graphics.beginFrame(
-                      canvas,
-                      gameWidth,
-                      gameHeight,
-                      _delta,
-                    );
-                    _game.render(_delta);
-                    Gdx.graphics.endFrame();
-                  }
-                  Gdx.input.endFrame();
-                },
-              ),
-              size: Size.infinite,
+                        if (letterboxedMode) {
+                          canvas.drawRect(
+                            Offset.zero & size,
+                            Paint()..color = Colors.black,
+                          );
+                          canvas.save();
+                          canvas.translate(_offsetX, _offsetY);
+                          canvas.scale(_scale, _scale);
+                          Gdx.graphics.beginFrame(
+                            canvas,
+                            gameWidth,
+                            gameHeight,
+                            _delta,
+                          );
+                          _game.render(_delta);
+                          Gdx.graphics.endFrame();
+                          canvas.restore();
+                        } else {
+                          Gdx.graphics.beginFrame(
+                            canvas,
+                            gameWidth,
+                            gameHeight,
+                            _delta,
+                          );
+                          _game.render(_delta);
+                          Gdx.graphics.endFrame();
+                        }
+                        Gdx.input.endFrame();
+                      },
+                    ),
+                    size: Size.infinite,
+                  ),
+                ),
+                if (showRestartOverlay)
+                  Positioned(
+                    left: restartButtonLeft,
+                    top: restartButtonTop,
+                    width: restartButtonWidth,
+                    child: FilledButton(
+                      onPressed: appData.canRequestMatchRestart
+                          ? appData.requestMatchRestart
+                          : null,
+                      child: const Text('Restart Match'),
+                    ),
+                  ),
+              ],
             ),
           );
         },

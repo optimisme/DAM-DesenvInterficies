@@ -165,12 +165,12 @@ class GameLogic {
         try {
             const obj = JSON.parse(msg);
             if (!obj || !obj.type) {
-                return;
+                return false;
             }
 
             const player = this.players.get(id);
             if (!player) {
-                return;
+                return false;
             }
 
             switch (obj.type) {
@@ -180,6 +180,7 @@ class GameLogic {
                     if (nextName !== player.name) {
                         player.name = nextName;
                         this.initialStateDirty = true;
+                        return true;
                     }
                 }
                 break;
@@ -189,11 +190,18 @@ class GameLogic {
                     player.facing = DIRECTIONS[player.direction].facing;
                 }
                 break;
+            case 'restartMatch':
+                if (this.phase === 'finished') {
+                    this.restartToWaitingRoom();
+                    return true;
+                }
+                break;
             default:
                 break;
             }
         } catch (_) {
         }
+        return false;
     }
 
     updateGame(fps) {
@@ -374,6 +382,14 @@ class GameLogic {
         this.phase = 'finished';
         const players = Array.from(this.players.values()).sort(comparePlayers);
         this.winnerId = players.length > 0 ? players[0].id : '';
+    }
+
+    restartToWaitingRoom() {
+        if (this.players.size <= 0) {
+            this.resetMatch();
+            return;
+        }
+        this.startWaitingRoom();
     }
 
     resetMatch() {

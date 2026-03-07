@@ -219,6 +219,9 @@ class AppData extends ChangeNotifier {
 
   bool get canMove => isConnected && phase == MatchPhase.playing;
 
+  bool get canRequestMatchRestart =>
+      isConnected && phase == MatchPhase.finished;
+
   void updateNetworkConfig(NetworkConfig nextConfig) {
     networkConfig = nextConfig;
     playerName = nextConfig.playerName;
@@ -236,6 +239,13 @@ class AppData extends ChangeNotifier {
     }
     _lastDirection = normalized;
     _sendMessage(<String, dynamic>{'type': 'direction', 'value': normalized});
+  }
+
+  void requestMatchRestart() {
+    if (!canRequestMatchRestart) {
+      return;
+    }
+    _sendMessage(<String, dynamic>{'type': 'restartMatch'});
   }
 
   void disconnect() {
