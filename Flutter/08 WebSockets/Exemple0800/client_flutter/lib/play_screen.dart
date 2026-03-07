@@ -149,6 +149,8 @@ class PlayScreen extends ScreenAdapter {
   ) {
     _localPlayerHighlightCenter = null;
     _localPlayerHighlightRadius = null;
+    final ui.Color previousBatchColor = batch.getColor();
+    bool usingRemotePlayerOpacity = false;
     final List<MultiplayerPlayer> orderedPlayers =
         List<MultiplayerPlayer>.from(players)
           ..sort((MultiplayerPlayer a, MultiplayerPlayer b) {
@@ -163,6 +165,15 @@ class PlayScreen extends ScreenAdapter {
     for (final MultiplayerPlayer player in orderedPlayers) {
       final _AnimatedSpriteFrame frame = _playerFrameFor(player);
       final bool isLocalPlayer = player.id == localPlayerId;
+      if (!isLocalPlayer) {
+        if (!usingRemotePlayerOpacity) {
+          batch.setColor(1, 1, 1, remotePlayerOpacity);
+          usingRemotePlayerOpacity = true;
+        }
+      } else if (usingRemotePlayerOpacity) {
+        batch.setColor(previousBatchColor);
+        usingRemotePlayerOpacity = false;
+      }
       _drawAnimatedSprite(
         batch,
         frame: frame,
@@ -171,7 +182,6 @@ class PlayScreen extends ScreenAdapter {
         width: player.width,
         height: player.height,
         flipX: frame.flipX,
-        opacity: isLocalPlayer ? 1 : remotePlayerOpacity,
       );
       if (isLocalPlayer) {
         final ui.Rect dst = viewport.worldToScreenRect(
@@ -187,6 +197,9 @@ class PlayScreen extends ScreenAdapter {
         _localPlayerHighlightRadius =
             math.max(dst.width, dst.height) * 0.5 + localPlayerRingPadding;
       }
+    }
+    if (usingRemotePlayerOpacity) {
+      batch.setColor(previousBatchColor);
     }
   }
 
@@ -214,7 +227,6 @@ class PlayScreen extends ScreenAdapter {
     required double width,
     required double height,
     bool flipX = false,
-    double opacity = 1,
   }) {
     final AssetManager assets = game.getAssetManager();
     if (!assets.isLoaded(frame.texturePath, Texture)) {
@@ -234,7 +246,7 @@ class PlayScreen extends ScreenAdapter {
       frame.frameHeight,
       frame.frameIndex,
     );
-    batch.drawRegion(texture, src, dst, flipX: flipX, opacity: opacity);
+    batch.drawRegion(texture, src, dst, flipX: flipX);
   }
 
   void _renderLocalPlayerHighlight() {
