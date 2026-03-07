@@ -222,6 +222,7 @@ class GameLogic {
         }
 
         for (const player of this.players.values()) {
+            this.applyMovingWallCarry(player);
             this.resolveWallPenetration(player);
 
             const direction = DIRECTIONS[player.direction] || DIRECTIONS.none;
@@ -590,6 +591,53 @@ class GameLogic {
             if (!this.wouldCollideBlocked(player, player.x, player.y)) {
                 return;
             }
+        }
+    }
+
+    applyMovingWallCarry(player) {
+        let bestDeltaMagnitudeSq = 0;
+        let carryX = 0;
+        let carryY = 0;
+
+        for (const zoneIndex of this.wallZoneIndices) {
+            if (!this.collidesWithZoneAt(player, zoneIndex, player.x, player.y)) {
+                continue;
+            }
+
+            const deltaX = this.zoneDeltaX(zoneIndex);
+            const deltaY = this.zoneDeltaY(zoneIndex);
+            if (Math.abs(deltaX) <= MOVEMENT_EPSILON &&
+                Math.abs(deltaY) <= MOVEMENT_EPSILON) {
+                continue;
+            }
+
+            const candidateX = clamp(
+                player.x + deltaX,
+                0,
+                Math.max(0, LEVEL.worldWidth - player.width)
+            );
+            const candidateY = clamp(
+                player.y + deltaY,
+                0,
+                Math.max(0, LEVEL.worldHeight - player.height)
+            );
+
+            const stillCollides = this.collidesWithZoneAt(player, zoneIndex, candidateX, candidateY);
+            if (stillCollides) {
+                continue;
+            }
+
+            const deltaMagnitudeSq = deltaX * deltaX + deltaY * deltaY;
+            if (deltaMagnitudeSq > bestDeltaMagnitudeSq) {
+                bestDeltaMagnitudeSq = deltaMagnitudeSq;
+                carryX = candidateX - player.x;
+                carryY = candidateY - player.y;
+            }
+        }
+
+        if (bestDeltaMagnitudeSq > 0) {
+            player.x += carryX;
+            player.y += carryY;
         }
     }
 

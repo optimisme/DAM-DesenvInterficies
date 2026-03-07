@@ -15,18 +15,18 @@ import 'player_list_renderer.dart';
 class WaitingRoomScreen extends ScreenAdapter {
   static const double worldWidth = 1280;
   static const double worldHeight = 720;
-  static const double panelWidth = 340;
-  static const double panelPadding = 22;
-  static const double rowStartTop = 96;
+  static const double panelWidth = 320;
+  static const double panelPadding = 14;
+  static const double leaderboardStartY = 92;
   static const double gemLegendSpriteSize = 28;
   static const double gemLegendCenterOffsetX = 44;
 
   static final ui.Color background = colorValueOf('070E08');
-  static final ui.Color panelFill = colorValueOf('0F1912DD');
+  static final ui.Color panelFill = colorValueOf('09140CCC');
   static final ui.Color panelStroke = colorValueOf('35FF74');
   static final ui.Color titleColor = colorValueOf('FFFFFF');
-  static final ui.Color textColor = colorValueOf('C7FFD5');
-  static final ui.Color dimTextColor = colorValueOf('6FA07A');
+  static final ui.Color textColor = colorValueOf('D8FFE3');
+  static final ui.Color dimTextColor = colorValueOf('76A784');
   static final ui.Color highlightColor = colorValueOf('35FF74');
   static final ui.Color localPlayerColor = colorValueOf('FFE07A');
 
@@ -138,11 +138,20 @@ class WaitingRoomScreen extends ScreenAdapter {
     _drawLeftAlignedText(
       batch,
       font,
-      'Players',
+      'Leaderboard',
       worldWidth - panelWidth + panelPadding,
-      52,
-      1.6,
+      34,
+      1.45,
       titleColor,
+    );
+    _drawLeftAlignedText(
+      batch,
+      font,
+      'Match starts soon',
+      worldWidth - panelWidth + panelPadding,
+      64,
+      1.0,
+      dimTextColor,
     );
 
     PlayerListRenderer.render(
@@ -153,22 +162,22 @@ class WaitingRoomScreen extends ScreenAdapter {
       localPlayerId: appData.playerId,
       left: worldWidth - panelWidth + panelPadding,
       right: worldWidth - panelPadding,
-      startY: rowStartTop + 21,
+      startY: leaderboardStartY,
       textColor: textColor,
       localPlayerColor: localPlayerColor,
       drawLeftAlignedText: _drawLeftAlignedText,
       drawRightAlignedText: _drawRightAlignedText,
-      style: PlayerListRenderer.waitingRoomStyle,
+      style: PlayerListRenderer.gameplayStyle,
     );
 
     if (appData.sortedPlayers.isEmpty) {
       _drawLeftAlignedText(
         batch,
         font,
-        'No players yet',
+        'Waiting for players...',
         worldWidth - panelWidth + panelPadding,
-        rowStartTop,
-        1.1,
+        leaderboardStartY,
+        1.0,
         dimTextColor,
       );
     }
