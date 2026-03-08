@@ -1,9 +1,10 @@
 enum ServerOption { local, remote }
 
 class NetworkConfig {
+  static const String remoteServer = 'nomUsuari.ieti.site';
+
   final ServerOption serverOption;
   final String playerName;
-
   const NetworkConfig({required this.serverOption, required this.playerName});
 
   static const NetworkConfig defaults = NetworkConfig(
@@ -16,7 +17,7 @@ class NetworkConfig {
       case ServerOption.local:
         return '127.0.0.1';
       case ServerOption.remote:
-        return 'nomUsuari.ieti.site';
+        return remoteServer;
     }
   }
 
@@ -43,7 +44,7 @@ class NetworkConfig {
       case ServerOption.local:
         return 'Local (127.0.0.1:3000)';
       case ServerOption.remote:
-        return 'Remote (https://nomUsuari.ieti.site:443)';
+        return 'Remote ($remoteServer:443)';
     }
   }
 

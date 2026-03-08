@@ -76,7 +76,7 @@ class _ConfigurationScreen extends StatefulWidget {
 }
 
 class _ConfigurationScreenState extends State<_ConfigurationScreen> {
-  ServerOption _serverOption = ServerOption.local;
+  ServerOption _serverOption = NetworkConfig.defaults.serverOption;
   final TextEditingController _playerNameController = TextEditingController(
     text: NetworkConfig.defaults.playerName,
   );
@@ -155,8 +155,8 @@ class _ConfigurationScreenState extends State<_ConfigurationScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _serverOption == ServerOption.local
-                        ? '127.0.0.1:3000'
-                        : 'https://nomUsuari.ieti.site:443',
+                        ? 'ws://127.0.0.1:3000'
+                        : 'wss://${NetworkConfig.remoteServer}:443',
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
