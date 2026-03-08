@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+
 const GameLogic = require('./gameLogic.js');
 const webSockets = require('./utilsWebSockets.js');
 const GameLoop = require('./utilsGameLoop.js');
@@ -11,8 +12,9 @@ loadEnvFiles([
 ]);
 
 const debug = process.env.DEBUG_WS === '1';
-const port = process.env.PORT || 3000;
+const port = Number.parseInt(String(process.env.PORT || '3000').trim(), 10) || 3000;
 const adminPassword = String(process.env.WEB_ADMIN_PASSWORD || '').trim();
+const publicDir = path.resolve(__dirname, '..', 'public');
 
 // Inicialitzar WebSockets i la lògica del joc
 const ws = new webSockets();
@@ -21,7 +23,7 @@ let gameLoop = new GameLoop();
 
 // Inicialitzar servidor Express
 const app = express();
-app.use(express.static('public', {
+app.use(express.static(publicDir, {
   maxAge: 0,
   setHeaders: (res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -37,7 +39,9 @@ app.use((req, res, next) => {
   res.setHeader('Surrogate-Control', 'no-store');
   next();
 });
+
 app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 app.post('/api/admin/restart-match', (req, res) => {
   if (!adminPassword) {
     return res.status(503).json({
@@ -113,6 +117,7 @@ function shutDown() {
 }
 
 function broadcastGameState() {
+  // Send initial state only if there is a new one to send, otherwise just send the gameplay state
   const initialState = game.consumeInitialState();
   if (initialState) {
     ws.broadcast(JSON.stringify({ type: 'initial', initialState }));
@@ -166,6 +171,7 @@ function loadEnvFiles(filePaths) {
       }
 
       let value = line.slice(separatorIndex + 1).trim();
+      value = value.replace(/\s+#.*$/, '').trim();
       if (
         value.length >= 2 &&
         ((value.startsWith('"') && value.endsWith('"')) ||

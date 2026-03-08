@@ -2,10 +2,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROJECT_DIR="$(cd "$SERVER_DIR/.." && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CLIENT_DIR="$PROJECT_DIR/client_flutter"
-PUBLIC_DIR="$SERVER_DIR/public"
+PUBLIC_DIR="$SCRIPT_DIR/public"
 
 if ! command -v flutter >/dev/null 2>&1; then
   echo "Error: flutter no esta instal·lat o no és al PATH."

@@ -24,9 +24,10 @@ if [[ ! -f "$RSA_PATH" ]]; then
   exit 1
 fi
 
-./buildFlutterWeb.sh
+bash ../buildFlutterWeb.sh
 
 cd ..
+./getAssets.sh
 rm -f "$ZIP_NAME"
 zip -r "$ZIP_NAME" . -x "proxmox/*" "node_modules/*" "data/*" ".gitignore"
 
