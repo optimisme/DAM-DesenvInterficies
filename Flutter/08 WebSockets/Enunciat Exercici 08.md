@@ -37,25 +37,25 @@ L'aplicació ha de permetre:
 Podeu agafar idees d'aquests jocs i transformar-los en un 'BattleRoyale' per a 10 jugadors
 
 **Wii Tanks**
-
 <center>
     <img src="./assets/game-wiitanks.png" style="max-width: 500px;">
 </center>
+<br/><br/>
 
 **Bomberman**
-
 <center>
     <img src="./assets/game-bomberman.png" style="max-width: 500px;">
 </center>
+<br/><br/>
 
 **Asteroids**
-
 <center>
     <img src="./assets/game-asteroids.png" style="max-width: 500px;">
 </center>
+<br/><br/>
 
 **Worms**
-
 <center>
     <img src="./assets/game-worms.png" style="max-width: 500px;">
 </center>
+<br/><br/>
