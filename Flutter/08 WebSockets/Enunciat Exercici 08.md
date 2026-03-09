@@ -20,6 +20,8 @@ La mecànica del joc ha de tenir:
 
 - Els jugadors han de tenir una barra de vida que es redueix quan reben danys, i moren quan arriba a zero
 
+- Items per recuperar vida
+
 - Animacions adequades (moviment, dany, mort, ...)
 
 L'aplicació ha de permetre:
