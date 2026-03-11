@@ -43,20 +43,20 @@ Els `enum` són un tipus de classe especial que permet definir una quantitat con
 
 ## Servidor
 
-A la part del servidor NodeJS, els WebSockets es gestionen amb:
+A la part del servidor NodeJS, la connexió WebSocket es gestiona amb `utilsWebSockets` i l’enviament optimitzat dels missatges del joc amb `utilsGameMessages`.
 
 - **ws.init**: inicialitza el servidor de websockets
 - **ws.onConnection**: gestiona les connexions entrants
 - **ws.onMessage**: gestiona els missatges entrants
 - **ws.onClose**: gestiona les desconnexions
-- **ws.send**: envia un missatge només a un client concret
-- **ws.broadcast**: envia un missatge a tots els clients connectats
 - **ws.forEachClient**: recorre tots els clients connectats per enviar missatges personalitzats
 - **ws.end**: tanca el servidor de websockets
 
 ```javascript
 const webSockets = require('./utilsWebSockets.js');
+const GameMessages = require('./utilsGameMessages.js');
 const ws = new webSockets();
+const gameMessages = new GameMessages(ws);
 
 // Gestionar WebSockets
 ws.init(httpServer, port);
@@ -64,13 +64,10 @@ ws.init(httpServer, port);
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
     game.addClient(id);
+    gameMessages.addClient(id);
 
-    ws.send(socket, JSON.stringify({
-      type: 'snapshot',
-      snapshot: game.getSnapshotState()
-    }));
-
-    sendGameplayStateToClient(socket, id, {
+    queueSnapshotToClient(socket, id, game.getSnapshotState());
+    queueGameplayStateToClient(socket, id, {
       includeOtherPlayers: true,
       includeGems: true
     });
@@ -87,6 +84,7 @@ ws.onMessage = (socket, id, msg) => {
 ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
     game.removeClient(id);
+    gameMessages.removeClient(id);
     ws.broadcast(JSON.stringify({ type: "disconnected", from: "server" }));
 };
 ```
@@ -107,6 +105,7 @@ El servidor executa un bucle que actualitza l'estat del joc a intervals regulars
 gameLoop.run = (fps) => {
     game.updateGame(fps);
     broadcastGameState();
+    gameMessages.flushAll();
 };
 ```
 
@@ -133,11 +132,13 @@ function broadcastGameState() {
   const includeGems = snapshot ? true : !includeOtherPlayers;
 
   if (snapshot) {
-    ws.broadcast(JSON.stringify({ type: 'snapshot', snapshot }));
+    ws.forEachClient((socket, id) => {
+      queueSnapshotToClient(socket, id, snapshot);
+    });
   }
 
   ws.forEachClient((socket, id) => {
-    sendGameplayStateToClient(socket, id, {
+    queueGameplayStateToClient(socket, id, {
       includeOtherPlayers,
       includeGems
     });
@@ -192,6 +193,53 @@ Ara el protocol queda així:
   - `selfPlayer` sempre
   - `otherPlayers` en missatges alterns
   - `gems` en missatges alterns
+
+### Gestió de missatges amb cua lògica
+
+Quan la connexió d’un client és lenta, enviar cada actualització directament al socket pot provocar que s’acumulin missatges antics al buffer de sortida. Això augmenta la latència perquè el client rep estats del joc que ja han quedat obsolets.
+
+Per reduir aquest problema, es pot afegir una capa intermèdia de gestió de missatges, per exemple `utilsGameMessages`, que manté una **cua lògica per client**.
+
+Aquesta cua no substitueix el buffer intern del protocol TCP/WebSocket, sinó que actua **abans** de fer `send()`. D’aquesta manera, si un client ja té backpressure, el servidor evita injectar nous missatges antics al socket.
+
+El funcionament és aquest:
+
+- si el socket no té backpressure, el missatge s’envia
+- si el socket està carregat, el missatge es guarda a la cua lògica
+- per als missatges replaceables, només es conserva l’última versió pendent
+- quan el buffer del socket baixa, es fa `flush` de la cua lògica
+
+Això és especialment útil per als missatges d’estat continu del joc, com ara:
+
+- `snapshot`
+- `gameplay`
+
+En canvi, els missatges puntuals o crítics no s’haurien de tractar igual, per exemple:
+
+- `welcome`
+- missatges d’error
+- notificacions de control o administració
+
+### Informació del buffer del socket
+
+Per saber si un client va endarrerit, `utilsWebSockets` pot exposar informació sobre l’estat del buffer, per exemple:
+
+- si el socket està obert
+- quants bytes hi ha pendents d’enviament
+- si hi ha backpressure per sobre d’un llindar determinat
+
+Això permet que la capa de missatges decideixi quan és millor esperar i quan és segur tornar a enviar.
+
+### Avantatge principal
+
+Aquesta tècnica no elimina els missatges que ja han entrat al buffer real del socket, però sí que evita continuar afegint-hi estats antics. Això té diversos avantatges:
+
+- redueix la latència percebuda
+- evita acumular actualitzacions obsoletes
+- disminueix l’ús de memòria en clients amb connexió lenta
+- prioritza l’enviament de l’estat més recent del joc
+
+En un joc en temps real, aquesta estratègia és especialment útil perquè normalment és més important rebre **l’últim estat disponible** que no pas tots els estats intermedis.
 
 ## Client
 
