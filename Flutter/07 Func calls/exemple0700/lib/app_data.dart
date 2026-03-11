@@ -8,6 +8,10 @@ import 'package:http/io_client.dart';
 import 'constants.dart';
 import 'drawable.dart';
 
+const streamingModel = 'granite4:3b';
+const functionCallingModel = 'granite4:3b';
+const jsonFixModel = 'granite4:3b';
+
 class AppData extends ChangeNotifier {
   String _responseText = "";
   bool _isLoading = false;
@@ -51,8 +55,8 @@ class AppData extends ChangeNotifier {
       );
 
       request.headers.addAll({'Content-Type': 'application/json'});
-      request.body =
-          jsonEncode({'model': 'llama3.2', 'prompt': question, 'stream': true});
+      request.body = jsonEncode(
+          {'model': streamingModel, 'prompt': question, 'stream': true});
 
       var streamedResponse = await _client!.send(request);
       _streamSubscription =
@@ -80,23 +84,88 @@ class AppData extends ChangeNotifier {
     }
   }
 
-  dynamic fixJsonInStrings(dynamic data) {
+  Future<dynamic> fixJsonInStrings(dynamic data) async {
     if (data is Map<String, dynamic>) {
-      return data.map((key, value) => MapEntry(key, fixJsonInStrings(value)));
+      final result = <String, dynamic>{};
+      for (final entry in data.entries) {
+        result[entry.key] = await fixJsonInStrings(entry.value);
+      }
+      return result;
     } else if (data is List) {
-      return data.map(fixJsonInStrings).toList();
+      return Future.wait(data.map((value) => fixJsonInStrings(value)));
     } else if (data is String) {
+      final trimmed = data.trim();
+      if (trimmed.isEmpty) {
+        return data;
+      }
+
       try {
         // Si és JSON dins d'una cadena, el deserialitzem
         final parsed = jsonDecode(data);
         return fixJsonInStrings(parsed);
       } catch (_) {
-        // Si no és JSON, retornem la cadena tal qual
+        if (_looksLikeJsonCandidate(trimmed)) {
+          final repairedJson = await _repairJsonWithAi(trimmed);
+          if (repairedJson != null) {
+            return fixJsonInStrings(repairedJson);
+          }
+        }
+
+        // Si no és JSON o no es pot reparar, retornem la cadena tal qual
         return data;
       }
     }
     // Retorna qualsevol altre tipus sense canvis (números, booleans, etc.)
     return data;
+  }
+
+  bool _looksLikeJsonCandidate(String value) {
+    return value.startsWith('{') ||
+        value.startsWith('[') ||
+        ((value.contains('{') || value.contains('[')) && value.contains(':'));
+  }
+
+  Future<dynamic> _repairJsonWithAi(String rawJson) async {
+    const apiUrl = 'http://localhost:11434/api/chat';
+    final body = {
+      "model": jsonFixModel,
+      "stream": false,
+      "format": "json",
+      "messages": [
+        {
+          "role": "system",
+          "content":
+              "You repair malformed JSON. Return only valid JSON that preserves the original intent and values as closely as possible."
+        },
+        {
+          "role": "user",
+          "content":
+              "Repair this malformed JSON and return only the fixed JSON:\n$rawJson"
+        }
+      ]
+    };
+
+    try {
+      final response = await _client!.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200) {
+        return null;
+      }
+
+      final jsonResponse = jsonDecode(response.body);
+      final content = jsonResponse['message']?['content'];
+      if (content is! String || content.trim().isEmpty) {
+        return null;
+      }
+
+      return jsonDecode(content);
+    } catch (_) {
+      return null;
+    }
   }
 
   dynamic cleanKeys(dynamic value) {
@@ -119,7 +188,7 @@ class AppData extends ChangeNotifier {
     setLoading(true);
 
     final body = {
-      "model": "llama3.2",
+      "model": functionCallingModel,
       "stream": false,
       "messages": [
         {"role": "user", "content": userPrompt}
@@ -143,7 +212,7 @@ class AppData extends ChangeNotifier {
               .toList();
           for (final tc in toolCalls) {
             if (tc['function'] != null) {
-              _processFunctionCall(tc['function']);
+              await _processFunctionCall(tc['function']);
             }
           }
         }
@@ -179,9 +248,16 @@ class AppData extends ChangeNotifier {
     return 0.0;
   }
 
-  void _processFunctionCall(Map<String, dynamic> functionCall) {
-    final fixedJson = fixJsonInStrings(functionCall);
-    final parameters = fixedJson['arguments'];
+  double _randomBetween(double min, double max) {
+    return min + Random().nextDouble() * (max - min);
+  }
+
+  Future<void> _processFunctionCall(Map<String, dynamic> functionCall) async {
+    final fixedJson = await fixJsonInStrings(functionCall);
+    final parametersData = fixedJson['arguments'];
+    final parameters = parametersData is Map<String, dynamic>
+        ? parametersData
+        : <String, dynamic>{};
 
     String name = fixedJson['name'];
     String infoText = "Draw $name: $parameters";
@@ -191,33 +267,37 @@ class AppData extends ChangeNotifier {
 
     switch (name) {
       case 'draw_circle':
-        if (parameters['x'] != null &&
-            parameters['y'] != null &&
-            parameters['radius'] != null) {
-          final dx = parseDouble(parameters['x']);
-          final dy = parseDouble(parameters['y']);
-          final radius = max(0.0, parseDouble(parameters['radius']));
-          addDrawable(Circle(center: Offset(dx, dy), radius: radius));
-        } else {
-          print("Missing circle properties: $parameters");
-        }
+        final dx =
+            parameters['x'] != null ? parseDouble(parameters['x']) : 50.0;
+        final dy =
+            parameters['y'] != null ? parseDouble(parameters['y']) : 50.0;
+        final radius = parameters['radius'] != null
+            ? parseDouble(parameters['radius'])
+            : 10.0;
+        addDrawable(
+          Circle(
+            center: Offset(dx, dy),
+            radius: max(0.0, radius),
+          ),
+        );
         break;
 
       case 'draw_line':
-        if (parameters['startX'] != null &&
-            parameters['startY'] != null &&
-            parameters['endX'] != null &&
-            parameters['endY'] != null) {
-          final startX = parseDouble(parameters['startX']);
-          final startY = parseDouble(parameters['startY']);
-          final endX = parseDouble(parameters['endX']);
-          final endY = parseDouble(parameters['endY']);
-          final start = Offset(startX, startY);
-          final end = Offset(endX, endY);
-          addDrawable(Line(start: start, end: end));
-        } else {
-          print("Missing line properties: $parameters");
-        }
+        final startX = parameters['startX'] != null
+            ? parseDouble(parameters['startX'])
+            : _randomBetween(10.0, 100.0);
+        final startY = parameters['startY'] != null
+            ? parseDouble(parameters['startY'])
+            : _randomBetween(10.0, 100.0);
+        final endX = parameters['endX'] != null
+            ? parseDouble(parameters['endX'])
+            : _randomBetween(10.0, 100.0);
+        final endY = parameters['endY'] != null
+            ? parseDouble(parameters['endY'])
+            : _randomBetween(10.0, 100.0);
+        final start = Offset(startX, startY);
+        final end = Offset(endX, endY);
+        addDrawable(Line(start: start, end: end));
         break;
 
       case 'draw_rectangle':

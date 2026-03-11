@@ -12,8 +12,7 @@ const tools = [
           "x": {"type": "number"},
           "y": {"type": "number"},
           "radius": {"type": "number"}
-        },
-        "required": ["x", "y", "radius"]
+        }
       }
     }
   },
@@ -30,8 +29,7 @@ const tools = [
           "startY": {"type": "number"},
           "endX": {"type": "number"},
           "endY": {"type": "number"},
-        },
-        "required": ["startX", "startY", "endX", "endY"]
+        }
       }
     }
   },
