@@ -28,7 +28,30 @@ class Obj {
     send(socket, msg) {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(msg)
+            return true
         }
+        return false
+    }
+
+    isOpen(socket) {
+        return !!socket && socket.readyState === WebSocket.OPEN
+    }
+
+    getBufferedAmount(socket) {
+        if (!socket) {
+            return 0
+        }
+        if (typeof socket.bufferedAmount === 'number') {
+            return socket.bufferedAmount
+        }
+        if (socket._socket && typeof socket._socket.writableLength === 'number') {
+            return socket._socket.writableLength
+        }
+        return 0
+    }
+
+    hasBackpressure(socket, threshold = 0) {
+        return this.getBufferedAmount(socket) > Math.max(0, threshold)
     }
 
     // A websocket client connects

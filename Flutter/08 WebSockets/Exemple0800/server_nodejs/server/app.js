@@ -5,6 +5,7 @@ const path = require('path');
 
 const GameLogic = require('./gameLogic.js');
 const webSockets = require('./utilsWebSockets.js');
+const GameMessages = require('./utilsGameMessages.js');
 const GameLoop = require('./utilsGameLoop.js');
 
 loadEnvFiles([
@@ -19,6 +20,7 @@ const publicDir = path.resolve(__dirname, '..', 'public');
 // Inicialitzar WebSockets i la lògica del joc
 const ws = new webSockets();
 const game = new GameLogic();
+const gameMessages = new GameMessages(ws);
 let gameLoop = new GameLoop();
 let gameplayBroadcastIndex = 0;
 
@@ -76,8 +78,9 @@ ws.init(httpServer, port);
 ws.onConnection = (socket, id) => {
     if (debug) console.log("WebSocket client connected: " + id);
     game.addClient(id);
-    ws.send(socket, JSON.stringify({ type: 'snapshot', snapshot: game.getSnapshotState() }));
-    sendGameplayStateToClient(socket, id, {
+    gameMessages.addClient(id);
+    queueSnapshotToClient(socket, id, game.getSnapshotState());
+    queueGameplayStateToClient(socket, id, {
       includeOtherPlayers: true,
       includeGems: true
     });
@@ -94,6 +97,7 @@ ws.onMessage = (socket, id, msg) => {
 ws.onClose = (socket, id) => {
     if (debug) console.log("WebSocket client disconnected: " + id);
     game.removeClient(id);
+    gameMessages.removeClient(id);
     ws.broadcast(JSON.stringify({ type: "disconnected", from: "server" }));
 };
 
@@ -101,6 +105,7 @@ ws.onClose = (socket, id) => {
 gameLoop.run = (fps) => {
     game.updateGame(fps);
     broadcastGameState();
+    gameMessages.flushAll();
 };
 gameLoop.start();
 
@@ -126,11 +131,13 @@ function broadcastGameState() {
   const includeGems = snapshot ? true : !includeOtherPlayers;
 
   if (snapshot) {
-    ws.broadcast(JSON.stringify({ type: 'snapshot', snapshot }));
+    ws.forEachClient((socket, id) => {
+      queueSnapshotToClient(socket, id, snapshot);
+    });
   }
 
   ws.forEachClient((socket, id) => {
-    sendGameplayStateToClient(socket, id, {
+    queueGameplayStateToClient(socket, id, {
       includeOtherPlayers,
       includeGems
     });
@@ -139,9 +146,23 @@ function broadcastGameState() {
   gameplayBroadcastIndex = (gameplayBroadcastIndex + 1) % 2;
 }
 
-function sendGameplayStateToClient(socket, id, options) {
+function queueSnapshotToClient(socket, id, snapshot) {
+  gameMessages.enqueueReplaceable(
+    socket,
+    id,
+    'snapshot',
+    JSON.stringify({ type: 'snapshot', snapshot })
+  );
+}
+
+function queueGameplayStateToClient(socket, id, options) {
   const gameState = game.getGameplayStateForPlayer(id, options);
-  ws.send(socket, JSON.stringify({ type: 'gameplay', gameState }));
+  gameMessages.enqueueReplaceable(
+    socket,
+    id,
+    'gameplay',
+    JSON.stringify({ type: 'gameplay', gameState })
+  );
 }
 
 function hasValidAdminSecret(req) {
