@@ -25,6 +25,12 @@ class Obj {
         this.ws.close()
     }
 
+    send(socket, msg) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(msg)
+        }
+    }
+
     // A websocket client connects
     newConnection(con) {
         console.log("Client connected");
@@ -71,9 +77,15 @@ class Obj {
 
     // Send a message to all websocket clients
     broadcast(msg) {
-        this.ws.clients.forEach((client) => {
+        this.forEachClient((client) => {
+            client.send(msg)
+        })
+    }
+
+    forEachClient(callback) {
+        this.socketsClients.forEach((metadata, client) => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(msg)
+                callback(client, metadata.id, metadata)
             }
         })
     }
