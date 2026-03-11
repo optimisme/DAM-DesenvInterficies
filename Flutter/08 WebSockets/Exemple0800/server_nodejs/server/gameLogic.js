@@ -5,7 +5,7 @@ const { loadMultiplayerLevel } = require('./multiplayerLevelData.js');
 // Lobby countdown length before the server switches the match from waiting to playing.
 const WAITING_DURATION_MS = 60 * 1000;
 // Safety fallback for dt calculation if the measured loop FPS is temporarily unavailable or zero.
-const TARGET_FPS_FALLBACK = 30;
+const TARGET_FPS_FALLBACK = 60;
 const PLAYER_WIDTH = 20;
 const PLAYER_HEIGHT = 20;
 const PLAYER_START_X = 32;
