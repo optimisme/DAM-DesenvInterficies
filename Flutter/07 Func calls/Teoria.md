@@ -8,6 +8,10 @@
 </div>
 <br/>
 
+# Eina IA útil
+
+[https://www.canirun.ai]()
+
 # Function calls
 
 Les **function calls** són una funcionalitat que permet que un model d'intel·ligència artificial, conegui quines funcions hi ha definides al teu codi (noms de les funcions i paràmetres), i decideixi si s'han d'invocar a partir de les peticions (prompts) d'un usuari.
