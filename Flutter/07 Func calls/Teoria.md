@@ -12,6 +12,8 @@
 
 [https://www.canirun.ai]()
 
+Per saber com funionaren les IAs en cada màquina i si tenen 'visió'/'tools'
+
 # Function calls
 
 Les **function calls** són una funcionalitat que permet que un model d'intel·ligència artificial, conegui quines funcions hi ha definides al teu codi (noms de les funcions i paràmetres), i decideixi si s'han d'invocar a partir de les peticions (prompts) d'un usuari.
