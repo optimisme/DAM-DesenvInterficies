@@ -173,8 +173,6 @@ class AppData extends ChangeNotifier {
       const <String, _PlayerStaticData>{};
   Map<String, _PlayerDynamicData> _playerDynamicById =
       const <String, _PlayerDynamicData>{};
-  List<MultiplayerGem> _allGems = const <MultiplayerGem>[];
-  List<int> _gemVisibility = const <int>[];
 
   AppData({NetworkConfig initialConfig = NetworkConfig.defaults})
     : networkConfig = initialConfig,
@@ -256,8 +254,6 @@ class AppData extends ChangeNotifier {
     isConnecting = false;
     players = const <MultiplayerPlayer>[];
     gems = const <MultiplayerGem>[];
-    _allGems = const <MultiplayerGem>[];
-    _gemVisibility = const <int>[];
     _playerStaticById = const <String, _PlayerStaticData>{};
     _playerDynamicById = const <String, _PlayerDynamicData>{};
     notifyListeners();
@@ -316,13 +312,13 @@ class AppData extends ChangeNotifier {
         return;
       }
 
-      if (type == 'initial') {
+      if (type == 'snapshot' || type == 'initial') {
         isConnected = true;
         isConnecting = false;
         _reconnectAttempts = 0;
-        final Object? rawInitialState = data['initialState'];
-        _applyInitialState(
-          rawInitialState is Map ? _mapFromDynamic(rawInitialState) : {},
+        final Object? rawSnapshot = data['snapshot'] ?? data['initialState'];
+        _applySnapshotState(
+          rawSnapshot is Map ? _mapFromDynamic(rawSnapshot) : {},
         );
         notifyListeners();
         return;
@@ -347,7 +343,7 @@ class AppData extends ChangeNotifier {
         final Object? rawGameState = data['gameState'];
         final Map<String, dynamic> gameState =
             rawGameState is Map ? _mapFromDynamic(rawGameState) : {};
-        _applyInitialState(gameState);
+        _applySnapshotState(gameState);
         _applyGameplayState(gameState);
         notifyListeners();
       }
@@ -358,24 +354,26 @@ class AppData extends ChangeNotifier {
     }
   }
 
-  void _applyInitialState(Map<String, dynamic> state) {
+  void _applySnapshotState(Map<String, dynamic> state) {
     levelName = (state['level'] as String? ?? levelName).trim();
 
-    final List<dynamic> rawPlayers = state['players'] as List<dynamic>? ?? [];
-    _playerStaticById = <String, _PlayerStaticData>{
-      for (final Map rawPlayer in rawPlayers.whereType<Map>())
-        (_mapFromDynamic(rawPlayer)['id'] as String? ?? '').trim():
-            _staticPlayerFromJson(_mapFromDynamic(rawPlayer)),
-    }..remove('');
+    if (state.containsKey('players')) {
+      final List<dynamic> rawPlayers = state['players'] as List<dynamic>? ?? [];
+      _playerStaticById = <String, _PlayerStaticData>{
+        for (final Map rawPlayer in rawPlayers.whereType<Map>())
+          (_mapFromDynamic(rawPlayer)['id'] as String? ?? '').trim():
+              _staticPlayerFromJson(_mapFromDynamic(rawPlayer)),
+      }..remove('');
+      _playerDynamicById = Map<String, _PlayerDynamicData>.fromEntries(
+        _playerDynamicById.entries.where(
+          (MapEntry<String, _PlayerDynamicData> entry) =>
+              _playerStaticById.containsKey(entry.key),
+        ),
+      );
+    }
 
     if (state.containsKey('gems')) {
-      final List<dynamic> rawGems = state['gems'] as List<dynamic>? ?? [];
-      _allGems = rawGems
-          .whereType<Map>()
-          .map((Map gem) => MultiplayerGem.fromJson(_mapFromDynamic(gem)))
-          .toList(growable: false);
-      _gemVisibility = List<int>.filled(_allGems.length, 1, growable: false);
-      _rebuildVisibleGems();
+      gems = _parseGems(state['gems'] as List<dynamic>?);
     }
 
     _rebuildPlayers();
@@ -389,30 +387,53 @@ class AppData extends ChangeNotifier {
         (state['remainingGems'] as num? ?? state['gems']?.length ?? 0).toInt();
     winnerId = state['winnerId'] as String?;
 
-    final List<dynamic> rawPlayers = state['players'] as List<dynamic>? ?? [];
-    _playerDynamicById = <String, _PlayerDynamicData>{
-      for (final Map rawPlayer in rawPlayers.whereType<Map>())
-        (_mapFromDynamic(rawPlayer)['id'] as String? ?? '').trim():
-            _dynamicPlayerFromJson(_mapFromDynamic(rawPlayer)),
-    }..remove('');
+    final Map<String, _PlayerDynamicData> nextDynamicById =
+        Map<String, _PlayerDynamicData>.from(_playerDynamicById);
+
+    final Object? rawSelfPlayer = state['selfPlayer'];
+    if (rawSelfPlayer is Map) {
+      final Map<String, dynamic> selfPlayer = _mapFromDynamic(rawSelfPlayer);
+      final String selfId = (selfPlayer['id'] as String? ?? '').trim();
+      if (selfId.isNotEmpty) {
+        nextDynamicById[selfId] = _dynamicPlayerFromJson(selfPlayer);
+      }
+    }
+
+    if (state.containsKey('otherPlayers')) {
+      final String currentPlayerId = (playerId ?? '').trim();
+      nextDynamicById.removeWhere(
+        (String id, _PlayerDynamicData _) => id != currentPlayerId,
+      );
+
+      final List<dynamic> rawOtherPlayers =
+          state['otherPlayers'] as List<dynamic>? ?? [];
+      for (final Map rawPlayer in rawOtherPlayers.whereType<Map>()) {
+        final Map<String, dynamic> parsedPlayer = _mapFromDynamic(rawPlayer);
+        final String id = (parsedPlayer['id'] as String? ?? '').trim();
+        if (id.isEmpty) {
+          continue;
+        }
+        nextDynamicById[id] = _dynamicPlayerFromJson(parsedPlayer);
+      }
+    } else if (state.containsKey('players')) {
+      nextDynamicById
+        ..clear()
+        ..addAll(<String, _PlayerDynamicData>{
+          for (final Map rawPlayer
+              in (state['players'] as List<dynamic>? ?? const <dynamic>[])
+                  .whereType<Map>())
+            (_mapFromDynamic(rawPlayer)['id'] as String? ?? '').trim():
+                _dynamicPlayerFromJson(_mapFromDynamic(rawPlayer)),
+        }..remove(''));
+    }
+
+    _playerDynamicById = nextDynamicById;
 
     if (state.containsKey('gems')) {
-      final List<dynamic> rawGems = state['gems'] as List<dynamic>? ?? [];
-      _allGems = rawGems
-          .whereType<Map>()
-          .map((Map gem) => MultiplayerGem.fromJson(_mapFromDynamic(gem)))
-          .toList(growable: false);
-      _gemVisibility = List<int>.filled(_allGems.length, 1, growable: false);
-    }
-    if (state.containsKey('gemVisibility')) {
-      _gemVisibility = _normalizeGemVisibility(
-        state['gemVisibility'] as List<dynamic>?,
-        _allGems.length,
-      );
+      gems = _parseGems(state['gems'] as List<dynamic>?);
     }
 
     _rebuildPlayers();
-    _rebuildVisibleGems();
 
     final List<dynamic> rawLayerTransforms =
         state['layerTransforms'] as List<dynamic>? ?? [];
@@ -459,9 +480,10 @@ class AppData extends ChangeNotifier {
   }
 
   void _rebuildPlayers() {
-    final Iterable<String> ids = _playerDynamicById.isNotEmpty
-        ? _playerDynamicById.keys
-        : _playerStaticById.keys;
+    final Set<String> ids = <String>{
+      ..._playerStaticById.keys,
+      ..._playerDynamicById.keys,
+    };
     players = ids.map((String id) {
       final _PlayerStaticData? staticData = _playerStaticById[id];
       final _PlayerDynamicData? dynamicData = _playerDynamicById[id];
@@ -482,38 +504,11 @@ class AppData extends ChangeNotifier {
     }).toList(growable: false);
   }
 
-  void _rebuildVisibleGems() {
-    if (_allGems.isEmpty) {
-      gems = const <MultiplayerGem>[];
-      return;
-    }
-    final List<MultiplayerGem> visibleGems = <MultiplayerGem>[];
-    for (int i = 0; i < _allGems.length; i++) {
-      if (i < _gemVisibility.length && _gemVisibility[i] == 0) {
-        continue;
-      }
-      visibleGems.add(_allGems[i]);
-    }
-    gems = visibleGems;
-  }
-
-  List<int> _normalizeGemVisibility(List<dynamic>? raw, int expectedLength) {
-    if (expectedLength <= 0) {
-      return const <int>[];
-    }
-    final List<int> normalized = List<int>.filled(
-      expectedLength,
-      1,
-      growable: false,
-    );
-    if (raw == null) {
-      return normalized;
-    }
-    final int limit = raw.length < expectedLength ? raw.length : expectedLength;
-    for (int i = 0; i < limit; i++) {
-      normalized[i] = (raw[i] as num? ?? 1).toInt() == 0 ? 0 : 1;
-    }
-    return normalized;
+  List<MultiplayerGem> _parseGems(List<dynamic>? rawGems) {
+    return (rawGems ?? const <dynamic>[])
+        .whereType<Map>()
+        .map((Map gem) => MultiplayerGem.fromJson(_mapFromDynamic(gem)))
+        .toList(growable: false);
   }
 
   void _registerPlayer() {

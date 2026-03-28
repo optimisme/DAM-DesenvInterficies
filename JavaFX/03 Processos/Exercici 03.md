@@ -1,13 +1,20 @@
+# Eina IA útil
+
+[https://www.canirun.ai]()
+
+Per saber com funionaren les IAs en cada màquina i si tenen 'visió'/'tools'
+
 ## Exercici 03
 
 Fent servir Ollama, i els models:
 
-- Model de text i visió: gemma3:1b
+- Model de text i visió: gemma3:1b (o gemma3:4b)
 
 **Nota**: Recorda, per instal·lar models
 ```bash
 ollama run gemma3:1b
 ollama run llava-phi3
+ollama run granite4:3b
 ```
 
 Fes una versió de ChatGPT amb JavaFX

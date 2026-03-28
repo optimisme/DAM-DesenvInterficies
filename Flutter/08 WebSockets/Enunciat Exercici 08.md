@@ -12,13 +12,15 @@
 
 Cal fer un joc multijugador en temps real amb un servidor de websockets **NodeJS**
 
-Ha de permetre una partida d'almenys 10 jugador simultanis, i el joc ha de ser del tipus BattleRoyale (guanya el darrer jugador viu).
+Ha de permetre una partida d'almenys 5 jugador simultanis, i el joc ha de ser del tipus BattleRoyale (guanya el darrer jugador viu).
 
 La mecànica del joc ha de tenir:
 
 - Dispars o lluites entre jugadors
 
 - Els jugadors han de tenir una barra de vida que es redueix quan reben danys, i moren quan arriba a zero
+
+- Items per recuperar vida
 
 - Animacions adequades (moviment, dany, mort, ...)
 
