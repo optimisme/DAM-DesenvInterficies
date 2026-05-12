@@ -7,8 +7,7 @@ import javafx.scene.layout.AnchorPane;
 
 public class Controller1 {
 
-    @FXML
-    private Button button0, button1, button2;
+
     @FXML
     private AnchorPane container;
 
@@ -34,6 +33,7 @@ public class Controller1 {
 
     @FXML
     private void animateToView1(ActionEvent event) {
+        Main.objDades.
         UtilsViews.setViewAnimating("View1");
     }
 
