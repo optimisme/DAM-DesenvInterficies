@@ -72,7 +72,7 @@ sudo n lts
 hash -r || true
 
 echo "==> Installing pm2 globally"
-npm install -g pm2
+sudo npm install -g pm2
 
 echo "==> Enabling MySQL"
 systemctl enable mysql >/dev/null 2>&1 || true
