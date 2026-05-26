@@ -50,7 +50,7 @@ DEFAULT_SERVER_PORT="3000"
 
 A Linux:
 ```bash
-sudo apt install npm zip unzip iptables-persistent
+sudo apt install npm zip unzip iptables-persistent rsync iproute2 
 sudo npm cache clean -f
 sudo npm install -g n
 sudo n latest
@@ -111,7 +111,14 @@ Amb el compte de l'insitut tens accés a un servidor *Proxmox* personal del cent
 bash ./proxmoxConnect.sh
 ```
 
-## Instal·lar NodeJS al Proxmox de l'institut
+## Script d'instal·lació automàtica
+
+Instal·la el software remot necessari amb:
+
+```bash
+./proxmosInstall.sh
+```
+## Instal·lació remota manual de "NodeJS"
 
 ```bash
 # Al terminal local, connecta't al proxmox remot
@@ -136,6 +143,30 @@ sudo npm install -g n
 sudo n latest
 sudo npm install -g pm2
 exit
+```
+
+### Instal·lació remota manual de "MySQL"
+
+Des de la consola local, connectar amb el servidor:
+
+```bash
+./proxmoxConnect.sh
+```
+
+Un cop connectats, des de la consola remota instal·lar MySQL. Les següents comandes poden anar lentes, no talleu la connexió i llegiu bé els missatges d'error en cas que n'hi hagin:
+
+```bash
+sudo apt update
+sudo apt install mysql-server
+sudo systemctl status mysql
+
+# Connectar a la base de dades des del propi servidor remot i crear l'usuari 'super':
+
+sudo mysql
+CREATE USER 'super'@'localhost' IDENTIFIED WITH caching_sha2_password BY '1234';
+GRANT ALL PRIVILEGES ON *.* TO 'super'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+quit
 ```
 
 ## Redirecció del port 80
@@ -169,34 +200,6 @@ Exemple:
 ```
 
 L'arxiu queda a l'arrel del servidor.
-
-# MySQL al Proxmox
-
-Al servidor remot "Proxmox" es pot instal·lar un MySQL, per accedir-hi caldrà fer un "túnel" entre el vostre ordinador i el servidor.
-
-## Instal·lar MySQL al servidor remot
-
-Des de la consola local, connectar amb el servidor:
-
-```bash
-./proxmoxConnect.sh
-```
-
-Un cop connectats, des de la consola remota instal·lar MySQL. Les següents comandes poden anar lentes, no talleu la connexió i llegiu bé els missatges d'error en cas que n'hi hagin:
-
-```bash
-sudo apt update
-sudo apt install mysql-server
-sudo systemctl status mysql
-
-# Connectar a la base de dades des del propi servidor remot i crear l'usuari 'super':
-
-sudo mysql
-CREATE USER 'super'@'localhost' IDENTIFIED WITH caching_sha2_password BY '1234';
-GRANT ALL PRIVILEGES ON *.* TO 'super'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-quit
-```
 
 ## Connectar a la base de dades MySQL del servidor remot (túnel)
 
