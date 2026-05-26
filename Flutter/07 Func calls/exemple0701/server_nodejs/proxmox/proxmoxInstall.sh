@@ -65,10 +65,10 @@ echo "==> Installing system packages"
 apt-get update
 apt-get install -y npm zip unzip rsync iproute2 iptables-persistent mysql-server
 
-echo "==> Installing latest Node.js with n"
-npm cache clean -f
-npm install -g n
-n latest
+echo "==> Installing Node.js LTS with n"
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n lts
 hash -r || true
 
 echo "==> Installing pm2 globally"
