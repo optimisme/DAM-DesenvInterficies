@@ -30,7 +30,16 @@ cd ..
 ./getAssets.sh
 
 rm -f "$ZIP_NAME"
-zip -r "$ZIP_NAME" . -x "proxmox/*" "node_modules/*" "data" "data/*" ".gitignore"
+zip -r "$ZIP_NAME" . \
+  -x "proxmox/*" \
+     "node_modules/*" \
+     "data" "data/*" \
+     ".git" ".git/*" \
+     ".gitignore" \
+     ".DS_Store" "*/.DS_Store" \
+     "settings.env" \
+     "keys.env" \
+     "$ZIP_NAME"
 
 eval "$(ssh-agent -s)" >/dev/null
 ssh-add "$RSA_PATH"
