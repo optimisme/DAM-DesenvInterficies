@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 
+ORIGINAL_DIR=$(pwd)
+
 cleanup() {
   ssh-agent -k 2>/dev/null || true
   cd "$ORIGINAL_DIR" 2>/dev/null || true
 }
 trap cleanup EXIT
 
-ORIGINAL_DIR=$(pwd)
 source ./config.env
 
 USER=${1:-$DEFAULT_USER}
@@ -24,12 +25,9 @@ if [[ ! -f "$RSA_PATH" ]]; then
   exit 1
 fi
 
-bash ../buildFlutterWeb.sh
-
 cd ..
-./getAssets.sh
-
 rm -f "$ZIP_NAME"
+
 zip -r "$ZIP_NAME" . \
   -x "proxmox/*" \
      "node_modules/*" \
@@ -42,12 +40,12 @@ zip -r "$ZIP_NAME" . \
      "$ZIP_NAME"
 
 eval "$(ssh-agent -s)" >/dev/null
-ssh-add "$RSA_PATH"
+ssh-add "$RSA_PATH" >/dev/null
 
 scp -P "$PORT_SSH" "$ZIP_NAME" "$USER@$HOST:~/server-package.zip"
 rm -f "$ZIP_NAME"
 
-ssh -tt -p "$PORT_SSH" -o UpdateHostKeys=no \
+ssh -T -p "$PORT_SSH" -o UpdateHostKeys=no \
   "$USER@$HOST" \
   bash -s -- "$SERVER_PORT" << 'EOF'
 set -e
@@ -56,9 +54,9 @@ SERVER_PORT="$1"
 APP_DIR="$HOME/nodejs_server"
 PKG="$HOME/server-package.zip"
 TMP_DIR="$(mktemp -d)"
+REMOTE_USER="$(id -un)"
 
 export PATH="$HOME/.npm-global/bin:/usr/local/bin:$PATH"
-
 
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
@@ -73,8 +71,10 @@ for i in {1..10}; do
   ss -tln | grep -q ":$SERVER_PORT " && sleep 1 || break
 done
 
-# Clean app dir (keep data if needed)
-find "$APP_DIR" -mindepth 1 -maxdepth 1 -name "data" -prune -o -exec rm -rf {} + 2>/dev/null || true
+# Clean app dir while preserving runtime state
+find "$APP_DIR" -mindepth 1 -maxdepth 1 \
+  \( -name "data" -o -name "settings.env" \) -prune \
+  -o -exec rm -rf {} + 2>/dev/null || true
 
 # Unzip safely
 test -f "$PKG"
@@ -83,13 +83,14 @@ rm -f "$PKG"
 
 # Detect project root
 if [[ -f "$TMP_DIR/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' "$TMP_DIR/" "$APP_DIR/"
+  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/" "$APP_DIR/"
 elif [[ -f "$TMP_DIR/nodejs_server/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' "$TMP_DIR/nodejs_server/" "$APP_DIR/"
+  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/nodejs_server/" "$APP_DIR/"
 elif [[ -f "$TMP_DIR/nodejs_web/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' "$TMP_DIR/nodejs_web/" "$APP_DIR/"
+  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/nodejs_web/" "$APP_DIR/"
 else
   echo "Error: no trobo package.json dins del zip"
+  rm -rf "$TMP_DIR"
   exit 1
 fi
 
@@ -100,11 +101,26 @@ test -f package.json
 
 npm install --omit=dev
 
-# Start app with global pm2
-pm2 start server/app.js --name app --update-env
+# Start app with PM2
+pm2 start src/server.js --name app --update-env
 pm2 save
+
+# Configure PM2 to restart the app after a machine reboot
+if command -v systemctl >/dev/null 2>&1; then
+  if sudo -n true 2>/dev/null; then
+    sudo env PATH="$PATH" pm2 startup systemd -u "$REMOTE_USER" --hp "$HOME"
+    pm2 save
+    echo "✔️  PM2 configurat per iniciar-se automàticament després d'un reinici."
+  else
+    echo "⚠️  Deploy correcte, però no s'ha pogut configurar l'arrencada automàtica."
+    echo "⚠️  Cal executar manualment al servidor:"
+    echo "sudo env PATH=$PATH pm2 startup systemd -u $REMOTE_USER --hp $HOME"
+    echo "pm2 save"
+  fi
+else
+  echo "⚠️  No s'ha trobat systemd. No s'ha configurat l'arrencada automàtica amb PM2."
+fi
 
 echo "✔️  Deploy correcte. Estat PM2:"
 pm2 status
-exit
 EOF
