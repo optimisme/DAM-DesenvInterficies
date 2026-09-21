@@ -33,7 +33,6 @@ public class Controller1 {
 
     @FXML
     private void animateToView1(ActionEvent event) {
-        Main.objDades.
         UtilsViews.setViewAnimating("View1");
     }
 
