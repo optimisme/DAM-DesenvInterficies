@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="15.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.project.Controller">
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20" />
+    </padding>
+
+    <HBox alignment="CENTER" spacing="10.0">
+        <TextField fx:id="inputNum1" prefWidth="80" promptText="Número 1" />
+        <ComboBox fx:id="comboOperacio" />
+        <TextField fx:id="inputNum2" prefWidth="80" promptText="Número 2" />
+        <Button onAction="#onCalcularClick" text="=" />
+    </HBox>
+
+    <Label fx:id="lblResultat" prefHeight="18.0" prefWidth="162.0" text="Resultat: " />
+</VBox>
