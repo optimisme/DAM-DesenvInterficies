@@ -117,3 +117,17 @@ Controller0 ctrl0 = (Controller0) UtilsViews.getController("View0");
 # Posicionament
 
 Els elements més flexibles per posicionar elements són **HBOX** i **VBOX**, ja que permeten centrar o alinear els elements fills en diferents posicions.
+
+# Compartir dades entre controladors de vistes
+
+La manera més fàcil de compartir dades entre diferents controladors és amb un objecte estàtic al `Main``
+
+```java
+static ObjSharedData data;
+```
+
+Aleshores quan es vol accedir a aquest objecte des dels controladors només cal:
+
+```java
+Main.data.???
+```
