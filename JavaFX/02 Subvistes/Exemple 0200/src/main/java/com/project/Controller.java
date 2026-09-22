@@ -17,7 +17,7 @@ import javafx.scene.layout.VBox;
 public class Controller implements Initializable {
 
     @FXML
-    private Button button0, button1, button2, buttonWeekdays, buttonMonths;
+    private Button buttonWeekdays, buttonMonths;
     @FXML
     private Label choiceLabel;
     @FXML

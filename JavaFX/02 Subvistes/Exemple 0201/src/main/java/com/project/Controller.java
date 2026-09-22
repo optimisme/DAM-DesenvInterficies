@@ -50,9 +50,6 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            // Obtenir el recurs del template .fxml
-            URL resource = this.getClass().getResource("/assets/listItem.fxml");
-
             // Obtenir la llista
             URL jsonFileURL = getClass().getResource("/assets/animals.json");
             Path path = Paths.get(jsonFileURL.toURI());
