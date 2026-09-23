@@ -9,7 +9,6 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Carrega la vista FXML que conté els elements visuals i està enllaçada amb el controller
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/assets/CalculadoraView.fxml"));
         Scene scene = new Scene(loader.load());
 
