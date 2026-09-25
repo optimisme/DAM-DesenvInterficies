@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com" xmlns:fx="http://javafx.com" fx:controller="com.project.ControllerMobile">
+   <children>
+      <Label fx:id="lblResultat" text="Esperant dades..." style="-fx-font-size: 16px;" />
+      <Button text="Tornar" onAction="#tornarEnrere" />
+   </children>
+   <padding>
+      <Insets top="20" right="20" bottom="20" left="20"/>
+   </padding>
+</VBox>
