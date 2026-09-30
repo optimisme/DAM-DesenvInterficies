@@ -60,3 +60,12 @@ Tancar la sessió i tornar a entrar
 > 
 > 
 > Si respon correctament (mostrant una llista buida de contenidors en lloc d'un error de permisos), ja ho tens a punt per utilitzar Docker Desktop completament des de la terminal i sense `sudo`.
+
+## NVIDIA i Docker
+
+Per tal de que l'acceleració de NVIDIA funcioni des de Docker:
+
+```bash
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```

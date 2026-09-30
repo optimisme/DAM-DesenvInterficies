@@ -1,0 +1,22 @@
+services:
+
+  llama:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: gemma-server
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - llama-models:/root/.cache
+
+    command:
+      - -hf
+      - ggml-org/gemma-4-E2B-it-GGUF:Q4_0
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+
+volumes:
+  llama-models:
