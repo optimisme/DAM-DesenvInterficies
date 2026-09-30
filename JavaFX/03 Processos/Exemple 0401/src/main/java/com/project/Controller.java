@@ -1,11 +1,12 @@
 package com.project;
 
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.event.ActionEvent;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -20,33 +21,50 @@ public class Controller {
 
     @FXML
     private void callLoadImage(ActionEvent event) {
-        // Choose image file (default dir = current working dir)
         FileChooser fc = new FileChooser();
         fc.setTitle("Choose an image");
+
         File initialDir = new File(System.getProperty("user.dir"));
         if (initialDir.exists() && initialDir.isDirectory()) {
             fc.setInitialDirectory(initialDir);
         }
-        fc.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif")
+
+        fc.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter(
+                "Images",
+                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif"
+            )
         );
 
         File file = fc.showOpenDialog(buttonLoad.getScene().getWindow());
         if (file == null) return;
 
-        try {
-            // Read bytes and encode to Base64
-            byte[] bytes = Files.readAllBytes(file.toPath());
-            String base64 = Base64.getEncoder().encodeToString(bytes);
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                byte[] bytes = Files.readAllBytes(file.toPath());
+                return Base64.getEncoder().encodeToString(bytes);
+            }
+        };
 
-            // Preview image
+        task.setOnSucceeded(e -> {
+            String base64 = task.getValue();
+
             imageView.setImage(new Image(file.toURI().toString()));
-
-            // Output base64 to textarea
             textBase64.setText(base64);
-        } catch (Exception e) {
-            e.printStackTrace(); // log error
-            textBase64.setText("Error reading image: " + e.getMessage());
-        }
+        });
+
+        task.setOnFailed(e -> {
+            Throwable error = task.getException();
+            error.printStackTrace();
+
+            textBase64.setText(
+                "Error reading image: " + error.getMessage()
+            );
+        });
+
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 }

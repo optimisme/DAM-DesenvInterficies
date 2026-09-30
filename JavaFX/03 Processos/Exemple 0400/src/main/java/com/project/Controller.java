@@ -60,6 +60,9 @@ public class Controller implements Initializable {
                     if (isCancelled()) {
                         break;
                     }
+                    // 'synchronized' bloqueja l’objecte this
+                    // 'wait' posa el fil en espera i allibera el bloqueig
+                    // un altre fil després pot fer 'notify' el mateix objecte
                     synchronized (this) {
                         while (isPaused) {
                             wait();

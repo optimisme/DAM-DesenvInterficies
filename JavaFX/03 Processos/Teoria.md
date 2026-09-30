@@ -133,6 +133,23 @@ En aquest exemple podeu veure com es carrega una imatge des del navegador d'arxi
 <br/>
 <br/>
 
+Els arxius d'imatge poden ser molt grans, per evitar que la seva lectura i transformació a **base64** aturi el fil principal, ho executem en una taca:
+
+```java
+Task<String> task = new Task<>() {
+    @Override
+    protected String call() throws Exception {
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+};
+// ...
+Thread thread = new Thread(task);
+thread.setDaemon(true); // Si es tanca la finestra s'atura la tasca
+thread.start();
+```
+
+
 ## Exemple 0402
 
 L'exemple 0402 fa peticions tipus POST amb un servidor IA compatible amb el protocol "OpenAI", en aquest cas el de l'institut:

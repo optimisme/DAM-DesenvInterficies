@@ -1,5 +1,6 @@
 package com.project;
 
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.text.Text;
@@ -39,7 +40,8 @@ public class Controller implements Initializable {
     private static final String MODEL_KEY = "SERVER_API_KEY";
 
     @FXML
-    private Button buttonCallStream, buttonCallComplete, buttonBreak, buttonPicture;
+    private Button buttonCallStream, buttonCallComplete,
+                   buttonBreak, buttonPicture;
 
     @FXML
     private Text textInfo;
@@ -52,7 +54,10 @@ public class Controller implements Initializable {
     private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 
     private InputStream currentInputStream;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    private final ExecutorService executorService =
+        Executors.newSingleThreadExecutor();
+
     private Future<?> streamReadingTask;
 
     private volatile boolean isFirst = false;
@@ -94,17 +99,21 @@ public class Controller implements Initializable {
         fc.getExtensionFilters().add(
             new FileChooser.ExtensionFilter(
                 "Images",
-                "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif"
+                "*.png", "*.jpg", "*.jpeg",
+                "*.webp", "*.bmp", "*.gif"
             )
         );
 
-        File initialDir = new File(System.getProperty("user.dir"));
+        File initialDir =
+            new File(System.getProperty("user.dir"));
 
         if (initialDir.exists() && initialDir.isDirectory()) {
             fc.setInitialDirectory(initialDir);
         }
 
-        File file = fc.showOpenDialog(buttonPicture.getScene().getWindow());
+        File file = fc.showOpenDialog(
+            buttonPicture.getScene().getWindow()
+        );
 
         if (file == null) {
             textInfo.setText("No file selected.");
@@ -112,25 +121,37 @@ public class Controller implements Initializable {
             return;
         }
 
-        final String base64Image;
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                byte[] bytes = Files.readAllBytes(file.toPath());
 
-        try {
-            byte[] bytes = Files.readAllBytes(file.toPath());
-            base64Image = Base64.getEncoder().encodeToString(bytes);
-        } catch (Exception e) {
-            e.printStackTrace();
+                return Base64
+                    .getEncoder()
+                    .encodeToString(bytes);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            String base64Image = task.getValue();
+            String mimeType = getMimeType(file);
+
+            executeImageRequest(
+                "Describe what's in this picture",
+                base64Image,
+                mimeType
+            );
+        });
+
+        task.setOnFailed(e -> {
+            task.getException().printStackTrace();
             textInfo.setText("Error reading image.");
             setButtonsIdle();
-            return;
-        }
+        });
 
-        String mimeType = getMimeType(file);
-
-        executeImageRequest(
-            "Describe what's in this picture",
-            base64Image,
-            mimeType
-        );
+        Thread thread = new Thread(task);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML
@@ -147,6 +168,7 @@ public class Controller implements Initializable {
     // --- Text request ---
 
     private void executeTextRequest(String prompt, boolean stream) {
+
         JSONArray messages = new JSONArray().put(
             new JSONObject()
                 .put("role", "user")
@@ -167,44 +189,137 @@ public class Controller implements Initializable {
             .build();
 
         if (stream) {
-            Platform.runLater(() -> textInfo.setText("Wait stream ... " + prompt));
+
+            textInfo.setText("Wait stream ... " + prompt);
             isFirst = true;
 
             streamRequest = httpClient.sendAsync(
                 request,
                 HttpResponse.BodyHandlers.ofInputStream()
             ).thenApply(response -> {
+
+                int code = response.statusCode();
+
+                if (code < 200 || code >= 300) {
+
+                    try {
+                        String bodyStr = new String(
+                            response.body().readAllBytes(),
+                            StandardCharsets.UTF_8
+                        );
+
+                        String message =
+                            extractOpenAIError(bodyStr);
+
+                        if (message == null ||
+                            message.isBlank()) {
+
+                            message =
+                                "HTTP " + code + ": " + bodyStr;
+                        }
+
+                        final String toShow = message;
+
+                        Platform.runLater(() -> {
+                            textInfo.setText(toShow);
+                            setButtonsIdle();
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+
+                        Platform.runLater(() -> {
+                            textInfo.setText(
+                                "HTTP error: " + code
+                            );
+                            setButtonsIdle();
+                        });
+                    }
+
+                    return response;
+                }
+
                 currentInputStream = response.body();
-                streamReadingTask = executorService.submit(this::handleStreamResponse);
+
+                streamReadingTask = executorService.submit(
+                    this::handleStreamResponse
+                );
+
                 return response;
+
             }).exceptionally(e -> {
-                if (!isCancelled.get()) e.printStackTrace();
-                Platform.runLater(this::setButtonsIdle);
+
+                if (!isCancelled.get()) {
+                    e.printStackTrace();
+
+                    Platform.runLater(() -> {
+                        textInfo.setText(
+                            "Request failed: " +
+                            getErrorMessage(e)
+                        );
+
+                        setButtonsIdle();
+                    });
+                }
+
                 return null;
             });
 
         } else {
-            Platform.runLater(() -> textInfo.setText("Wait complete ..."));
+
+            textInfo.setText("Wait complete ...");
 
             completeRequest = httpClient.sendAsync(
                 request,
                 HttpResponse.BodyHandlers.ofString()
             ).thenApply(response -> {
-                String responseText = extractOpenAIResponse(response.body());
+
+                int code = response.statusCode();
+                String bodyStr = response.body();
+
+                String message;
+
+                if (code >= 200 && code < 300) {
+
+                    message =
+                        extractOpenAIResponse(bodyStr);
+
+                } else {
+
+                    message =
+                        extractOpenAIError(bodyStr);
+
+                    if (message == null ||
+                        message.isBlank()) {
+
+                        message =
+                            "HTTP " + code + ": " + bodyStr;
+                    }
+                }
+
+                final String toShow = message;
 
                 Platform.runLater(() -> {
-                    textInfo.setText(responseText);
+                    textInfo.setText(toShow);
                     setButtonsIdle();
                 });
 
                 return response;
-            }).exceptionally(e -> {
-                if (!isCancelled.get()) e.printStackTrace();
 
-                Platform.runLater(() -> {
-                    textInfo.setText("Request failed.");
-                    setButtonsIdle();
-                });
+            }).exceptionally(e -> {
+
+                if (!isCancelled.get()) {
+                    e.printStackTrace();
+
+                    Platform.runLater(() -> {
+                        textInfo.setText(
+                            "Request failed: " +
+                            getErrorMessage(e)
+                        );
+
+                        setButtonsIdle();
+                    });
+                }
 
                 return null;
             });
@@ -213,8 +328,13 @@ public class Controller implements Initializable {
 
     // --- Image request ---
 
-    private void executeImageRequest(String prompt, String base64Image, String mimeType) {
-        Platform.runLater(() -> textInfo.setText("Analyzing picture ..."));
+    private void executeImageRequest(
+        String prompt,
+        String base64Image,
+        String mimeType
+    ) {
+
+        textInfo.setText("Analyzing picture ...");
 
         JSONArray content = new JSONArray()
             .put(
@@ -225,8 +345,14 @@ public class Controller implements Initializable {
             .put(
                 new JSONObject()
                     .put("type", "image_url")
-                    .put("image_url", new JSONObject()
-                        .put("url", "data:" + mimeType + ";base64," + base64Image))
+                    .put(
+                        "image_url",
+                        new JSONObject().put(
+                            "url",
+                            "data:" + mimeType +
+                            ";base64," + base64Image
+                        )
+                    )
             );
 
         JSONArray messages = new JSONArray().put(
@@ -252,18 +378,27 @@ public class Controller implements Initializable {
             request,
             HttpResponse.BodyHandlers.ofString()
         ).thenApply(response -> {
+
             int code = response.statusCode();
             String bodyStr = response.body();
 
             String message;
 
             if (code >= 200 && code < 300) {
-                message = extractOpenAIResponse(bodyStr);
-            } else {
-                message = extractOpenAIError(bodyStr);
 
-                if (message == null || message.isBlank()) {
-                    message = "HTTP " + code + ": " + bodyStr;
+                message =
+                    extractOpenAIResponse(bodyStr);
+
+            } else {
+
+                message =
+                    extractOpenAIError(bodyStr);
+
+                if (message == null ||
+                    message.isBlank()) {
+
+                    message =
+                        "HTTP " + code + ": " + bodyStr;
                 }
             }
 
@@ -275,13 +410,21 @@ public class Controller implements Initializable {
             });
 
             return response;
-        }).exceptionally(e -> {
-            if (!isCancelled.get()) e.printStackTrace();
 
-            Platform.runLater(() -> {
-                textInfo.setText("Request failed.");
-                setButtonsIdle();
-            });
+        }).exceptionally(e -> {
+
+            if (!isCancelled.get()) {
+                e.printStackTrace();
+
+                Platform.runLater(() -> {
+                    textInfo.setText(
+                        "Request failed: " +
+                        getErrorMessage(e)
+                    );
+
+                    setButtonsIdle();
+                });
+            }
 
             return null;
         });
@@ -290,60 +433,105 @@ public class Controller implements Initializable {
     // --- Stream reader ---
 
     private void handleStreamResponse() {
+
         try (
             BufferedReader reader = new BufferedReader(
-                new InputStreamReader(currentInputStream, StandardCharsets.UTF_8)
+                new InputStreamReader(
+                    currentInputStream,
+                    StandardCharsets.UTF_8
+                )
             )
         ) {
+
             String line;
 
             while ((line = reader.readLine()) != null) {
-                if (isCancelled.get()) break;
-                if (line.isBlank()) continue;
-                if (!line.startsWith("data:")) continue;
 
-                String data = line.substring(5).trim();
+                if (isCancelled.get()) {
+                    break;
+                }
 
-                if (data.equals("[DONE]")) break;
+                if (line.isBlank()) {
+                    continue;
+                }
 
-                JSONObject jsonResponse = new JSONObject(data);
-                JSONArray choices = jsonResponse.optJSONArray("choices");
+                if (!line.startsWith("data:")) {
+                    continue;
+                }
 
-                if (choices == null || choices.isEmpty()) continue;
+                String data =
+                    line.substring(5).trim();
+
+                if (data.equals("[DONE]")) {
+                    break;
+                }
+
+                JSONObject jsonResponse =
+                    new JSONObject(data);
+
+                JSONArray choices =
+                    jsonResponse.optJSONArray("choices");
+
+                if (choices == null ||
+                    choices.isEmpty()) {
+
+                    continue;
+                }
 
                 JSONObject delta = choices
                     .getJSONObject(0)
                     .optJSONObject("delta");
 
-                if (delta == null) continue;
+                if (delta == null) {
+                    continue;
+                }
 
-                String chunk = delta.optString("content", "");
+                String chunk =
+                    delta.optString("content", "");
 
-                if (chunk.isEmpty()) continue;
+                if (chunk.isEmpty()) {
+                    continue;
+                }
 
                 if (isFirst) {
-                    Platform.runLater(() -> textInfo.setText(chunk));
-                    isFirst = false;
-                } else {
+
                     Platform.runLater(() ->
-                        textInfo.setText(textInfo.getText() + chunk)
+                        textInfo.setText(chunk)
+                    );
+
+                    isFirst = false;
+
+                } else {
+
+                    Platform.runLater(() ->
+                        textInfo.setText(
+                            textInfo.getText() + chunk
+                        )
                     );
                 }
             }
 
         } catch (Exception e) {
+
             if (!isCancelled.get()) {
                 e.printStackTrace();
 
                 Platform.runLater(() ->
-                    textInfo.setText("Error during streaming.")
+                    textInfo.setText(
+                        "Error during streaming: " +
+                        getErrorMessage(e)
+                    )
                 );
             }
 
         } finally {
+
             try {
-                if (currentInputStream != null) currentInputStream.close();
-            } catch (Exception ignore) {}
+                if (currentInputStream != null) {
+                    currentInputStream.close();
+                }
+            } catch (Exception ignore) {
+            }
 
             Platform.runLater(this::setButtonsIdle);
         }
@@ -352,17 +540,29 @@ public class Controller implements Initializable {
     // --- OpenAI response helpers ---
 
     private String extractOpenAIResponse(String bodyStr) {
-        try {
-            JSONObject response = new JSONObject(bodyStr);
-            JSONArray choices = response.optJSONArray("choices");
 
-            if (choices != null && !choices.isEmpty()) {
+        try {
+
+            JSONObject response =
+                new JSONObject(bodyStr);
+
+            JSONArray choices =
+                response.optJSONArray("choices");
+
+            if (choices != null &&
+                !choices.isEmpty()) {
+
                 JSONObject message = choices
                     .getJSONObject(0)
                     .optJSONObject("message");
 
                 if (message != null) {
-                    String content = message.optString("content", "");
+
+                    String content =
+                        message.optString(
+                            "content",
+                            ""
+                        );
 
                     if (!content.isBlank()) {
                         return content;
@@ -370,7 +570,8 @@ public class Controller implements Initializable {
                 }
             }
 
-            String error = extractOpenAIError(bodyStr);
+            String error =
+                extractOpenAIError(bodyStr);
 
             if (error != null) {
                 return error;
@@ -380,47 +581,95 @@ public class Controller implements Initializable {
             e.printStackTrace();
         }
 
-        return bodyStr != null && !bodyStr.isBlank()
+        return bodyStr != null &&
+               !bodyStr.isBlank()
             ? bodyStr
             : "(empty)";
     }
 
     private String extractOpenAIError(String bodyStr) {
+
         try {
-            JSONObject response = new JSONObject(bodyStr);
-            JSONObject error = response.optJSONObject("error");
+
+            JSONObject response =
+                new JSONObject(bodyStr);
+
+            JSONObject error =
+                response.optJSONObject("error");
 
             if (error != null) {
-                return "Error: " + error.optString(
-                    "message",
-                    error.toString()
-                );
+
+                return "Error: " +
+                    error.optString(
+                        "message",
+                        error.toString()
+                    );
             }
 
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
 
         return null;
+    }
+
+    private String getErrorMessage(Throwable e) {
+
+        Throwable cause = e;
+
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+
+        if (cause.getMessage() != null) {
+            return cause.getMessage();
+        }
+
+        return cause.getClass().getSimpleName();
     }
 
     // --- Image MIME type ---
 
     private String getMimeType(File file) {
-        try {
-            String mimeType = Files.probeContentType(file.toPath());
 
-            if (mimeType != null && mimeType.startsWith("image/")) {
+        try {
+
+            String mimeType =
+                Files.probeContentType(
+                    file.toPath()
+                );
+
+            if (mimeType != null &&
+                mimeType.startsWith("image/")) {
+
                 return mimeType;
             }
 
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
 
-        String name = file.getName().toLowerCase();
+        String name =
+            file.getName().toLowerCase();
 
-        if (name.endsWith(".png")) return "image/png";
-        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
-        if (name.endsWith(".webp")) return "image/webp";
-        if (name.endsWith(".gif")) return "image/gif";
-        if (name.endsWith(".bmp")) return "image/bmp";
+        if (name.endsWith(".png")) {
+            return "image/png";
+        }
+
+        if (name.endsWith(".jpg") ||
+            name.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+
+        if (name.endsWith(".webp")) {
+            return "image/webp";
+        }
+
+        if (name.endsWith(".gif")) {
+            return "image/gif";
+        }
+
+        if (name.endsWith(".bmp")) {
+            return "image/bmp";
+        }
 
         return "application/octet-stream";
     }
@@ -428,17 +677,27 @@ public class Controller implements Initializable {
     // --- Cancel requests ---
 
     private void cancelStreamRequest() {
-        if (streamRequest != null && !streamRequest.isDone()) {
+
+        if (streamRequest != null &&
+            !streamRequest.isDone()) {
+
             try {
+
                 if (currentInputStream != null) {
-                    System.out.println("Cancelling InputStream");
+                    System.out.println(
+                        "Cancelling InputStream"
+                    );
+
                     currentInputStream.close();
                 }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            System.out.println("Cancelling StreamRequest");
+            System.out.println(
+                "Cancelling StreamRequest"
+            );
 
             if (streamReadingTask != null) {
                 streamReadingTask.cancel(true);
@@ -449,8 +708,14 @@ public class Controller implements Initializable {
     }
 
     private void cancelCompleteRequest() {
-        if (completeRequest != null && !completeRequest.isDone()) {
-            System.out.println("Cancelling CompleteRequest");
+
+        if (completeRequest != null &&
+            !completeRequest.isDone()) {
+
+            System.out.println(
+                "Cancelling CompleteRequest"
+            );
+
             completeRequest.cancel(true);
         }
     }
