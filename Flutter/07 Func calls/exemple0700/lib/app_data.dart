@@ -10,9 +10,12 @@ import 'package:http/io_client.dart';
 import 'constants.dart';
 import 'drawable.dart';
 
-const modelName = 'Qwen36';
-const modelUrl = 'https://agents.ieti.site/v1/chat/completions';
+// const modelName = 'Qwen36';
+// const modelUrl = 'https://agents.ieti.site/v1/chat/completions';
 const modelKey = 'SERVER_API_KEY';
+
+const modelName = 'qwen3-vl';
+const modelUrl = 'http://localhost:8080/v1/chat/completions';
 
 class AppData extends ChangeNotifier {
   String _responseText = "";
