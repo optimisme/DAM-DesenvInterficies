@@ -1,31 +1,10 @@
-# Eina IA útil
-
-[https://www.canirun.ai]()
-
-Per saber com funionaren les IAs en cada màquina i si tenen 'visió'/'tools'
-
 ## Exercici 03
 
-Fent servir Ollama, i els models:
-
-- Model de text i visió: gemma3:1b (o gemma3:4b)
-
-**Nota**: Recorda, per instal·lar models
-```bash
-ollama run gemma3:1b
-ollama run llava-phi3
-ollama run granite4:3b
-```
-
-Fes una versió de ChatGPT amb JavaFX
-
-L'aplicació ha d'acceptar textos i imatges
-
-- Els textos es processen amb el model de text
-- Les imatges es processen amb el model de visió
+Fes una versió de ChatGPT amb JavaFX i un servidor compatible amb el protocol **"OpenAI"**
 
 Les condicions són:
 
+- L'aplicació ha d'acceptar textos i imatges
 - En el cas d'una petició de text, la resposta s'ha de mostrar a mida que es va rebent (stream)
 - En el cas d'una petició d'imatge, la resposta s'ha de mostrar un cop completada i mentresant l'usuari veu un 'thinking...'
 - L'usuari **ha de poder aturar la última petició** en qualsevol moment.
