@@ -1,6 +1,7 @@
 package com.project;
 
 import java.net.URL;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -64,7 +65,11 @@ public class Controller implements Initializable {
                             wait();
                         }
                     }
-                    Thread.sleep(100); // Simulate work
+                    // ThreadLocalRandom subtitutes Math.random() 
+                    // for better performance in multithreaded environments
+                    int waitTime = ThreadLocalRandom.current().nextInt(100, 501);
+                    Thread.sleep(waitTime);
+
                     updateMessage("Progress: " + i + "%");
                     progress = i + 1;
                 }

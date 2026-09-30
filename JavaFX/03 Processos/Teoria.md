@@ -48,7 +48,12 @@ private void createTask() {
                         wait();
                     }
                 }
-                Thread.sleep(100); // Simulate work
+                
+                // ThreadLocalRandom subtitutes Math.random() 
+                // for better performance in multithreaded environments
+                int waitTime = ThreadLocalRandom.current().nextInt(100, 501);
+                Thread.sleep(waitTime);
+
                 updateMessage("Progress: " + i + "%");
                 progress = i + 1;
             }
@@ -130,126 +135,114 @@ En aquest exemple podeu veure com es carrega una imatge des del navegador d'arxi
 
 ## Exemple 0402
 
-Per fer anar aquest exemple cal un servidor Ollama amb el model 'llama3.2':
+L'exemple 0402 fa peticions tipus POST amb un servidor IA compatible amb el protocol "OpenAI", en aquest cas el de l'institut:
 
-```bash
-ollama pull gemma3:1b
-ollama run gemma3:1b
+```java
+private static final String MODEL_NAME = "Qwen36";
+private static final String MODEL_URL = "https://agents.ieti.site/v1/chat/completions";
+private static final String MODEL_KEY = "SERVER_API_KEY";
 ```
 
-Quan estigui carregat, en un terminal diferent:
+Les peticions tipus POST les fa el client cap el servidor, el servidor només pot enviar respostes al client (no s'hi pot posar en contacte directament).
+
+En un terminal:
 
 ```bash
-cd Exemple\ 0401
+cd Exemple\ 0402
 ./run.sh com.project.Main
 ```
 
-Molt sovint enlloc d'una tasca completa únicament necessitem fer una crida a una API externa, o a una base de dades. **També cal fer-ho amb un thread** però de manera més senzilla fent servir **"httpClient.sendAsync"**.
+Les crides POST són les més habituals, perquè permeten fer una crides a una API externa, o a una base de dades. 
 
-Si només volem fer una petició que espera una resposta completa:
+A JavaFX les crides POST **també cal fer-les amb un thread** però de manera més senzilla fent servir **"httpClient.sendAsync"**.
+
+Hi ha dos tipus de peticions POST:
+
+- **Normals**, rebem la resposta completa un cop disponible
+- **Stream**, rebem parts de la resposta a mida que estàn disponibles
 
 ```java
-@FXML
-private void callComplete(ActionEvent event) {
-    textInfo.setText(""); // Clear the textInfo
-    setButtonsRunning();
-    isCancelled.set(false);
+private void executeTextRequest(String prompt, boolean stream) {
+    JSONArray messages = new JSONArray().put(
+        new JSONObject()
+            .put("role", "user")
+            .put("content", prompt)
+    );
+
+    JSONObject body = new JSONObject()
+        .put("model", MODEL_NAME)
+        .put("messages", messages)
+        .put("stream", stream)
+        .put("reasoning_effort", "none");
 
     HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("http://localhost:11434/api/generate"))
-            .header("Content-Type", "application/json")
-            .POST(BodyPublishers.ofString(
-                    "{\"model\": \"llama3\", \"prompt\": \"Tell me a haiku.\", \"stream\": false}"))
-            .build();
+        .uri(URI.create(MODEL_URL))
+        .header("Content-Type", "application/json")
+        .header("Authorization", "Bearer " + MODEL_KEY)
+        .POST(BodyPublishers.ofString(body.toString()))
+        .build();
 
-    Platform.runLater(() -> textInfo.setText("Wait complete ..."));
+    if (stream) {
+        Platform.runLater(() -> textInfo.setText("Wait stream ... " + prompt));
+        isFirst = true;
 
-    completeRequest = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            .thenApply(response -> {
-                JSONObject jsonResponse = new JSONObject(response.body());
-                String responseText = jsonResponse.getString("response");
-                Platform.runLater(() -> {
-                    textInfo.setText(responseText);
-                    setButtonsIdle();
-                });
-                return response;
-            })
-            .exceptionally(e -> {
-                if (!isCancelled.get()) {
-                    e.printStackTrace();
-                }
-                Platform.runLater(this::setButtonsIdle);
-                return null;
+        streamRequest = httpClient.sendAsync(
+            request,
+            HttpResponse.BodyHandlers.ofInputStream()
+        ).thenApply(response -> {
+            currentInputStream = response.body();
+            streamReadingTask = executorService.submit(this::handleStreamResponse);
+            return response;
+        }).exceptionally(e -> {
+            if (!isCancelled.get()) e.printStackTrace();
+            Platform.runLater(this::setButtonsIdle);
+            return null;
+        });
+
+    } else {
+        Platform.runLater(() -> textInfo.setText("Wait complete ..."));
+
+        completeRequest = httpClient.sendAsync(
+            request,
+            HttpResponse.BodyHandlers.ofString()
+        ).thenApply(response -> {
+            String responseText = extractOpenAIResponse(response.body());
+
+            Platform.runLater(() -> {
+                textInfo.setText(responseText);
+                setButtonsIdle();
             });
+
+            return response;
+        }).exceptionally(e -> {
+            if (!isCancelled.get()) e.printStackTrace();
+
+            Platform.runLater(() -> {
+                textInfo.setText("Request failed.");
+                setButtonsIdle();
+            });
+
+            return null;
+        });
+    }
 }
 ```
 
-Si volem fer una petició tipus *stream* i processar cada un dels *blocs* de dades que rebem:
+En aquest exemple, per tal que el servidor IA descrigui una imatge, li hem d'enviar en format 'base64' dins la mateixa petició:
 
 ```java
-@FXML
-private void callStream(ActionEvent event) {
-    textInfo.setText(""); // Clear the textInfo
-    setButtonsRunning();
-    isCancelled.set(false);
-
-    HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create("http://localhost:11434/api/generate"))
-            .header("Content-Type", "application/json")
-            .POST(BodyPublishers.ofString("{\"model\": \"llama3\", \"prompt\": \"Why is the sky blue?\"}"))
-            .build();
-
-    Platform.runLater(() -> textInfo.setText("Wait stream ..."));
-
-    isFirst = true;
-    streamRequest = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
-            .thenApply(response -> {
-                currentInputStream = response.body();
-                streamReadingTask = executorService.submit(() -> {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(currentInputStream))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (isCancelled.get()) {
-                                System.out.println("Stream cancelled");
-                                break;
-                            }
-                            JSONObject jsonResponse = new JSONObject(line);
-                            String responseText = jsonResponse.getString("response");
-                            if (isFirst) {
-                                Platform.runLater(() -> textInfo.setText(responseText));
-                                isFirst = false;
-                            } else {
-                                Platform.runLater(() -> textInfo.setText(textInfo.getText() + responseText));
-                            }
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Platform.runLater(() -> {
-                            textInfo.setText("Error during streaming.");
-                            setButtonsIdle();
-                        });
-                    } finally {
-                        try {
-                            if (currentInputStream != null) {
-                                System.out.println("Cancelling InputStream in finally");
-                                currentInputStream.close();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Platform.runLater(this::setButtonsIdle);
-                    }
-                });
-                return response;
-            })
-            .exceptionally(e -> {
-                if (!isCancelled.get()) {
-                    e.printStackTrace();
-                }
-                Platform.runLater(this::setButtonsIdle);
-                return null;
-            });
-}
+JSONArray content = new JSONArray()
+    .put(
+        new JSONObject()
+            .put("type", "text")
+            .put("text", prompt)
+    )
+    .put(
+        new JSONObject()
+            .put("type", "image_url")
+            .put("image_url", new JSONObject()
+                .put("url", "data:" + mimeType + ";base64," + base64Image))
+    );
 ```
 
 <br/>
