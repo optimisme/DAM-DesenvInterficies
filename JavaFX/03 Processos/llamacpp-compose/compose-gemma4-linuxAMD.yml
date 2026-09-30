@@ -16,6 +16,8 @@ services:
     command:
       - -hf
       - ggml-org/gemma-4-E2B-it-GGUF:Q4_0
+      - --alias
+      - gemma4
       - --host
       - 0.0.0.0
       - --port

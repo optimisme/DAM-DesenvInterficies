@@ -20,6 +20,8 @@ services:
     command:
       - -hf
       - Qwen/Qwen3-VL-2B-Instruct-GGUF:Q4_K_M
+      - --alias
+      - qwen3-vl
       - --jinja
       - --host
       - 0.0.0.0

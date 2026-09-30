@@ -447,3 +447,11 @@ La principal diferència entre els fitxers és el sistema d'acceleració utilitz
 ```
 
 Això ens permet mantenir la mateixa pràctica i la mateixa API independentment del model o del maquinari utilitzat.
+
+# Crides Java a llama.cpp local
+
+```java
+private static final String MODEL_NAME = "qwen3-vl";
+private static final String MODEL_URL = "http://localhost:8080/v1/chat/completions";
+private static final String MODEL_KEY = "...";
+```

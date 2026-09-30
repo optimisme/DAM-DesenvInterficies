@@ -34,11 +34,15 @@ import org.json.JSONObject;
 
 public class Controller implements Initializable {
 
-    // Model configuration
-    private static final String MODEL_NAME = "Qwen36";
-    private static final String MODEL_URL = "https://agents.ieti.site/v1/chat/completions";
-    private static final String MODEL_KEY = "ieti_sk_k33fAWVP8NWWZ8U4WxTJ7AbwBEkcxsz9zQrMItCEso8";
+    // Model configuration (Agents IETI)
+    //private static final String MODEL_NAME = "Qwen36";
+    //private static final String MODEL_URL = "https://agents.ieti.site/v1/chat/completions";
+    private static final String MODEL_KEY = "API_KEY"; // Replace with your actual API key
 
+    // Model configuration (Qwen3-VL)
+    //private static final String MODEL_NAME = "qwen3-vl";
+    private static final String MODEL_URL = "http://localhost:8080/v1/chat/completions";
+    
     @FXML
     private Button buttonCallStream, buttonCallComplete, buttonBreak, buttonPicture;
 
