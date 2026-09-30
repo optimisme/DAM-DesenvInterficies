@@ -37,7 +37,7 @@ public class Controller implements Initializable {
     // Model configuration
     private static final String MODEL_NAME = "Qwen36";
     private static final String MODEL_URL = "https://agents.ieti.site/v1/chat/completions";
-    private static final String MODEL_KEY = "SERVER_API_KEY";
+    private static final String MODEL_KEY = "ieti_sk_k33fAWVP8NWWZ8U4WxTJ7AbwBEkcxsz9zQrMItCEso8";
 
     @FXML
     private Button buttonCallStream, buttonCallComplete, buttonBreak, buttonPicture;
