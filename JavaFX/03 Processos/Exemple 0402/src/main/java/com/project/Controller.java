@@ -40,7 +40,7 @@ public class Controller implements Initializable {
     private static final String MODEL_KEY = "API_KEY"; // Replace with your actual API key
 
     // Model configuration (Qwen3-VL)
-    //private static final String MODEL_NAME = "qwen3-vl";
+    private static final String MODEL_NAME = "qwen3-vl";
     private static final String MODEL_URL = "http://localhost:8080/v1/chat/completions";
     
     @FXML
