@@ -43,9 +43,11 @@ systemctl --user start docker-desktop
 Per assegurar-te que la línia de comandes apunta correctament a Docker Desktop (i no al motor natiu de Linux), defineix el context permanent:
 
 ```bash
+sudo usermod -aG kvm $USER
 docker context use desktop-linux
-
 ```
+
+Tancar la sessió i tornar a entrar
 
 ---
 
