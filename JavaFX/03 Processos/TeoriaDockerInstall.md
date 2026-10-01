@@ -63,7 +63,7 @@ Tancar la sessió i tornar a entrar
 
 ## NVIDIA i Docker
 
-Per tal de que l'acceleració de NVIDIA funcioni des de Docker:
+Si l'equip té una tarja NVIDIA, es pot accelerar la computació des de Docker:
 
 ```bash
 sudo nvidia-ctk runtime configure --runtime=docker
