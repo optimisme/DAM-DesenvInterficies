@@ -8,12 +8,11 @@
 </div>
 <br/>
 
-# Exercici 0
+# Exercici 0 (en grups de 2 a través del Proxy)
 
 Fes un joc de **"Tanks"** multijugador amb **JavaFX, Canvas i WebSockets**, inspirat en el joc de tancs de *Wii Play*.
 
 Video [Tanks, Wii Play!](https://www.youtube.com/watch?v=orLxrg51xL8)
-
 
 El joc serà per a **dos jugadors** connectats al mateix servidor.
 
@@ -259,3 +258,11 @@ Els tancs es poden dibuixar directament sobre el Canvas utilitzant formes simple
 - Cercles per a les rodes o detalls.
 
 La rotació del tanc i de la torreta s'ha de calcular a partir dels angles corresponents.
+
+## Entrega
+
+Ha de ser un repositori compartit pels dos alumnes del grup.
+
+S'ha d'entregar la URL del repositori de GitHub al Moodle.
+
+S'ha de presentar presencialment de manera individual, caldrà respondre les preguntes i no es podrà dir: "això ho va fer el meu company"
