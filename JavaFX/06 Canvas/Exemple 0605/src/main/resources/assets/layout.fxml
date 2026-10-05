@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/22"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.project.Controller">
+    <children>
+        <Canvas fx:id="canvas" width="800.0" height="500.0" />
+        <Label text="Fletxes: moure el tanc · Ratolí: apuntar · Clic: disparar · R: reiniciar"
+               style="-fx-padding: 8;" />
+    </children>
+</VBox>

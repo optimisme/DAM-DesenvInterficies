@@ -16,7 +16,7 @@ El joc ha de tenir tres vistes:
 
 - La primera vista configura el servidor al que s'ha de connectar el client i el nom del jugador
 - La primera vista configura el servidor al que s'ha de connectar el client i el nom del jugador
-- La segona vista escull un contrincant a partir d'una llista de clients disponibles (clients que estàn connectats al servidor però no estàn jugant)
+- La segona vista espera que un contrincant es connecti al servidor i mostra un compte enrrera per començar la partida
 - La tercera vista permet definir la posició dels vaixells
 - La quarta vista serà per jugar contra el jugador remot:
 

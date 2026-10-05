@@ -283,6 +283,31 @@ En aquest exemple, es veu com fer una animació simple amb el timer.
 </center>
 <br/>
 
+## Exemple 0605
+
+Aquest exemple és una base mínima per al joc de **Tanks**: un únic *Canvas* amb parets, dos obstacles escollits aleatòriament d'una llista predefinida i dos tancs dibuixats amb formes simples.
+
+- Les fletxes mouen el tanc **amunt, avall, esquerra i dreta** sobre el tauler. El cos s'orienta segons la direcció del moviment.
+- El **ratolí** orienta la torreta independentment del cos. Els cercles blaus indiquen la direcció del tret fins al cursor o un obstacle.
+- Un **clic** dispara una bala vermella, amb un màxim de **quatre bales actives**. Cada bala pot **rebotar una vegada** contra una paret o un obstacle: inverteix la component de velocitat perpendicular a la superfície i conserva l'altra. Al segon impacte desapareix amb una petita explosió taronja que s'expandeix i s'esvaeix.
+- El segon tanc és un objectiu immòbil: quan rep una bala, desapareix amb una petita animació d'explosió. Les bales també poden destruir el tanc del jugador després de rebotar.
+- La tecla **R** reinicia l'exemple i torna a escollir els dos obstacles.
+
+Com al 0604, el controlador separa la lògica (`update`) del dibuix (`redraw`) i fa servir `CnvTimer`. El moviment es calcula amb el temps transcorregut entre fotogrames. Les col·lisions es comproven amb cercles i rectangles; les bales avancen en passos petits per no saltar obstacles.
+
+Per executar-lo des de la carpeta de l'exemple:
+
+```bash
+./run.sh com.project.Main
+```
+
+A Windows, feu servir `./run.ps1 com.project.Main`.
+
+<br/>
+<center><img src="./assets/ex0605.png" style="max-height: 400px" alt="Exemple Tanks: parets, dos obstacles, punts de mira blaus i bales vermelles">
+<br/></center>
+<br/>
+
 ## Exemple Pong
 
 Aquest exemple mostra una versió de Pong per a un sol jugador, mostra com es poden fer jocs senzills amb *Canvas* i també com capturar les tecles.
