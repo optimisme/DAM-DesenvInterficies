@@ -153,10 +153,7 @@ La llista de colors predefinits s'han de dibuixar amb un canvas propi i tenir un
 <br/></center>
 <br/>
 
-Si el color escollit coincideix amb algun de la llista, s'ha de marcar amb una d'aquestes dues opcions:
-
-- Amb un requadre blau
-- Posant-lo verticalment més amunt que els altres colors de la seva fila
+Si el color escollit coincideix amb algun de la llista, s'ha de marcar posant-lo verticalment més amunt que els altres colors de la seva fila.
 
 ## Model de dades i redibuixat
 
