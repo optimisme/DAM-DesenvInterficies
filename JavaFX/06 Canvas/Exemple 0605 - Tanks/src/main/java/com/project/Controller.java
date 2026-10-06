@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -12,7 +11,7 @@ import java.util.Set;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Rectangle2D;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
@@ -29,294 +28,290 @@ public class Controller implements Initializable {
 
     // Mides fixes per treballar directament amb les coordenades del Canvas.
     private static final double WALL = 20;
-    private static final double TANK_RADIUS = 25;
     private static final double TANK_SPEED = 140; // píxels/segon
-    private static final double BULLET_RADIUS = 5;
     private static final double BULLET_SPEED = 360;
     private static final int MAX_BULLETS = 4;
     private static final double EXPLOSION_DURATION = 0.6; // segons
 
     // Escollim dos obstacles d'aquesta llista; les posicions no se solapen.
-    private final List<Rectangle2D> obstacleOptions = List.of(
-        new Rectangle2D(260, 100, 60, 100),
-        new Rectangle2D(260, 300, 60, 100),
-        new Rectangle2D(370, 170, 60, 160),
-        new Rectangle2D(480, 100, 60, 100),
-        new Rectangle2D(480, 300, 60, 100)
+    private final List<ObjectStatic> obstacleOptions = List.of(
+        new ObjectStatic(260, 100, 60, 100, Color.LIGHTGRAY),
+        new ObjectStatic(260, 300, 60, 100, Color.LIGHTGRAY),
+        new ObjectStatic(370, 170, 60, 160, Color.LIGHTGRAY),
+        new ObjectStatic(480, 100, 60, 100, Color.LIGHTGRAY),
+        new ObjectStatic(480, 300, 60, 100, Color.LIGHTGRAY)
     );
-    private final List<Rectangle2D> obstacles = new ArrayList<>();
+    private final List<ObjectStatic> staticObjects = new ArrayList<>();
     private final List<Bullet> bullets = new ArrayList<>();
     private final List<Explosion> explosions = new ArrayList<>();
-    private final Set<KeyCode> keys = EnumSet.noneOf(KeyCode.class);
+    private final Set<KeyCode> pressedKeys = EnumSet.noneOf(KeyCode.class);
 
-    // La posició és el centre del tanc. El cos i la torreta tenen angles diferents.
-    private double tankX, tankY, bodyAngle;
-    private double mouseX, mouseY;
-    private final double enemyX = 710, enemyY = 250;
-    private boolean tankAlive, enemyAlive;
-
-    // Cada bala conserva la seva direcció encara que després moguem el ratolí.
-    private static class Bullet {
-        double x, y, vx, vy;
-        boolean bounced;
-
-        Bullet(double x, double y, double angle) {
-            this.x = x;
-            this.y = y;
-            vx = Math.cos(angle) * BULLET_SPEED;
-            vy = Math.sin(angle) * BULLET_SPEED;
-        }
-    }
-
-    // El mateix efecte serveix per als impactes petits i per destruir el tanc.
-    private static class Explosion {
-        double x, y, radius;
-        double time = EXPLOSION_DURATION;
-
-        Explosion(double x, double y, double radius) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-        }
-    }
+    private final Tank tank = new Tank(new Point2D(90, 250), 0, 0, Color.DODGERBLUE);
+    private final Tank enemy = new Tank(new Point2D(710, 250), 180, 180, Color.DARKGOLDENROD);
+    private final Target target = new Target();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+
+        // Iniciar el context de dibuix
         gc = canvas.getGraphicsContext2D();
+
+        // Iniciar tauler de joc i objectes
         resetBoard();
 
-        canvas.setOnMouseMoved(this::aim);
-        canvas.setOnMouseDragged(this::aim);
-        canvas.setOnMousePressed(event -> {
-            aim(event);
-            if (event.getButton() == MouseButton.PRIMARY) fire();
-        });
+        // Iniciar events
+        // (amb Platform.runLater() per assegurar que ja hi ha escena)
+        Platform.runLater(() -> { configureInput(); });
 
-        // L'escena i la finestra ja existeixen quan s'executa aquest bloc.
-        Platform.runLater(() -> {
-            canvas.getScene().setOnKeyPressed(event -> {
-                if (event.getCode() == KeyCode.R) resetBoard();
-                else keys.add(event.getCode());
-            });
-            canvas.getScene().setOnKeyReleased(event -> keys.remove(event.getCode()));
-            canvas.getScene().getWindow().focusedProperty().addListener((obs, old, focused) -> {
-                if (!focused) keys.clear();
-            });
-        });
-
+        // Iniciar el temporitzador de dibuix i actualització de l'estat del joc
         timer = new CnvTimer(fps -> update(), this::redraw, 60);
         timer.start();
         redraw();
     }
 
+    private void configureInput() {
+
+        // Iniciar events de ratolí
+        canvas.setOnMouseMoved(this::updateTarget);
+        canvas.setOnMouseDragged(this::updateTarget);
+        canvas.setOnMousePressed(event -> {
+            updateTarget(event);
+            if (event.getButton() == MouseButton.PRIMARY) fireBullet();
+        });
+
+        // Iniciar events de teclat
+        canvas.getScene().setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.R) resetBoard();
+            else pressedKeys.add(event.getCode());
+        });
+        canvas.getScene().setOnKeyReleased(event -> pressedKeys.remove(event.getCode()));
+        canvas.getScene().getWindow().focusedProperty().addListener((obs, old, focused) -> {
+            if (!focused) pressedKeys.clear();
+        });
+    }
+
+    // Iniciar partida
     private void resetBoard() {
-        tankX = 90;
-        tankY = 250;
-        bodyAngle = 0;
-        mouseX = enemyX;
-        mouseY = enemyY;
-        tankAlive = true;
-        enemyAlive = true;
+
+        // Iniciar el temporitzador i les tecles premudes
+        if (timer != null) timer.stop();
         lastRunNanos = 0;
+        pressedKeys.clear();
+
+        // Iniciar parets
+        double w = canvas.getWidth(), h = canvas.getHeight();
+        staticObjects.clear();
+        staticObjects.add(new ObjectStatic(0, 0, w, WALL, Color.DIMGRAY));
+        staticObjects.add(new ObjectStatic(0, h - WALL, w, WALL, Color.DIMGRAY));
+        staticObjects.add(new ObjectStatic(0, 0, WALL, h, Color.DIMGRAY));
+        staticObjects.add(new ObjectStatic(w - WALL, 0, WALL, h, Color.DIMGRAY));
+
+        // Iniciar obstacles escollint-ne dos aleatòriament de la llista d'opcions
+        List<ObjectStatic> options = new ArrayList<>(obstacleOptions);
+        Collections.shuffle(options);
+        staticObjects.addAll(options.subList(0, 2));
+
+        // Iniciar bales i explosions
         bullets.clear();
         explosions.clear();
-        keys.clear();
 
-        List<Rectangle2D> options = new ArrayList<>(obstacleOptions);
-        Collections.shuffle(options);
-        obstacles.clear();
-        obstacles.addAll(options.subList(0, 2));
+        // Iniciar tancs
+        tank.reset(new Point2D(90, 250), 0, 0);
+        enemy.reset(new Point2D(710, 250), 180, 180);
+
+        // Iniciar punt de mira
+        target.setPosition(enemy.getPosition().getX(), enemy.getPosition().getY());
+        tank.pointAt(target.getPosition());
+
+        // Reprendre el joc després de reiniciar-lo amb R
+        if (timer != null) timer.start();
     }
 
-    private void aim(MouseEvent event) {
-        mouseX = event.getX();
-        mouseY = event.getY();
+    // Actualitzar la posició del punt de mira
+    private void updateTarget(MouseEvent event) {
+        target.setPosition(event.getX(), event.getY());
     }
 
-    private double turretAngle() {
-        return Math.atan2(mouseY - tankY, mouseX - tankX);
+    // Disparar una bala
+    private void fireBullet() {
+
+        // Per disparar una bala:
+        // - el tanc ha d'estar viu
+        // - no hi pot haver més de MAX_BULLETS bales disparades al mateix temps
+        if (!tank.isAlive() || bullets.size() >= MAX_BULLETS) return;
+
+        // Apuntar des de la posició actual del tanc abans de disparar
+        tank.pointAt(target.getPosition());
+
+        // Afegir la bala a la llista de bales
+        Point2D position = tank.getPosition();
+        bullets.add(new Bullet(position, tank.getTurretAngle(), BULLET_SPEED));
     }
 
-    private void fire() {
-        if (!tankAlive || bullets.size() >= MAX_BULLETS) return;
-        // Neix al centre per no saltar una paret que toqui la boca del canó.
-        // El dibuix del tanc la tapa fins que surt; només ens pot tocar després de rebotar.
-        bullets.add(new Bullet(tankX, tankY, turretAngle()));
-    }
-
-    // --- Lògica: el temps transcorregut fa que la velocitat no depengui dels FPS.
+    // Actualitzar la lògica del joc (run)
     private void update() {
+        double dt = calculateDt();
+        if (dt <= 0) return;
+
+        updateTank(dt);
+        updateBullets(dt);
+        updateExplosions(dt);
+
+        // Apuntar des de la posició final del tanc.
+        tank.pointAt(target.getPosition());
+    }
+
+    // Calcular el temps transcorregut, en segons, des de l'última actualització.
+    // Aquest "dt" permet actualitzar els moviments sense dependre dels FPS.
+    private double calculateDt() {
         long now = System.nanoTime();
         double dt = lastRunNanos == 0 ? 0 : (now - lastRunNanos) / 1_000_000_000.0;
         lastRunNanos = now;
         dt = Math.min(dt, 0.05); // evita salts grans després d'una pausa
-        if (dt <= 0) return;
+        return dt;
+    }
 
+    // Llegir les tecles i moure el tanc si la nova posició és lliure.
+    private void updateTank(double dt) {
         double dx = 0, dy = 0;
+
         // Les fletxes i WASD comparteixen les mateixes direccions.
-        if (keys.contains(KeyCode.LEFT) || keys.contains(KeyCode.A)) dx -= 1;
-        if (keys.contains(KeyCode.RIGHT) || keys.contains(KeyCode.D)) dx += 1;
-        if (keys.contains(KeyCode.UP) || keys.contains(KeyCode.W)) dy -= 1;
-        if (keys.contains(KeyCode.DOWN) || keys.contains(KeyCode.S)) dy += 1;
-        double length = Math.hypot(dx, dy);
-        if (tankAlive && length > 0) {
-            bodyAngle = Math.atan2(dy, dx);
-            // Normalitzem perquè el moviment diagonal tingui la mateixa velocitat.
-            double nextX = tankX + dx / length * TANK_SPEED * dt;
-            double nextY = tankY + dy / length * TANK_SPEED * dt;
-            // Comprovem cada eix per poder lliscar al costat d'un obstacle.
-            if (canMove(nextX, tankY)) tankX = nextX;
-            if (canMove(tankX, nextY)) tankY = nextY;
-        }
+        if (pressedKeys.contains(KeyCode.LEFT) || pressedKeys.contains(KeyCode.A)) dx -= 1;
+        if (pressedKeys.contains(KeyCode.RIGHT) || pressedKeys.contains(KeyCode.D)) dx += 1;
+        if (pressedKeys.contains(KeyCode.UP) || pressedKeys.contains(KeyCode.W)) dy -= 1;
+        if (pressedKeys.contains(KeyCode.DOWN) || pressedKeys.contains(KeyCode.S)) dy += 1;
 
-        for (Explosion explosion : explosions) explosion.time -= dt;
-        explosions.removeIf(explosion -> explosion.time <= 0);
-        updateBullets(dt);
+        tank.updateMovement(new Point2D(dx, dy), TANK_SPEED);
+
+        Point2D current = tank.getPosition();
+        Point2D next = tank.nextPosition(dt);
+
+        // Si el moviment complet xoca, provem de moure només en X o només en Y.
+        // Així el tanc llisca al llarg de la paret en lloc de quedar-s'hi enganxat.
+        Point2D onlyX = new Point2D(next.getX(), current.getY());
+        Point2D onlyY = new Point2D(current.getX(), next.getY());
+
+        if (!isTankBlocked(next)) tank.setPosition(next);
+        else if (!isTankBlocked(onlyX)) tank.setPosition(onlyX);
+        else if (!isTankBlocked(onlyY)) tank.setPosition(onlyY);
+        // Si tot està bloquejat, el tanc es queda on és.
     }
 
-    private boolean canMove(double x, double y) {
-        if (blocked(x, y, TANK_RADIUS)) return false;
-        return !enemyAlive || Math.hypot(x - enemyX, y - enemyY) >= TANK_RADIUS * 2;
+    // El tanc no pot entrar a les parets, als obstacles ni a l'altre tanc.
+    private boolean isTankBlocked(Point2D position) {
+        if (touchesStatic(position, Tank.RADIUS)) return true;
+        return enemy.isAlive()
+            && HelperCollisions.circlesOverlap(position, Tank.RADIUS, enemy.getPosition(), Tank.RADIUS);
     }
 
-    private void updateBullets(double dt) {
-        // Passos petits perquè una bala ràpida no salti per sobre d'un obstacle.
-        int steps = (int) Math.ceil(BULLET_SPEED * dt / BULLET_RADIUS);
-        double stepTime = dt / steps;
-        Iterator<Bullet> iterator = bullets.iterator();
-        while (iterator.hasNext()) {
-            Bullet bullet = iterator.next();
-            boolean remove = false;
-            for (int i = 0; i < steps; i++) {
-                double nextX = bullet.x + bullet.vx * stepTime;
-                double nextY = bullet.y + bullet.vy * stepTime;
-                boolean hitX = blocked(nextX, bullet.y, BULLET_RADIUS);
-                boolean hitY = blocked(bullet.x, nextY, BULLET_RADIUS);
-                // Una cantonada pot bloquejar només el moviment combinat dels dos eixos.
-                if (!hitX && !hitY && blocked(nextX, nextY, BULLET_RADIUS)) {
-                    hitX = hitY = true;
-                }
-                if (hitX || hitY) {
-                    if (bullet.bounced) {
-                        explosions.add(new Explosion(nextX, nextY, 20));
-                        remove = true;
-                        break;
-                    }
-                    // Paret vertical: invertim X. Paret horitzontal: invertim Y.
-                    // L'altra component es conserva, així l'angle de rebot és el correcte.
-                    if (hitX) bullet.vx = -bullet.vx;
-                    if (hitY) bullet.vy = -bullet.vy;
-                    bullet.bounced = true;
-                    // Conservem la posició anterior, fora de la paret.
-                } else {
-                    bullet.x = nextX;
-                    bullet.y = nextY;
-                }
-                if (enemyAlive && Math.hypot(bullet.x - enemyX, bullet.y - enemyY)
-                        <= TANK_RADIUS + BULLET_RADIUS) {
-                    enemyAlive = false;
-                    explosions.add(new Explosion(enemyX, enemyY, 60));
-                    remove = true;
-                    break;
-                }
-                if (tankAlive && bullet.bounced && Math.hypot(bullet.x - tankX, bullet.y - tankY)
-                        <= TANK_RADIUS + BULLET_RADIUS) {
-                    tankAlive = false;
-                    explosions.add(new Explosion(tankX, tankY, 60));
-                    remove = true;
-                    break;
-                }
-            }
-            if (remove) iterator.remove();
-        }
-    }
-
-    // Col·lisió d'un cercle amb els límits interiors i els rectangles dels obstacles.
-    private boolean blocked(double x, double y, double radius) {
-        if (x - radius < WALL || y - radius < WALL
-                || x + radius > canvas.getWidth() - WALL
-                || y + radius > canvas.getHeight() - WALL) return true;
-
-        for (Rectangle2D obstacle : obstacles) {
-            double nearestX = Math.max(obstacle.getMinX(), Math.min(x, obstacle.getMaxX()));
-            double nearestY = Math.max(obstacle.getMinY(), Math.min(y, obstacle.getMaxY()));
-            if (Math.hypot(x - nearestX, y - nearestY) <= radius) return true;
+    // Indica si un cercle a "position" toca alguna paret o obstacle.
+    private boolean touchesStatic(Point2D position, double radius) {
+        for (ObjectStatic rectangle : staticObjects) {
+            if (rectangle.touches(position, radius)) return true;
         }
         return false;
     }
 
-    // --- Dibuix: només rectangles, línies i cercles.
+    // Moure les bales i aplicar les regles del joc quan xoquen.
+    private void updateBullets(double dt) {
+        List<Bullet> bulletsToRemove = new ArrayList<>();
+
+        for (Bullet bullet : bullets) {
+            Point2D current = bullet.getPosition();
+            Point2D next = bullet.nextPosition(dt);
+
+            // 1. Paret o obstacle: el primer cop rebota, el segon desapareix.
+            if (touchesStatic(next, Bullet.RADIUS)) {
+                if (bullet.hasBounced()) {
+                    bulletsToRemove.add(bullet);
+                    addExplosion(current, 20);
+                } else {
+                    // Si movent-nos només en X ja xoquem, la paret és vertical: invertim X.
+                    // Si movent-nos només en Y ja xoquem, la paret és horitzontal: invertim Y.
+                    boolean invertX = touchesStatic(new Point2D(next.getX(), current.getY()), Bullet.RADIUS);
+                    boolean invertY = touchesStatic(new Point2D(current.getX(), next.getY()), Bullet.RADIUS);
+                    if (!invertX && !invertY) {
+                        // Ha tocat just una cantonada: torna enrere.
+                        invertX = true;
+                        invertY = true;
+                    }
+                    bullet.bounce(invertX, invertY);
+                }
+                continue; // La bala no avança aquest cop: es queda fora de la paret.
+            }
+            bullet.setPosition(next);
+
+            // 2. Tancs: l'enemic sempre; el nostre només si la bala ja ha rebotat.
+            if (enemy.isAlive() && bullet.touches(enemy)) {
+                destroyTank(enemy);
+                bulletsToRemove.add(bullet);
+            } else if (tank.isAlive() && bullet.hasBounced() && bullet.touches(tank)) {
+                destroyTank(tank);
+                bulletsToRemove.add(bullet);
+            }
+        }
+
+        // 3. Dues bales que es toquen desapareixen totes dues.
+        for (int i = 0; i < bullets.size(); i++) {
+            for (int j = i + 1; j < bullets.size(); j++) {
+                Bullet a = bullets.get(i);
+                Bullet b = bullets.get(j);
+                if (a.touches(b)) {
+                    bulletsToRemove.add(a);
+                    bulletsToRemove.add(b);
+                    addExplosion(a.getPosition().midpoint(b.getPosition()), 20);
+                }
+            }
+        }
+
+        // Retirar les bales al final, per no modificar la llista mentre la recorrem.
+        bullets.removeAll(bulletsToRemove);
+    }
+
+    // Destruir un tanc i mostrar una explosió gran.
+    private void destroyTank(Tank hitTank) {
+        hitTank.destroy();
+        addExplosion(hitTank.getPosition(), 60);
+    }
+
+    // Actualitzar la durada dels efectes visuals i eliminar les explosions acabades.
+    private void updateExplosions(double dt) {
+        for (Explosion explosion : explosions) {
+            explosion.update(dt);
+        }
+        explosions.removeIf(Explosion::isFinished);
+    }
+
+    // Afegeix una explosió visual a la llista d'explosions
+    private void addExplosion(Point2D point, double radius) {
+        explosions.add(new Explosion(point.getX(), point.getY(), radius, EXPLOSION_DURATION));
+    }
+
+    // Dibuix del joc
     private void redraw() {
+
+        // Dibuix del fons
         double w = canvas.getWidth(), h = canvas.getHeight();
         gc.setFill(Color.WHITESMOKE);
         gc.fillRect(0, 0, w, h);
 
-        gc.setFill(Color.DIMGRAY);
-        gc.fillRect(0, 0, w, WALL);
-        gc.fillRect(0, h - WALL, w, WALL);
-        gc.fillRect(0, 0, WALL, h);
-        gc.fillRect(w - WALL, 0, WALL, h);
-        gc.setFill(Color.LIGHTGRAY);
-        for (Rectangle2D obstacle : obstacles) {
-            gc.fillRect(obstacle.getMinX(), obstacle.getMinY(),
-                obstacle.getWidth(), obstacle.getHeight());
+        // Dibuix de tots els rectangles estàtics: parets i obstacles.
+        for (ObjectStatic rectangle : staticObjects) rectangle.draw(gc);
+
+        // Dibuix de les bales
+        for (Bullet bullet : bullets) bullet.draw(gc);
+
+        // Dibuix dels tancs
+        tank.draw(gc);
+        enemy.draw(gc);
+
+        // Dibuix explosions
+        for (Explosion explosion : explosions) explosion.draw(gc);
+
+        // Dibuix del canó i del punt de mira
+        if (tank.isAlive()) {
+            target.drawGuide(gc, tank, staticObjects);
+            target.draw(gc, tank);
         }
-
-        if (tankAlive) drawAim();
-        gc.setFill(Color.RED);
-        for (Bullet bullet : bullets) {
-            gc.fillOval(bullet.x - BULLET_RADIUS, bullet.y - BULLET_RADIUS,
-                BULLET_RADIUS * 2, BULLET_RADIUS * 2);
-        }
-        if (tankAlive) {
-            drawTank(tankX, tankY, bodyAngle, turretAngle(), Color.DODGERBLUE);
-        }
-        if (enemyAlive) drawTank(enemyX, enemyY, Math.PI, Math.PI, Color.DARKGOLDENROD);
-        for (Explosion explosion : explosions) drawExplosion(explosion);
-    }
-
-    private void drawAim() {
-        double angle = turretAngle();
-        double distance = Math.hypot(mouseX - tankX, mouseY - tankY);
-        gc.setFill(Color.DODGERBLUE);
-        for (double d = 44; d < distance; d += 18) {
-            double x = tankX + Math.cos(angle) * d;
-            double y = tankY + Math.sin(angle) * d;
-            if (blocked(x, y, 3)) break;
-            gc.fillOval(x - 3, y - 3, 6, 6);
-        }
-    }
-
-    private void drawTank(double x, double y, double body, double turret, Color color) {
-        // save/restore separa la rotació del cos de la rotació de la torreta.
-        gc.save();
-        gc.translate(x, y);
-        gc.rotate(Math.toDegrees(body));
-        gc.setFill(Color.DARKSLATEGRAY);
-        gc.fillRect(-18, -17, 36, 6);
-        gc.fillRect(-18, 11, 36, 6);
-        gc.setFill(color);
-        gc.fillRect(-16, -11, 32, 22);
-        gc.restore();
-
-        gc.save();
-        gc.translate(x, y);
-        gc.rotate(Math.toDegrees(turret));
-        gc.setFill(color.darker());
-        gc.fillRect(0, -3, 32, 6);
-        gc.fillOval(-9, -9, 18, 18);
-        gc.restore();
-    }
-
-    private void drawExplosion(Explosion explosion) {
-        double progress = 1 - explosion.time / EXPLOSION_DURATION;
-        double radius = explosion.radius * (0.3 + 0.7 * progress);
-        gc.save();
-        gc.setGlobalAlpha(1 - progress);
-        gc.setFill(Color.ORANGE);
-        gc.fillOval(explosion.x - radius, explosion.y - radius, radius * 2, radius * 2);
-        gc.setStroke(Color.ORANGERED);
-        gc.strokeOval(explosion.x - radius, explosion.y - radius, radius * 2, radius * 2);
-        gc.restore();
     }
 }

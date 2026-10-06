@@ -293,7 +293,57 @@ Aquest exemple és una base mínima per al joc de **Tanks**: un únic *Canvas* a
 - El segon tanc és un objectiu immòbil: quan rep una bala, desapareix amb una petita animació d'explosió. Les bales també poden destruir el tanc del jugador després de rebotar.
 - La tecla **R** reinicia l'exemple i torna a escollir els dos obstacles.
 
-Com al 0604, el controlador separa la lògica (`update`) del dibuix (`redraw`) i fa servir `CnvTimer`. El moviment es calcula amb el temps transcorregut entre fotogrames. Les col·lisions es comproven amb cercles i rectangles; les bales avancen en passos petits per no saltar obstacles.
+Com al 0604, el controlador separa la lògica (`update`) del dibuix (`redraw`) i fa servir `CnvTimer`. La variable `dt` indica el temps transcorregut entre actualitzacions. `update()` mou els objectes i orienta la torreta; `redraw()` representa l'estat del joc.
+
+### Objectes i moviment
+
+La jerarquia separa els objectes segons si es mouen o són estàtics:
+
+```mermaid
+classDiagram
+    ObjectBase <|-- ObjectDynamic
+    ObjectBase <|-- ObjectStatic
+    ObjectDynamic <|-- Tank
+    ObjectDynamic <|-- Bullet
+```
+
+- `ObjectBase` defineix la posició (`getPosition()`) i el dibuix (`draw()`).
+- `ObjectDynamic` afegeix angle, velocitat, radi i moviment. `Tank` i `Bullet` es representen com a cercles per detectar col·lisions.
+- `ObjectStatic` representa directament un rectangle immòbil, tant si és una paret exterior com un obstacle interior. Guarda un `Rectangle2D` i el color, i comprova si un cercle hi xoca.
+
+`nextPosition(dt)` pertany només a `ObjectDynamic`: calcula on arribaria l'objecte després de `dt` segons, sense moure'l encara. Si la nova posició és lliure, el controlador la confirma amb `setPosition()`. El cos del tanc i la torreta tenen angles independents.
+
+El controlador manté una única llista de rectangles estàtics. Sempre hi ha **quatre parets exteriors de color gris fosc** i **dos obstacles interiors de color gris clar**, escollits aleatòriament en reiniciar. En un rectangle, la posició és la cantonada superior esquerra.
+
+### Col·lisions
+
+Cada vegada que s'actualitza el joc, els objectes avancen pocs píxels. Per això n'hi ha prou amb una pregunta molt senzilla: **«A la posició nova, aquest objecte toca alguna cosa?»**
+
+`HelperCollisions` només té dues comprovacions:
+
+- **Cercle-cercle**: dos cercles es toquen si la distància entre els centres és més petita que la suma dels radis.
+- **Cercle-rectangle**: es busca el punt del rectangle més proper al centre del cercle (limitant la X i la Y del centre als costats del rectangle). Si aquest punt és a menys d'un radi, es toquen.
+
+```java
+// Una bala toca el tanc enemic?
+if (bullet.touches(enemy)) { ... }
+
+// Un cercle a la posició "next" toca aquesta paret?
+if (wall.touches(next, Bullet.RADIUS)) { ... }
+```
+
+### Aplicar les regles del joc
+
+Abans de moure un objecte, calculem la seva posició següent amb `nextPosition(dt)` i la comprovem:
+
+- **Tanc**: si la posició nova toca una paret, un obstacle o l'altre tanc, provem de moure'l només en X i després només en Y. Així el tanc **llisca** al llarg de la paret en lloc de quedar-s'hi enganxat.
+- **Bala contra paret**: si és el primer xoc, rebota. Per saber cap on, provem el moviment només en X: si ja xoca, la paret és vertical i invertim la part horitzontal de la direcció. Igual amb Y per a les parets horitzontals. Al segon xoc, la bala desapareix amb una explosió petita.
+- **Bala contra tanc**: destrueix l'enemic sempre, i el tanc del jugador només si la bala ja ha rebotat.
+- **Bala contra bala**: desapareixen totes dues.
+
+Les bales a eliminar es guarden en una llista i es retiren al final, per no modificar la llista `bullets` mentre la recorrem.
+
+Aquest mètode és senzill però té un límit: si un objecte anés tan ràpid que en un sol pas travessés una paret sencera, no es detectaria el xoc. Amb les velocitats d'aquest exemple i `dt` limitat a 0,05 segons, una bala avança com a màxim 18 píxels per pas, menys que el gruix de les parets.
 
 Per executar-lo des de la carpeta de l'exemple:
 
