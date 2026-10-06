@@ -44,12 +44,12 @@ Els dos jugadors han de veure el mateix escenari i la mateixa posició dels tanc
 
 ## Moviment del tanc
 
-El jugador controla el seu tanc amb les **fletxes del teclat**:
+El jugador controla el seu tanc amb les **fletxes del teclat** o amb les tecles **WASD**:
 
-- `↑`: moure el tanc amunt.
-- `↓`: moure el tanc avall.
-- `←`: girar el tanc cap a l'esquerra.
-- `→`: girar el tanc cap a la dreta.
+- `↑` o `W`: moure el tanc amunt.
+- `↓` o `S`: moure el tanc avall.
+- `←` o `A`: girar el tanc cap a l'esquerra.
+- `→` o `D`: girar el tanc cap a la dreta.
 
 El moviment ha de ser continu mentre la tecla estigui premuda.
 

@@ -153,10 +153,11 @@ public class Controller implements Initializable {
         if (dt <= 0) return;
 
         double dx = 0, dy = 0;
-        if (keys.contains(KeyCode.LEFT)) dx -= 1;
-        if (keys.contains(KeyCode.RIGHT)) dx += 1;
-        if (keys.contains(KeyCode.UP)) dy -= 1;
-        if (keys.contains(KeyCode.DOWN)) dy += 1;
+        // Les fletxes i WASD comparteixen les mateixes direccions.
+        if (keys.contains(KeyCode.LEFT) || keys.contains(KeyCode.A)) dx -= 1;
+        if (keys.contains(KeyCode.RIGHT) || keys.contains(KeyCode.D)) dx += 1;
+        if (keys.contains(KeyCode.UP) || keys.contains(KeyCode.W)) dy -= 1;
+        if (keys.contains(KeyCode.DOWN) || keys.contains(KeyCode.S)) dy += 1;
         double length = Math.hypot(dx, dy);
         if (tankAlive && length > 0) {
             bodyAngle = Math.atan2(dy, dx);
