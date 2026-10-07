@@ -283,7 +283,7 @@ En aquest exemple, es veu com fer una animació simple amb el timer.
 </center>
 <br/>
 
-## Exemple 0605
+## Exemple 0606 - Tanks
 
 Aquest exemple és una base mínima per al joc de **Tanks**: un únic *Canvas* amb parets, dos obstacles escollits aleatòriament d'una llista predefinida i dos tancs dibuixats amb formes simples.
 
@@ -355,7 +355,7 @@ for (int step = 0; step < PHYSICS_PRECISION; step++) {
 }
 ```
 
-Les comprovacions són les mateixes; només canvia que els objectes avancen menys entre comprovació i comprovació. Amb `PHYSICS_PRECISION = 1` es pot veure com dues bales disparades l'una contra l'altra a vegades es creuen sense explotar.
+**NOTA:** Això evita que dos moviments ràpids "se saltin" sense detectar el xoc, normalment això es fa amb matemàtiques més precises però així és més senzill i funciona prou bé per aquest joc.
 
 Per executar-lo des de la carpeta de l'exemple:
 
