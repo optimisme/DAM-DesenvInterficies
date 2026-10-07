@@ -12,12 +12,12 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
 
-        // Carrega l'única vista de l'exemple
+        // Load the only view of the example
         Parent root = FXMLLoader.load(getClass().getResource("/assets/layout.fxml"));
         Scene scene = new Scene(root);
 
         stage.setScene(scene);
-        stage.setTitle("Exemple 0606 - Tanks");
+        stage.setTitle("Exemple 0605 - Paint");
         stage.setResizable(false);
 
         if (!System.getProperty("os.name").contains("Mac")) {

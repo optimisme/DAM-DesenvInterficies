@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx/22"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.project.Controller">
+    <children>
+
+        <!-- Left: drawing area -->
+        <Canvas fx:id="canvas" width="600.0" height="500.0" />
+
+        <!-- Center: tools -->
+        <VBox spacing="8.0" prefWidth="140.0" style="-fx-background-color: #eeeeee;">
+            <padding><Insets top="10.0" right="10.0" bottom="10.0" left="10.0" /></padding>
+            <children>
+                <!-- Top: line width -->
+                <Label text="Width" style="-fx-font-weight: bold;" />
+                <fx:define>
+                    <ToggleGroup fx:id="widthGroup" />
+                </fx:define>
+                <RadioButton fx:id="thinRadio" text="Thin" toggleGroup="$widthGroup" selected="true" />
+                <RadioButton fx:id="thickRadio" text="Thick" toggleGroup="$widthGroup" />
+
+                <!-- Push the colors to the bottom -->
+                <Region VBox.vgrow="ALWAYS" />
+                <Separator />
+
+                <!-- Bottom: predefined colors -->
+                <Label text="Color" style="-fx-font-weight: bold;" />
+                <Canvas fx:id="colorsCanvas" width="120.0" height="60.0" />
+            </children>
+        </VBox>
+
+        <!-- Right: objects list (to do) -->
+        <VBox prefWidth="160.0">
+            <padding><Insets top="10.0" right="10.0" bottom="10.0" left="10.0" /></padding>
+            <children>
+                <Label text="Objects" style="-fx-font-weight: bold;" />
+            </children>
+        </VBox>
+
+    </children>
+</HBox>
