@@ -33,6 +33,11 @@ public class Controller implements Initializable {
     private static final int MAX_BULLETS = 4;
     private static final double EXPLOSION_DURATION = 0.6; // segons
 
+    // Nombre de passos petits en què es divideix cada actualització.
+    // Com més passos, menys avancen els objectes cada vegada i més difícil és
+    // que dos objectes ràpids "se saltin" sense detectar el xoc (prova-ho amb 1).
+    private static final int PHYSICS_PRECISION = 10;
+
     // Escollim dos obstacles d'aquesta llista; les posicions no se solapen.
     private final List<ObjectStatic> obstacleOptions = List.of(
         new ObjectStatic(260, 100, 60, 100, Color.LIGHTGRAY),
@@ -153,8 +158,17 @@ public class Controller implements Initializable {
         double dt = calculateDt();
         if (dt <= 0) return;
 
-        updateTank(dt);
-        updateBullets(dt);
+        // Moure i comprovar col·lisions en PHYSICS_PRECISION passos petits.
+        // Això evita que dos moviments ràpids "se saltin" sense detectar el xoc,
+        // normalment això es fa amb matemàtiques més precises
+        // però així és més senzill i funciona prou bé per aquest joc.
+        double stepDt = dt / PHYSICS_PRECISION;
+        for (int step = 0; step < PHYSICS_PRECISION; step++) {
+            updateTank(stepDt);
+            updateBullets(stepDt);
+        }
+
+        // Les explosions només s'animen, no xoquen: n'hi ha prou amb un cop.
         updateExplosions(dt);
 
         // Apuntar des de la posició final del tanc.

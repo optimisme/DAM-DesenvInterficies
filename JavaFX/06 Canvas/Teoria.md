@@ -343,7 +343,19 @@ Abans de moure un objecte, calculem la seva posició següent amb `nextPosition(
 
 Les bales a eliminar es guarden en una llista i es retiren al final, per no modificar la llista `bullets` mentre la recorrem.
 
-Aquest mètode és senzill però té un límit: si un objecte anés tan ràpid que en un sol pas travessés una paret sencera, no es detectaria el xoc. Amb les velocitats d'aquest exemple i `dt` limitat a 0,05 segons, una bala avança com a màxim 18 píxels per pas, menys que el gruix de les parets.
+Aquest mètode és senzill però té un límit: si un objecte avança massa en un sol pas, pot "saltar" per sobre d'una paret o d'una altra bala sense que es detecti el xoc. Per exemple, dues bales que s'acosten de cara poden passar de no tocar-se a haver-se creuat.
+
+Per evitar-ho, `update()` divideix cada actualització en `PHYSICS_PRECISION` passos petits (10 per defecte) i mou i comprova les col·lisions a cada pas:
+
+```java
+double stepDt = dt / PHYSICS_PRECISION;
+for (int step = 0; step < PHYSICS_PRECISION; step++) {
+    updateTank(stepDt);
+    updateBullets(stepDt);
+}
+```
+
+Les comprovacions són les mateixes; només canvia que els objectes avancen menys entre comprovació i comprovació. Amb `PHYSICS_PRECISION = 1` es pot veure com dues bales disparades l'una contra l'altra a vegades es creuen sense explotar.
 
 Per executar-lo des de la carpeta de l'exemple:
 
