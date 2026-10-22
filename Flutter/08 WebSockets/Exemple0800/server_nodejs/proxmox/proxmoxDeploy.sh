@@ -102,7 +102,7 @@ test -f package.json
 npm install --omit=dev
 
 # Start app with PM2
-pm2 start src/server.js --name app --update-env
+pm2 start server/app.js --name app --update-env
 pm2 save
 
 # Configure PM2 to restart the app after a machine reboot
