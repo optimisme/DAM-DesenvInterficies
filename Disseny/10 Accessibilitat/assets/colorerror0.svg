@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="320" height="130" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" fill="#222">Correu electrònic</text>
+  <rect x="20" y="40" width="280" height="44" rx="6" fill="#ffffff" stroke="#d32f2f" stroke-width="3"/>
+  <text x="34" y="68" font-size="16" fill="#222">martaexemple.com</text>
+
+</svg>

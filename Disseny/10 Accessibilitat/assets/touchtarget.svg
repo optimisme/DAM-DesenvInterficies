@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 220" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="520" height="220" fill="#ffffff"/>
+  <defs>
+    <g id="bin" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round">
+      <line x1="-8" y1="-7" x2="8" y2="-7"/><line x1="-3" y1="-10" x2="3" y2="-10"/>
+      <path d="M-6 -7 L-5 9 L5 9 L6 -7"/>
+    </g>
+  </defs>
+  <!-- small: 20px target, drawn at 2x -->
+  <rect x="110" y="70" width="40" height="40" fill="#fde0e0" stroke="#c62828" stroke-width="2" stroke-dasharray="5 4"/>
+  <use href="#bin" transform="translate(130 90) scale(1.6)"/>
+  <!-- big: 48px target, drawn at 2x -->
+  <rect x="322" y="42" width="96" height="96" rx="8" fill="#e3f2e6" stroke="#1a7f37" stroke-width="2" stroke-dasharray="5 4"/>
+  <use href="#bin" transform="translate(370 90) scale(1.6)"/>
+  <g font-size="17" text-anchor="middle">
+    <text x="130" y="170" fill="#333">Àrea de 20 x 20</text>
+    <text x="370" y="170" fill="#333">Àrea de 48 x 48</text>
+    <text x="130" y="198" font-weight="bold" fill="#c62828">✗ Massa petita</text>
+    <text x="370" y="198" font-weight="bold" fill="#1a7f37">✓ Correcte</text>
+  </g>
+</svg>
