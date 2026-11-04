@@ -70,7 +70,7 @@ Aquest fet, va introduir una nova manera d’interactuar amb els elements anomen
 - Double tap: tocar la pantalla dos cops de manera ràpida
 - Drag: tocar la pantalla moure el dit en una direcció i aixecar-lo
 - Pinch: Pessigar la pantalla amb dos dits
-- Zoom: Lo contrari que ‘pinch’, separar el dits
+- Zoom: El contrari que ‘pinch’, separar els dits
 - Panning: Tocar la pantalla amb un dit, moure’l sense aixecar-lo
 
 <center><img src="./assets/gestures.png" style="max-width: 90%;" alt="">
@@ -95,7 +95,7 @@ Generalment hi ha una manera estàndard de tornar enrere cap a la vista anterior
 
 La quantitat de sub-vistes, i la seva relació (la manera de navegar entre aquestes), es pot fer complexa ràpidament.
 
-Per aquest motiu quan es dissenya l’aplicació, es fa un “stroyboard” amb totes les pantalles, i definint la navegació entre elles.
+Per aquest motiu quan es dissenya l’aplicació, es fa un “storyboard” amb totes les pantalles, i definint la navegació entre elles.
 
 <center><img src="./assets/storyboards.png" style="max-width: 90%;max-height: 400px;" alt="">
 <br/></center>
@@ -105,18 +105,18 @@ Per aquest motiu quan es dissenya l’aplicació, es fa un “stroyboard” amb 
 
 Quan s’han de sobreposar elements, cal marcar bé els límits entre aquests. Bé sigui perquè es mostren diàlegs, o perquè es mouen elements per la pantalla. 
 
-La guia de material design (Android), demana fer aquesta separació amb **[ombres](https://m2.material.io/design/environment/light-shadows.html#light)**.
+La guia de material design (Android), fa aquesta separació amb l'**[elevació](https://m3.material.io/styles/elevation/overview)**: ombres i, a Material 3, també un canvi de to en el color de fons.
 
-A més sombra, més elevació i per tant més separació visual entre elements.
+Com més ombra, més elevació i per tant més separació visual entre elements.
 
 <div class="image-container">
     <div class="image-item">
         <img src="./assets/shadows0.png" alt="">
-        <div>Sombra al mostrar el menú</div>
+        <div>Ombra en mostrar el menú</div>
     </div>
     <div class="image-item">
         <img src="./assets/shadows1.gif" alt="">
-        <div>Sombra al arrossegar</div>
+        <div>Ombra en arrossegar</div>
     </div>
 </div>
 <br/>
@@ -124,7 +124,7 @@ A més sombra, més elevació i per tant més separació visual entre elements.
 <div class="image-container">
     <div class="image-item">
         <img src="./assets/shadows2.png" alt="">
-        <div>Bon ús de ombres, per ressaltar un pop-over o botons</div>
+        <div>Bon ús d'ombres, per ressaltar un pop-over o botons</div>
     </div>
     <div class="image-item">
         <img src="./assets/shadows3.png" alt="">
@@ -185,9 +185,11 @@ A vegades, una graella és una opció més adequada que una llista per mostrar u
 
 Cal tenir en compte que els dispositius mòbils solen interactuar a través dels dits, i per tant els elements interactius **no poden ser petits ni estar molt junts**.
 
-Es recomana que els botons siguin com a mínim de **48x48** pixels. 
+Es recomana que els botons siguin com a mínim de **48x48 dp** a Android (**44x44 punts** a iOS).
 
-Això vol dir que els elements de les llistes i les graelles han de ser com a mínim de 48 pixels d’alt.
+Els **dp** (*density-independent pixels*) i els **punts** són unitats independents de la densitat de la pantalla: 48 dp ocupen el mateix espai físic en una pantalla normal que en una d'alta densitat (veure la lliçó d'imatges i vectors).
+
+Això vol dir que els elements de les llistes i les graelles han de ser com a mínim de 48 dp d’alt.
 
 <center><img src="./assets/select.png" style="max-height: 250px;" alt="">
 <br/></center>
@@ -216,9 +218,9 @@ Si la barra superior inclou una imatge de fons, els textos i els icones han de s
 
 ### Tab bars, navegació entre seccions
 
-Algunes aplicacions fan ús de **[tab bars](https://developer.apple.com/design/human-interface-guidelines/tab-bars)** (també anomenades [bottom navigation](https://m2.material.io/components/bottom-navigation/flutter#using-bottom-navigation)), es tracta d’un element situat a la part inferior que permet organitzar les aplicacions en diferents **seccions** (continguts).
+Algunes aplicacions fan ús de **[tab bars](https://developer.apple.com/design/human-interface-guidelines/tab-bars)** (també anomenades [navigation bar](https://m3.material.io/components/navigation-bar/overview)), es tracta d’un element situat a la part inferior que permet organitzar les aplicacions en diferents **seccions** (continguts).
 
-Les **tab bars**’** han d’ajudar a la navegació, no han d'oferir accions, ni opcions ni eines. És a dir una tab bar **NO equival a la toolbar**.
+Les **tab bars** han d’ajudar a la navegació, no han d'oferir accions, ni opcions ni eines. És a dir una tab bar **NO equival a la toolbar**.
 
 <div class="image-container">
     <div class="image-item">
@@ -248,7 +250,7 @@ Poden ser alertes que demanen la confirmació d’una acció, o una llista d’o
 
 ### Navigation drawer
 
-Els [panells de navegació](https://m2.material.io/components/navigation-drawer), són diàlegs que poden mostrar menús, llistes d’accions, eines i fins i tot configuracions.
+Els [panells de navegació](https://m3.material.io/components/navigation-drawer/overview), són diàlegs que poden mostrar menús, llistes d’accions, eines i fins i tot configuracions.
 
 <center><img src="./assets/drawer.gif" style="max-height: 250px;" alt="">
 <br/></center>
@@ -266,3 +268,28 @@ NO trenquen la interactivitat de l’aplicació
 <br/> 
 
 **Nota:** No són diàlegs, ja que no bloquegen la interacció amb l’aplicació
+
+## Quin element escollir?
+
+| Necessitat                                                    | Element                                  |
+|---------------------------------------------------------------|------------------------------------------|
+| Moure's entre 3 i 5 seccions principals                       | Tab bar                                  |
+| Més de 5 seccions, o seccions que es fan servir poc           | Navigation drawer                        |
+| Veure el detall d'un element d'una llista                     | Sub-vista, amb el botó d'anar enrere     |
+| Accions sobre la vista actual                                 | Botons a la top bar                      |
+| Confirmar una acció important o destructiva (esborrar, pagar) | Alert                                    |
+| Escollir entre diverses opcions d'una acció (compartir, …)    | Action sheet                             |
+| Informar que una acció s'ha fet, sense interrompre            | Snackbar                                 |
+| Molts elements visuals (fotos, productes)                     | GridView en lloc de ListView             |
+
+## Exercicis
+
+1. Dibuixa en paper el storyboard d'una aplicació de receptes amb aquestes vistes: llista de receptes, detall d'una recepta, receptes preferides i configuració. Marca amb fletxes com es navega entre les vistes.
+
+2. Fent servir la taula *Quin element escollir?*, decideix quin element faries servir a l'aplicació de receptes per:
+    - Esborrar una recepta
+    - Avisar que una recepta s'ha afegit a preferides
+    - Moure's entre *Receptes*, *Preferides* i *Configuració*
+    - Compartir una recepta
+
+3. Busca al teu mòbil un botó que costi de tocar. Per què costa? És massa petit, o està massa a prop d'un altre botó?

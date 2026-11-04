@@ -22,7 +22,7 @@ Quan una imatge es defineix a partir d’una matriu de píxels, es diu que és "
 
 ## Pantalles i píxels
 
-A la pantalla, les imatges també es formen a partir de píxels, però cada tecnología de pantalla pot formar els píxels de manera diferent. 
+A la pantalla, les imatges també es formen a partir de píxels, però cada tecnologia de pantalla pot formar els píxels de manera diferent. 
 
 En general totes ho fan a partir de punts de llum:
 
@@ -36,15 +36,15 @@ En general totes ho fan a partir de punts de llum:
 
 ## Imatges amb transparències, RGBA
 
-Alguns formats d’imatge (png), estàn pensats per poder sobreposar la imatge sobre altres imatges.
+Alguns formats d’imatge (png), estan pensats per poder sobreposar la imatge sobre altres imatges.
 
-Per fer-ho, a part de definir els píxels com a valors RGB, afegeixen el valor de transparència [Alpha](https://en.wikipedia.org/wiki/RGBA_color_model) que defineix quan de transparent és aquell píxel.
+Per fer-ho, a part de definir els píxels com a valors RGB, afegeixen el valor de transparència [Alpha](https://en.wikipedia.org/wiki/RGBA_color_model) que defineix com de transparent és aquell píxel.
 
 <center><img src="./assets/rgba.png" style="max-height: 350px; max-width: 90%;" alt=""> 
 <br/></center>
 <br/>
 
-**Nota:** Històricament, els programes de fotografia posen una quadricula de fons, per mostrar les parts transparents d’una imatge.
+**Nota:** Històricament, els programes de fotografia posen una quadrícula de fons, per mostrar les parts transparents d’una imatge.
 
 ## Anti-aliasing
 
@@ -61,7 +61,7 @@ Hi ha diverses maneres de fer anti-aliasing, les més senzilles només mesclen e
 
 Quan s’ha d’imprimir una imatge, es parla de DPI que són els punts per cada Inch (2.54 cm) que hi ha en una imatge.
 
-Una imatge a 600DPI tindrà molta més definició que una a 72DPI, ocupant el mateix espai un cop impresses.
+Una imatge a 600DPI tindrà molta més definició que una a 72DPI, ocupant el mateix espai un cop impreses.
 
 <style>
 .image-container {
@@ -114,7 +114,7 @@ Una imatge a 600DPI tindrà molta més definició que una a 72DPI, ocupant el ma
 
 Agafant el concepte de DPI per a impressions, les pantalles tenen un valor PPI.
 
-La [densitat de la pantalla](https://m2.material.io/design/layout/pixel-density.html#pixel-density) es defineix en Pixels Per Inch (o PPI). És a dir, quants píxels hi ha en 1 Inch (2.54cm)
+La [densitat de la pantalla](https://developer.android.com/training/multiscreen/screendensities) es defineix en Pixels Per Inch (o PPI). És a dir, quants píxels hi ha en 1 Inch (2.54cm)
 
 <div class="image-container">
     <div class="image-item">
@@ -150,11 +150,13 @@ Retina display és el nom comercial que ha posat Apple als dispositius que tenen
 
 ### Qualitat de les imatges en pantalles d'alta densitat
 
-Els dispositius amb pantalles “no retina”, solen ser més antics i tenir menys capacitat de memòria, per aquests dispositius es fan servir imatges amb menys definició.
+Una mateixa imatge es prepara en diverses resolucions, una per a cada densitat de pantalla:
 
-Per dispositius amb pantalla retina, solen ser més moderns i tenir més capacitat de memòria, habitualment es fan servir imatges amb el doble de definició.
+- **@1x**: pantalles de densitat normal (cada vegada més rares)
+- **@2x**: el doble de definició (la majoria de portàtils i tauletes)
+- **@3x**: el triple de definició (la majoria de mòbils actuals)
 
-**Nota:** Per convenció, els arxius amb més definició s’anomenen amb el mateix nom seguit de “@2x”.
+**Nota:** Per convenció, els arxius amb més definició s’anomenen amb el mateix nom seguit de “@2x” o “@3x”. Android fa servir la mateixa idea amb carpetes: `mdpi` (1x), `hdpi` (1,5x), `xhdpi` (2x), `xxhdpi` (3x) i `xxxhdpi` (4x).
 
 <div class="image-container">
     <div class="image-item">
@@ -175,7 +177,7 @@ Quan no oferim una alternativa “@2x” al sistema, en pantalles retina el sist
 
 Habitualment, al fer més gran una imatge, es dupliquen els píxels, però això produeix “aliasing”, aleshores s’apliquen tècniques d’anti-aliasing que fan la imatge més borrosa.
 
-Idealment oferirem dues imatges, una amb poca definició i una altra “@2x” amb el doble de definició per tal que el sistema no hagi de fer l’escalat.
+Idealment oferirem una imatge per a cada densitat (@1x, @2x, @3x) per tal que el sistema no hagi de fer l’escalat.
 
 <div class="image-container">
     <div class="image-item">
@@ -194,7 +196,7 @@ Idealment oferirem dues imatges, una amb poca definició i una altra “@2x” a
 <br/>
 <br/>
 
-**Important:** El motiu de no oferir només una imatge amb el doble de definició i que el sistema l’escali a petita, és que habitualment els dispositius sense pantalles retina, no són massa potents.
+**Important:** Avui dia, per a icones i il·lustracions senzilles és millor fer servir **gràfics vectorials** (SVG, [SF Symbols](https://developer.apple.com/sf-symbols/), [Material Symbols](https://fonts.google.com/icons)), que es veuen bé a qualsevol densitat amb un sol arxiu. Les imatges @1x, @2x i @3x es reserven per a fotografies i imatges complexes.
 
 ## Textos en pantalles d'alta densitat
 
@@ -223,9 +225,9 @@ Avantatges:
 <br/> 
 <br/> 
 
-Al igual que els textos, els gràfics vectorials es veuen automàticament bé en pantalles retina.
+Igual que els textos, els gràfics vectorials es veuen automàticament bé en pantalles retina.
 
-El motiu és simple, al igual que les tipografies, els gràfics vectorials es defineixen a partir de formes geomètriques i coordenades, per tant el sistema sap com “inventar-se” els píxels per donar més definició. A més, afegeix l’aliasing amb coherència per evitar les "dents de serra"
+El motiu és simple, igual que les tipografies, els gràfics vectorials es defineixen a partir de formes geomètriques i coordenades, per tant el sistema sap com “inventar-se” els píxels per donar més definició. A més, aplica l’anti-aliasing amb coherència per evitar les "dents de serra"
 
 <center><img src="./assets/retinawatch.png" style="max-height: 150px; max-width: 90%;" alt=""> 
 <br/></center>
@@ -254,16 +256,14 @@ Del procés de transformar una imatge ‘raster’ en un dibuix vectorial, se’
 
 Al principi de Google Maps, els servidors de Google generaven les imatges dels mapes al servidor i enviaven aquestes imatges als clients.
 
-**Apple va demanar a Google** que canviés la tecnologia de l'aplicació Maps per tal que fos amb dibuixos vectorials enlloc d'imatges descarregades del navegador.
+L'any 2012, l'aplicació de mapes de l'iPhone feia servir les dades de Google. **Apple volia mapes vectorials i navegació pas a pas amb veu**, però Google reservava la navegació per veu per a Android i demanava condicions a canvi. Les dues empreses no es van posar d'acord.
 
-Els avantatges de fer el dibuix amb gràfics vectorials enlloc d'imatges:
+Els avantatges de fer el dibuix amb gràfics vectorials en lloc d'imatges:
 
 - Menys intercanvi de dades, més ràpid de carregar a telèfons mòbils ([fins a un 80% menys](https://bgr.com/general/apple-maps-data-consumption-80-percent-less-than-google-maps/))
-- Dibuixios més nítids, adaptats a la densitat de pantalla de cada dispositiu
+- Dibuixos més nítids, adaptats a la densitat de pantalla de cada dispositiu
 
-Google no ho volia, perquè no volia publicar les coordenades de les localitzacions dels seus mapes. I s'hi va negar.
-
-Al final, [Apple va fer]((https://appleinsider.com/articles/12/08/03/inside_apples_new_vector_based_maps_in_ios_6)) la seva pròpia "Apple Maps".
+Al final, [Apple va fer](https://appleinsider.com/articles/12/08/03/inside_apples_new_vector_based_maps_in_ios_6)) la seva pròpia aplicació, "Apple Maps", amb mapes vectorials (iOS 6, 2012).
 
 <div class="image-container">
     <div class="image-item">
@@ -284,5 +284,12 @@ I ara, Google Maps també és vectorial:
 <center><img src="./assets/mapCanvas.png" style="max-height: 500px; max-width: 90%;" alt=""> 
 <br/></center>
 <br/> 
-<br/> 
+<br/>
 
+## Exercicis
+
+1. Una icona ocupa 24x24 punts a la pantalla. Quina mida en píxels han de tenir les versions @1x, @2x i @3x?
+
+2. Decideix si faries servir una imatge raster o un gràfic vectorial per a: el logotip de l'empresa, una foto de perfil, la icona d'esborrar, un fons de pantalla amb un paisatge i un gràfic de barres.
+
+3. Fes una captura de pantalla i amplia-la fins veure els píxels. Busca l'anti-aliasing a les vores d'un text.

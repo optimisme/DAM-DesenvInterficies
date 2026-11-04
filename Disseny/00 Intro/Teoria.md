@@ -156,3 +156,11 @@ Pensament de disseny, afecta UX i UI. Normalment implica les següents etapes:
 - Crear un prototip
 - Testejar el prototip
 - Tornar al principi i evolucionar el prototip
+
+## Exercicis
+
+1. Pensa en una aplicació que facis servir cada dia. Escriu un exemple de bona experiència i un de mala. Per a cada exemple, digues si és un problema de UX, de UI o de tots dos.
+
+2. Escull una aplicació per reservar taula en un restaurant. Escriu una frase per a cada etapa del design thinking: empatitzar, definir, idear, prototip i testejar.
+
+3. Dibuixa en paper un prototip de tres pantalles de l'aplicació de l'exercici anterior. Ensenya'l a un company sense explicar res, i apunta el que no entén.

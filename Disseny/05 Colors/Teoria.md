@@ -48,7 +48,7 @@ El [cercle cromàtic](https://ca.wikipedia.org/wiki/Cercle_crom%C3%A0tic) mostra
 <br/></center>
 <br/> 
 
-Algunes guies de disseny ([material](https://m2.material.io/design/color/the-color-system.html#color-usage-and-palettes)) expliquen com fer servir el cercle cromàtic per definir els colors primari i secundari de les aplicacions.
+Algunes guies de disseny ([material](https://m3.material.io/styles/color/overview)) expliquen com fer servir el cercle cromàtic per definir els colors primari i secundari de les aplicacions.
 
 ### Colors i emocions
 
@@ -203,3 +203,11 @@ Tradicionalment:
     </div>
 </div>
 <br/>
+
+## Exercicis
+
+1. Crea una paleta de cinc colors per a una aplicació de meditació: principal, secundari, accent, fons i text. Justifica cada color a partir de *Colors i emocions*.
+
+2. Comprova amb el [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) el contrast entre el text i el fons de la teva paleta. Arriba a 4,5:1?
+
+3. Activa el mode fosc al teu mòbil i obre tres aplicacions. Quina s'adapta millor? Quina es llegeix pitjor?

@@ -28,7 +28,7 @@ Una animació està formada per diversos frames
 
 La quantitat de frames que podem mostrar cada segon són els FPS
 
-Quan més alta és la quantitat de FPS, més suau es veu l’animació
+Com més alta és la quantitat de FPS, més suau es veu l’animació
 
 <center>
 <video width="275" height="480" controls autoplay loop>
@@ -59,9 +59,9 @@ Les animacions es defineixen a partir de:
 
 ### Funció de transició
 
-La funció de transició, defineix com progresa l’animació durant el temps establert.
+La funció de transició, defineix com progressa l’animació durant el temps establert.
 
-Normalment, hi ha diversos tipus pre-definits. Per exemple, una funció ‘linear’ és aquella en què tots els valors intermitjos són proporcionals al temps que falta per acabar.
+Normalment, hi ha diversos tipus pre-definits. Per exemple, una funció ‘linear’ és aquella en què tots els valors intermedis són proporcionals al temps que falta per acabar.
 
 <center>
 <div>
@@ -95,7 +95,7 @@ Informen que una acció s’ha completat, i si s’ha realitzat o no amb èxit.
 
 ### Progrés
 
-Animacions que informen de l’estat en què progresa una acció.
+Animacions que informen de l’estat en què progressa una acció.
 
 - Són determinades si es pot estimar quan acabarà l’acció
 - Són indeterminades si no es pot saber quan acabarà
@@ -178,3 +178,15 @@ Ajuden a millorar l’experiència d’usuari i la relació amb la marca **(bran
 <br/></center>
 <br/>
 <br/>
+
+## Exercicis
+
+1. Digues quin tipus d'animació és cadascuna (micro-interacció, progrés, navegació o storytelling):
+    - Un cor que s'omple en fer *m'agrada*
+    - Una barra de descàrrega
+    - Una pantalla que entra des de la dreta
+    - Una mascota que saluda a la pantalla de benvinguda
+
+2. Quin indicador de progrés faries servir, determinat o indeterminat, per a: descarregar un arxiu de 200 MB, i una cerca que no se sap quant trigarà?
+
+3. Grava amb la càmera lenta del mòbil l'animació d'obrir una aplicació. Quant dura? Comença i acaba a la mateixa velocitat, o accelera i frena?

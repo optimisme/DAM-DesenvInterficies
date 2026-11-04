@@ -134,7 +134,7 @@ Cal tenir-ho en compte quan s’alinea un text que està al costat d’un botó.
 <br/></center>
 <br/>
 
-Es llegeix millor si estàn verticalment alineats com en aquest segon exemple.
+Es llegeix millor si estan verticalment alineats com en aquest segon exemple.
 
 ## Fonts del sistema i fonts de tercers
 
@@ -196,3 +196,11 @@ En el següent exemple es poden identificar:
     </div>
 </div>
 <br/>
+
+## Exercicis
+
+1. Escull dues fonts per a un diari digital, una per als títols i una per al text. Prova-les amb un títol i un paràgraf.
+
+2. Defineix la mida i el pes (*font weight*) de: títol, subtítol, text normal i peu de foto.
+
+3. Busca una aplicació o web que faci servir massa fonts diferents. Quantes en comptes? Quantes en deixaries?

@@ -220,7 +220,7 @@ Els detalls, s’acaben d’ajustar amb disseny **"responsive"**
 <br/>
 <br/>
 
-**Obrir un document a macOS**, enlloc d'una vista, es fa servir el diàleg del sistema normalment
+**Obrir un document a macOS**, en lloc d'una vista, es fa servir el diàleg del sistema normalment
 
 <center><img src="./assets/pagesviewmacos.png" style="max-height: 350px; max-width: 90%;" alt="">
 <br/></center>
@@ -324,3 +324,11 @@ Al desplegar el submenú, apareixen les mateixes opcions que hi ha disponibles a
 </div>
 <br/>
 <br/>
+
+## Exercicis
+
+1. Obre una web que coneguis al navegador i fes la finestra cada vegada més estreta (o fes servir el mode dispositiu de les eines de desenvolupament). Apunta a quines amplades canvia el disseny, i què canvia.
+
+2. Pensa una aplicació de notes. Descriu què mostraries en un mòbil en vertical, en una tauleta en horitzontal i en un ordinador, com a l'exemple de Pages.
+
+3. Troba una funció que una aplicació només ofereixi en alguns dispositius, segons les seves capacitats (càmera, GPS, llapis, …).

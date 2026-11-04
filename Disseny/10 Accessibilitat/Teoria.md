@@ -289,3 +289,11 @@ No cal esperar al final del projecte, es pot comprovar a cada prototip:
 | Les imatges i icones tenen descripció                        | Imatges i vectors |
 | Es respecta l'opció de reduir el moviment                    | Animacions        |
 | Els errors expliquen com arreglar-los                        | Maquetació        |
+
+## Exercicis
+
+1. Activa el lector de pantalla del teu mòbil (VoiceOver o TalkBack) i intenta enviar un missatge amb els ulls tancats. Apunta on t'has perdut.
+
+2. Escriu el text alternatiu de: un botó d'enviar amb la icona d'un avió de paper, una foto decorativa d'una muntanya a la pantalla de benvinguda, i un gràfic amb les temperatures de la setmana.
+
+3. Revisa una aplicació que hagis fet a classe amb la taula de *Resum*. Quantes comprovacions compleix?

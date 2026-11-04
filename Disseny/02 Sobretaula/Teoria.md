@@ -194,7 +194,7 @@ Actualment es tendeix a simplificar, per tal de fer aplicacions que s’adaptin 
 
 ### Aplicacions d’escriptori, menú
 
-Les aplicacions d’OSX poden afegir accions al menú del sistema, unifican-los i fent que els menús sempre estiguin a la mateixa posició de la pantalla, a més ajuda a identificar l’aplicació activa.
+Les aplicacions d’OSX poden afegir accions al menú del sistema, unificant-los i fent que els menús sempre estiguin a la mateixa posició de la pantalla, a més ajuda a identificar l’aplicació activa.
 
 <center><img src="./assets/menumacos.png" style="max-height: 300px;" alt="">
 <br/><div style="color: #444444;">macOS</div></center>
@@ -266,7 +266,7 @@ Per tal d’evitar obrir una finestra d’aplicació per cada instància d’aqu
 <br/></center>
 <br/>
 
-Algunes aplicacions trenquen el funcionament dels tabs (un tab per cada instà ncia d'aplicació o document), per fer que es mostrin diferents opcions de la toolbar. D’aquest disseny se’n diu “[Ribbon](https://en.wikipedia.org/wiki/Ribbon_(computing))”
+Algunes aplicacions trenquen el funcionament dels tabs (un tab per cada instància d'aplicació o document), per fer que es mostrin diferents opcions de la toolbar. D’aquest disseny se’n diu “[Ribbon](https://en.wikipedia.org/wiki/Ribbon_(computing))”
 
 <center><img src="./assets/tabsribbon.png" style="max-width: 90%;" alt="">
 <br/></center>
@@ -307,10 +307,33 @@ Poden ser alertes o formularis que mostren un estat temporal de l’aplicació, 
 
 ### Aplicacions d’escriptori, popovers
 
-Els **"popovers"** són dialegs que mostren contingut directament relacionat amb l’element que s’ha clickat.
+Els **"popovers"** són diàlegs que mostren contingut directament relacionat amb l’element que s’ha clicat.
 
 S’han de fer servir quan es vol facilitar accions ràpides sense sortir de la interfície principal.
 
 <center><img src="./assets/popovers.png" style="max-width: 90%;" alt="">
 <br/></center>
 <br/>
+
+## Quin element escollir?
+
+| Necessitat                                                        | Element                 |
+|-------------------------------------------------------------------|-------------------------|
+| Totes les accions de l'aplicació, ordenades i amb dreceres        | Menú                    |
+| Les accions més freqüents, a un sol clic                          | Toolbar                 |
+| Diversos documents oberts a la mateixa finestra                   | Pestanyes (tabs)        |
+| Navegar entre arxius, carpetes o seccions                         | Sidebar esquerra        |
+| Eines i propietats de l'element seleccionat                       | Sidebar dreta           |
+| Informació d'estat que no demana cap acció (zoom, línia, connexió)| Statusbar               |
+| Una decisió que ha de bloquejar l'aplicació (guardar, sobreescriure) | Diàleg               |
+| Opcions ràpides d'un botó concret, sense bloquejar                | Popover                 |
+
+**Nota:** Les accions de la toolbar també han de ser al menú. La toolbar és una drecera, no l'únic lloc on trobar una acció.
+
+## Exercicis
+
+1. Obre una aplicació d'escriptori que facis servir sovint i identifica-hi: menú, titlebar, toolbar, pestanyes, sidebar i statusbar. Quins elements té i quins no?
+
+2. Fent servir la taula *Quin element escollir?*, decideix on posaries aquestes accions d'un editor de textos: Guardar, Negreta, Nombre de paraules, Llista d'arxius oberts, Configurar la impressora.
+
+3. Compara una mateixa aplicació a Windows i a macOS (o Linux). On és el menú? On són els botons de tancar la finestra?

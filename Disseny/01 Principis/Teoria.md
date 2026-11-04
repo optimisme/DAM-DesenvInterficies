@@ -10,11 +10,13 @@
 
 # Història i principis de les GUI
 
-## Primera GUI, naixement de WYSIWYG
+## Primeres GUI, naixement de WYSIWYG
 
-La primera GUI va aparèixer el 1968 amb el sistema NLS, quan es va combinar una interfície de text amb gràfics.
+El 1963, el programa [Sketchpad](https://en.wikipedia.org/wiki/Sketchpad) d'Ivan Sutherland ja permetia dibuixar directament a la pantalla amb un llapis òptic. Es considera una de les primeres interfícies gràfiques.
 
-Amb la primera GUI va aparèixer el concepte [WYSIWYG](https://es.wikipedia.org/wiki/WYSIWYG) (what you see is what you get), és a dir, mostrar documents de textos amb imatges que es formaten visualment i de igual manera bé sigui en paper o en altres equips i sistemes.
+El 1968, el sistema NLS va combinar una interfície de text amb gràfics, finestres i ratolí.
+
+Uns anys més tard, el 1974, l'editor [Bravo](https://en.wikipedia.org/wiki/Bravo_(editor)) del Xerox Alto va introduir el concepte [WYSIWYG](https://es.wikipedia.org/wiki/WYSIWYG) (what you see is what you get), és a dir, mostrar documents de textos amb imatges que es formaten visualment i de la mateixa manera bé sigui en paper o en altres equips i sistemes.
 
 <center><img src="./assets/wysiwyg.png" style="max-height: 200px" alt=""></center><br/>
 
@@ -106,3 +108,11 @@ Cal tenir en compte, que unes mateixes recomanacions de disseny han de tenir en 
 | 1 mes                 | Processos comercials habituals                            |
 | 1 any                 | Temps en què es considera a un usuari ‘expert’ en ús d’una web/app |
 | 10 anys               | Temps per desenvolupar experiències complexes com UNIX, programació, … |
+
+## Exercicis
+
+1. Escull tres dels conceptes bàsics del disseny GUI (1987) i troba un exemple de cadascun al sistema operatiu que fas servir avui.
+
+2. Busca una aplicació que no compleixi el principi *hi ha d'haver eines per desfer els errors*. Com ho arreglaries?
+
+3. Cronometra quant triguen a obrir-se tres aplicacions del teu ordinador. A quina fila de l'*Escala de temps UI* queda cadascuna?

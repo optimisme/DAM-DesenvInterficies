@@ -134,14 +134,14 @@ Així es manté una coherència visual i s’assegura que els dissenys
 
 - Intentar que les distàncies siguin iguals o proporcionals als extrems
 
-- Cal que els elements interactius siguin més grans de 48x48 pixels i distants d’altres elements interactius
+- Cal que els elements interactius siguin més grans de 48x48 dp i distants d’altres elements interactius
 
 <center><img src="./assets/spacingrecommendations.png" style="max-width: 90%; max-height: 350px;" alt="">
 <br/></center>
 <br/>
 <br/>
 
-A vegades cal que hi hagi **contrast** en les distàncies, és a dir, cal que les distàncies entre elements no siguin similars per marcar una diferencia visual.
+A vegades cal que hi hagi **contrast** en les distàncies, és a dir, cal que les distàncies entre elements no siguin similars per marcar una diferència visual.
 
 En els següents dos exemples, es veu com augmentar l’espai entre els ítems de la llista, fa que es vegi millor a quina imatge pertanyen les accions "Download" i "Bookmark"
 
@@ -237,7 +237,7 @@ Fer servir diferents colors de fons és una bona manera de mostrar les diferènc
 
 En general, **NO** s’han de fer servir scrolls horitzontals
 
-En cas de posar-los, ha de quedar clar que hi han més continguts “a la dreta”
+En cas de posar-los, ha de quedar clar que hi ha més continguts “a la dreta”
 
 També és recomanable posar indicador de posició de l’scroll, indicant la posició actual i els límits
 
@@ -268,4 +268,11 @@ També han d'incloure una icona que mostri si la secció està plegada o despleg
 </div>
 <br/>
 <br/>
- 
+
+## Exercicis
+
+1. Dibuixa un formulari de registre (nom, correu, contrasenya i botó d'enviar) fent servir un sistema d'espais de 8 en 8 (8, 16, 24, 32). Indica cada distància.
+
+2. Fes una captura d'una pantalla de configuració del teu mòbil i marca els grups d'elements. L'espaiat ajuda a veure quins elements van junts?
+
+3. Busca una web o aplicació amb elements mal alineats. Dibuixa com quedaria ben alineada.
