@@ -45,7 +45,7 @@ L’experiència d’usuari ha de tenir en compte des que s’obté el producte 
 
 ### Exemple de bona experiència
 
-Poder contestar trucades del telèfon desde altres dispositius, quan els estàs fent servir, encara que no tinguin tarjeta SIM. A més, fent servir una interfície igual o similar entre dispositius.
+Poder contestar trucades del telèfon des de altres dispositius, quan els estàs fent servir, encara que no tinguin targeta SIM. A més, fent servir una interfície igual o similar entre dispositius.
 <style>
 .image-container {
     display: flex;
@@ -92,7 +92,7 @@ Poder contestar trucades del telèfon desde altres dispositius, quan els estàs 
 </div>
 <br/>
 
-### UX experiencia d’usuari, exemple de mala experiència
+### UX experiència d’usuari, exemple de mala experiència
 
 La publicitat del sender de ‘Fauna’ fa servir diferents noms, colors i icones que els cartells penjats al bosc. 
 
@@ -108,7 +108,7 @@ L’usuari pot pensar que no està al sender correcte.
 </div>
 <br/>
 
-### UX experiencia d’usuari, exemples de males experiències
+### UX experiència d’usuari, exemples de males experiències
 
 - Botons que no funcionen
 - Icones que no representen la funció adequada (un disquet per guardar)
@@ -140,13 +140,13 @@ Una mala experiència farà que l’usuari busqui una altra aplicació.
 
 <center><img src="./assets/ux-ui.svg" style="max-height: 200px" alt=""></center>
 
-# Design Thinking
+## Design Thinking
 
 **Pensament de disseny**, és un procés que intenta entendre els usuaris per tal de definir com ha de ser el software a desenvolupar.
 
 Pensar en el disseny afecta l’experiència UX i el disseny d’interfícies UI. 
 
-Com que és un procés iteratiu (que es repeteix) no intenta crear una aplicació complerta d’inici, sinó fer prototips senzills que van evolucionant amb el temps.
+Com que és un procés iteratiu (que es repeteix) no intenta crear una aplicació completa d’inici, sinó fer prototips senzills que van evolucionant amb el temps.
 
 Pensament de disseny, afecta UX i UI. Normalment implica les següents etapes:
 

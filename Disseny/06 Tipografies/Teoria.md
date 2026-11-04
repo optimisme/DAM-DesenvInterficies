@@ -86,7 +86,7 @@ Per exemple Serif i Sans-serif (serif sense decoracions).
 
 La majoría de fons, tenen 3 variacions:
 
-- **Italic**, la cursiva es pot fer servir per emfatitzar paràgrafs sencers amb molt text, o petits grups de paraules que no han de resaltar per sobre la lectura normal del text.
+- **Italic**, la cursiva es pot fer servir per emfatitzar paràgrafs sencers amb molt text, o petits grups de paraules que no han de ressaltar per sobre la lectura normal del text.
 
 - **Regular**, textos llargs que necessiten concentració a la lectura
 
@@ -100,7 +100,7 @@ En realitat la negreta afecta el **pes de les fonts**, algunes fonts ofereixen d
 <br/></center>
 <br/>
 
-## Anatomía dels caràcters
+## Anatomia dels caràcters
 
 Les tipografies (fonts) formen part d'un llenguatge de disseny amb [carecterístiques](https://osmanassem.com/typography-the-anatomy-of-a-letter/) pròpies.
 

@@ -252,7 +252,7 @@ Actualment les aplicacions personalitzen la barra superior fent una barreja entr
 <center><img src="./assets/combinedwindows.png" style="max-width: 90%;" alt=""></center>
 <br/>
 
-A més, combinar la titlebar i la toolbar promou l’ús d’un menú bàsic tipus mòbil a la toolbar, enlloc del clàssic menú amb ‘Arxiu, Editar, …’. Aquest tipus de menús s'adapten millor a diferents dispositius:
+A més, combinar la titlebar i la toolbar promou l’ús d’un menú bàsic tipus mòbil a la toolbar, en lloc del clàssic menú amb ‘Arxiu, Editar, …’. Aquest tipus de menús s'adapten millor a diferents dispositius:
 
 <center><img src="./assets/toolbarmenu.png" style="max-height: 300px;" alt="">
 <br/><div style="color: #444444;">Menú a la Toolbar</div></center>

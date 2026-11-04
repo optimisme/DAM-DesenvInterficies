@@ -105,7 +105,7 @@ Per aquest motiu quan es dissenya l’aplicació, es fa un “stroyboard” amb 
 
 Quan s’han de sobreposar elements, cal marcar bé els límits entre aquests. Bé sigui perquè es mostren diàlegs, o perquè es mouen elements per la pantalla. 
 
-La guia de material design (Android), demana fer aquesta separació amb **[sombres](https://m2.material.io/design/environment/light-shadows.html#light)**.
+La guia de material design (Android), demana fer aquesta separació amb **[ombres](https://m2.material.io/design/environment/light-shadows.html#light)**.
 
 A més sombra, més elevació i per tant més separació visual entre elements.
 
@@ -124,18 +124,18 @@ A més sombra, més elevació i per tant més separació visual entre elements.
 <div class="image-container">
     <div class="image-item">
         <img src="./assets/shadows2.png" alt="">
-        <div>Bon ús de sombres, per resaltar un pop-over o botons</div>
+        <div>Bon ús de ombres, per ressaltar un pop-over o botons</div>
     </div>
     <div class="image-item">
         <img src="./assets/shadows3.png" alt="">
-        <div>Mal ús, elements amb sombres sobreposades a altres</div>
+        <div>Mal ús, elements amb ombres sobreposades a altres</div>
     </div>
 </div>
 <br/>
 
 ### Superposició de capes, glassmorphism
 
-Algunes aplicacions, combinen les sombres amb **[glassmorphism](https://platzi.com/tutoriales/1640-frontend-developer-2019/9482-glassmorphism/)**. 
+Algunes aplicacions, combinen les ombres amb **[glassmorphism](https://platzi.com/tutoriales/1640-frontend-developer-2019/9482-glassmorphism/)**. 
 Amb aquesta tècnica, la separació visual s’aconsegueix a partir de superfícies transparents amb el fons desenfocat.
 
 Crea l’efecte d’un vidre congelat, *frozenglass*

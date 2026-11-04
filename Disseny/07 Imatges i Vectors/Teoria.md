@@ -209,7 +209,7 @@ La llibreria encarregada de dibuixar el text, segons la font escollida, perfila 
 
 ## Gràfics vectorials
 
-Els [gràfics vectorials](https://www.digitional.com/a-simple-explanation-of-vector-graphics-illustrations/) ([Vector Graphics](https://www.coreldraw.com/en/learn/guide-to-vector-design/how-do-vector-graphics-work/)) es defineixen a partir de formes geomètriques i coordenades enlloc de matrius de píxels (semblant als textos)
+Els [gràfics vectorials](https://www.digitional.com/a-simple-explanation-of-vector-graphics-illustrations/) ([Vector Graphics](https://www.coreldraw.com/en/learn/guide-to-vector-design/how-do-vector-graphics-work/)) es defineixen a partir de formes geomètriques i coordenades en lloc de matrius de píxels (semblant als textos)
 
 Avantatges:
 
@@ -248,15 +248,15 @@ Del procés de transformar una imatge ‘raster’ en un dibuix vectorial, se’
 </div>
 <br/>
 
-**Important:** Idealment, els logotips de les empreses tenen una versió vectorial. A més, a les aplicacions s’ha d’intentar fer servir la versió vectorial enlloc de la versió “raster”
+**Important:** Idealment, els logotips de les empreses tenen una versió vectorial. A més, a les aplicacions s’ha d’intentar fer servir la versió vectorial en lloc de la versió “raster”
 
 ## Exemple, mapes!
 
 Al principi de Google Maps, els servidors de Google generaven les imatges dels mapes al servidor i enviaven aquestes imatges als clients.
 
-**Apple va demanar a Google** que canviés la tecnologia de l'aplicació Maps per tal que fós amb dibuixos vectorials enlloc d'imatges descarregades del navegador.
+**Apple va demanar a Google** que canviés la tecnologia de l'aplicació Maps per tal que fos amb dibuixos vectorials enlloc d'imatges descarregades del navegador.
 
-Les avantatges de fer el dibuix amb gràfics vectorials enlloc d'imatges:
+Els avantatges de fer el dibuix amb gràfics vectorials enlloc d'imatges:
 
 - Menys intercanvi de dades, més ràpid de carregar a telèfons mòbils ([fins a un 80% menys](https://bgr.com/general/apple-maps-data-consumption-80-percent-less-than-google-maps/))
 - Dibuixios més nítids, adaptats a la densitat de pantalla de cada dispositiu

@@ -8,7 +8,7 @@
 </div>
 <br/>
 
-# Introducció UX/UI
+# Història i principis de les GUI
 
 ## Primera GUI, naixement de WYSIWYG
 
@@ -38,7 +38,7 @@ L’evolució de les interfícies gràfiques, està molt unida als avenços tèc
 - Aplicacions en finestres
 - Videoconferència
 - Enllaços entre diferents fonts de dades
-- Control de versions (precusor de Git)
+- Control de versions (precursor de Git)
 
 Tot i que la demo va ser el 1968, no va ser fins al 1973 quan Xerox va tenir un equip capaç d’executar tots els conceptes de la demo funcionals, el [Xerox Alto](https://es.wikipedia.org/wiki/Xerox_Alto).
 
@@ -46,17 +46,17 @@ Tot i que la demo va ser el 1968, no va ser fins al 1973 quan Xerox va tenir un 
 <br/><div style="color: #444444;">Xerox Alto, 1973</div></center>
 <br/><br/>
 
-### Steve Jobs a Xerox Park
+### Steve Jobs a Xerox PARC
 
 El desembre de 1979 Steve Jobs junt amb altres enginyers d’Apple van visitar Xerox i van conèixer els conceptes exposats a “The mother of all demos”
 
 En aquell moment hi va haver un **punt d’inflexió a la informàtica personal**, Apple va aconseguir fer un equip amb les tecnologies de “The mother of all demos” per al públic general, a un preu assequible. S’entén que a partir d’aquell moment es van “democratitzar” els ordinadors amb interfícies gràfiques.
 
-**Curiositat**: en aquella presentació també se’ls van presentar demos de Xarxa molt similars al què més tard sería Internet, però estaven tan emocionats amb les interfícies gràfiques que no van donar importància a les xarxes.
+**Curiositat**: en aquella presentació també se’ls van presentar demos de Xarxa molt similars al què més tard seria Internet, però estaven tan emocionats amb les interfícies gràfiques que no van donar importància a les xarxes.
 
 ### Apple Human Interface Guidelines
 
-Junt amb el sistema operatiu GUI, Apple publica una guia que descriu com funciona un ordinador personal basat en gràfics enlloc de comandes de text.
+Junt amb el sistema operatiu GUI, Apple publica una guia que descriu com funciona un ordinador personal basat en gràfics en lloc de comandes de text.
 
 La guia tenia com a propòsit explicar als desenvolupadors com dissenyar aplicacions coherents amb el disseny UX/UI dels ordinadors Apple Macintosh.
 
@@ -82,7 +82,7 @@ Cal tenir en compte, que unes mateixes recomanacions de disseny han de tenir en 
 - Els elements fan referència a **metàfores del món real** (arxius, carpetes, documents, colors, sons, …)
 - Les aplicacions han d’estar preparades per rebre entrades de l’usuari en qualsevol moment, **els usuaris han de tenir el control**
 - **See-and-point**, és a dir l’usuari escull entre les opcions que hi ha disponibles en pantalla (sense haver de recordar comandes textuals)
-- **Les aplicacions han de ser consistens** amb el sistema i les altres aplicacions (obrir un arxiu s’ha de fer sempre amb el mateix quadre de diàleg)
+- **Les aplicacions han de ser consistents** amb el sistema i les altres aplicacions (obrir un arxiu s’ha de fer sempre amb el mateix quadre de diàleg)
 - **WYSIWYG** la presentació dels documents no s’ha de veure diferent entre equips o impressions de paper
 - **L’usuari ha d’estar informat** del què fa la màquina, amb el menor temps d’espera possible
 - Els usuaris es poden equivocar, **hi ha d’haver eines per desfer els errors**

@@ -59,7 +59,7 @@ No sempre s’han d’oferir opcions per tots els formats, sovint no té sentit 
 
 Disseny Responsive: l’aplicació posiciona, mostra i amaga els elements segons la mida i orientació de la pantalla. 
 
-<center><img src="./assets/responsive0.gif" style="max-height: 150px;" alt="">
+<center><img src="./assets/responsive.gif" style="max-height: 150px;" alt="">
 <br/></center>
 <br/> 
 

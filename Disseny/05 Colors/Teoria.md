@@ -64,7 +64,7 @@ Algunes guies de disseny ([material](https://m2.material.io/design/color/the-col
 <br/></center>
 <br/> 
 
-**Colors neutrals:** es relacionen amb elegancia i neutralitat. Es consideren colors subtils que i es fan servir com a fons, o per fer resaltar colors d’accent.
+**Colors neutrals:** es relacionen amb elegància i neutralitat. Es consideren colors subtils que i es fan servir com a fons, o per fer ressaltar colors d’accent.
 
 <center><img src="./assets/colorfeel2.png" style="max-height: 25px; max-width: 90%;" alt="">
 <br/></center>
@@ -156,7 +156,7 @@ Comparació entre el nou "Liquid Glass" amb l'antic "Frozen Glass" de Apple. S'h
 </center>
 <br/>
 
-El contrast, pot fer resaltar un element o botó i induir a l’usuari a fer accions més fàcilment.
+El contrast, pot fer ressaltar un element o botó i induir a l’usuari a fer accions més fàcilment.
 
 <center><img src="./assets/colorcontrast4.png" style="max-height: 450px; max-width: 90%;" alt="">
 <br/></center>
@@ -184,7 +184,7 @@ Avantatges del mode fosc:
 <br/>
 <br/>
 
-Actualment, les pròpies llibreries del sistema deixen escollir si les aplicacions fan servir els mòdes clar i/o fosc.
+Actualment, les pròpies llibreries del sistema deixen escollir si les aplicacions fan servir els modes clar i/o fosc.
 
 Tradicionalment:
 
