@@ -57,12 +57,6 @@ cd exemple0100
 dart arxiu.dart
 ```
 
-Si el què es vol és un arxiu “.exe” del codi, es pot fer amb:
-
-```dart
-dart compile exe arxiu.dart
-```
-
 ## Comentaris
 
 Els comentaris 'inline' (d'una linia) començen a partir de les dues barres //

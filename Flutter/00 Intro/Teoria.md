@@ -195,18 +195,6 @@ I es crea la carpeta ‘build/macos/Build/Products/Release/’ amb l’aplicaci�
 
 Tot i que cada sistema té peculiaritats de distribució diferents, a la [documentació](https://docs.flutter.dev/testing/build-modes) hi ha més detalls.
 
-## Impeller
-
-Flutter està canviant el seu motor gràfic (Skia) per un més modern i ràpid que han anomenat [Impeller](https://docs.flutter.dev/perf/impeller) i està pensat per funcionar amb APIs gràfiques modernes (Vulkan/WebGPU/Metal)
-
-Els primers sistemes en tenir Impeller van ser OSX i iOS (2022), tot i que els altres han d’anar després.
-
-Per fer anar l’aplicació amb el nou motor gràfic, es pot posar:
-
-```bash
-flutter run --enable-impeller -d android
-```
-
 ## Estructura dels projectes Flutter
 
 **Important** 
