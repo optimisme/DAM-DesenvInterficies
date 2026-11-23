@@ -16,19 +16,20 @@ DEFAULT_RSA_PATH="/root/.ssh/id_rsa"
 
 **També** és recomanable tenir tot el projecte a l'espai d'arxius WSL per tal que funcionin els permissos d'execuió.
 
-## Format d'arxius
-
-Heu de configurar *Visual Studio Code*, o el vostre editor per fer els salts de linia amb format UNIX i UTF-8.
-
-Si no ho feu, quan editeu els arxius des de Windows, els haureu d'arreglar perquè funcionin amb WSL, feu-ho amb:
-```bash
-chmod +x *.sh && chmod +x ../*.sh
-dos2unix * && dos2unix ../*
-```
-
 ## Despendències WSL
 
 A la carpeta del projecte caldrà instal·lar:
 ```bash
-sudo apt install git zip unzip dos2unix net-tools
+sudo apt update
+sudo apt install git rsync dos2unix net-tools
+```
+
+## Format d'arxius
+
+Heu de configurar *Visual Studio Code*, o el vostre editor per fer els salts de linia amb format UNIX i UTF-8.
+
+Si no ho feu, quan editeu els arxius des de Windows, els haureu d'arreglar perquè funcionin amb WSL, feu-ho aneu a la carpeta "proxmox" i:
+```bash
+chmod +x *.sh
+dos2unix *
 ```

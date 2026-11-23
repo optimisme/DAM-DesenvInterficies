@@ -1,11 +1,10 @@
 #!/bin/bash
+# Sends the project to the remote server with rsync and restarts the NodeJS app
+
 set -e
 
-ORIGINAL_DIR=$(pwd)
-
 cleanup() {
-  ssh-agent -k 2>/dev/null || true
-  cd "$ORIGINAL_DIR" 2>/dev/null || true
+  ssh-agent -k >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -18,88 +17,78 @@ RSA_PATH="${RSA_PATH%$'\r'}"
 
 HOST="ieticloudpro.ieti.cat"
 PORT_SSH="20127"
-ZIP_NAME="server-package.zip"
+SSH_OPTS='-oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedAlgorithms=+ssh-rsa -oUpdateHostKeys=no'
+REMOTE_DIR="nodejs_server"
+
+# The project is the parent folder of "proxmox"
+PROJECT_DIR="$(cd .. && pwd)"
 
 if [[ ! -f "$RSA_PATH" ]]; then
   echo "Error: No s'ha trobat la clau privada: $RSA_PATH"
   exit 1
 fi
 
-cd ..
-rm -f "$ZIP_NAME"
+if [[ ! -f "$PROJECT_DIR/package.json" ]]; then
+  echo "Error: no trobo package.json a $PROJECT_DIR"
+  exit 1
+fi
 
-zip -r "$ZIP_NAME" . \
-  -x "proxmox/*" \
-     "node_modules/*" \
-     "data" "data/*" \
-     ".git" ".git/*" \
-     ".gitignore" \
-     ".DS_Store" "*/.DS_Store" \
-     "settings.env" \
-     "keys.env" \
-     "$ZIP_NAME"
+if ! command -v rsync >/dev/null 2>&1; then
+  echo "Error: cal instal·lar 'rsync' al vostre ordinador (sudo apt install rsync)"
+  exit 1
+fi
 
 eval "$(ssh-agent -s)" >/dev/null
 ssh-add "$RSA_PATH" >/dev/null
 
-scp -P "$PORT_SSH" "$ZIP_NAME" "$USER@$HOST:~/server-package.zip"
-rm -f "$ZIP_NAME"
+# The remote server also needs rsync, and the destination folder must exist
+if ! ssh -T -p "$PORT_SSH" $SSH_OPTS "$USER@$HOST" \
+  "command -v rsync >/dev/null 2>&1 && mkdir -p \"\$HOME/$REMOTE_DIR\""; then
+  echo "Error: no s'ha pogut connectar, o el servidor remot no té 'rsync' instal·lat."
+  echo "Al servidor remot (./proxmoxConnect.sh): sudo apt install rsync"
+  exit 1
+fi
 
-ssh -T -p "$PORT_SSH" -o UpdateHostKeys=no \
-  "$USER@$HOST" \
-  bash -s -- "$SERVER_PORT" << 'EOF'
+# Send only the files that changed.
+# Excluded files are never sent, and are never deleted from the remote server,
+# so 'node_modules', 'data' and 'settings.env' are kept between deploys.
+echo "Enviant arxius a $USER@$HOST:~/$REMOTE_DIR ..."
+rsync -az --delete \
+  -e "ssh -p $PORT_SSH $SSH_OPTS" \
+  --exclude '/proxmox/' \
+  --exclude '/node_modules/' \
+  --exclude '/data/' \
+  --exclude '/settings.env' \
+  --exclude '/keys.env' \
+  --exclude '/server-package.zip' \
+  --exclude '.git/' \
+  --exclude '.gitignore' \
+  --exclude '.DS_Store' \
+  "$PROJECT_DIR/" "$USER@$HOST:$REMOTE_DIR/"
+
+ssh -T -p "$PORT_SSH" $SSH_OPTS "$USER@$HOST" \
+  bash -s -- "$SERVER_PORT" "$REMOTE_DIR" << 'EOF'
 set -e
 
 SERVER_PORT="$1"
-APP_DIR="$HOME/nodejs_server"
-PKG="$HOME/server-package.zip"
-TMP_DIR="$(mktemp -d)"
+APP_DIR="$HOME/$2"
 REMOTE_USER="$(id -un)"
 
 export PATH="$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 
-mkdir -p "$APP_DIR"
 cd "$APP_DIR"
+test -f package.json
+
+# Install dependencies while the old version keeps running
+npm install --omit=dev
 
 # Stop only our app
-if command -v pm2 >/dev/null 2>&1; then
-  pm2 delete app >/dev/null 2>&1 || true
-fi
+pm2 delete app >/dev/null 2>&1 || true
 
 # Wait for port to be free
 for i in {1..10}; do
   ss -tln | grep -q ":$SERVER_PORT " && sleep 1 || break
 done
-
-# Clean app dir while preserving runtime state
-find "$APP_DIR" -mindepth 1 -maxdepth 1 \
-  \( -name "data" -o -name "settings.env" \) -prune \
-  -o -exec rm -rf {} + 2>/dev/null || true
-
-# Unzip safely
-test -f "$PKG"
-unzip -q -o "$PKG" -d "$TMP_DIR"
-rm -f "$PKG"
-
-# Detect project root
-if [[ -f "$TMP_DIR/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/" "$APP_DIR/"
-elif [[ -f "$TMP_DIR/nodejs_server/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/nodejs_server/" "$APP_DIR/"
-elif [[ -f "$TMP_DIR/nodejs_web/package.json" ]]; then
-  rsync -a --delete --exclude 'data/' --exclude 'settings.env' "$TMP_DIR/nodejs_web/" "$APP_DIR/"
-else
-  echo "Error: no trobo package.json dins del zip"
-  rm -rf "$TMP_DIR"
-  exit 1
-fi
-
-rm -rf "$TMP_DIR"
-
-cd "$APP_DIR"
-test -f package.json
-
-npm install --omit=dev
 
 # Start app with PM2
 pm2 start server/app.js --name app --update-env

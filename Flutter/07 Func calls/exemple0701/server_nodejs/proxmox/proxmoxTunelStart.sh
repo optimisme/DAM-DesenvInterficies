@@ -27,13 +27,22 @@ if ssh -S "$CTRL_SOCK" -p 20127 $SSH_OPTS -O check "$USER@ieticloudpro.ieti.cat"
   exit 0
 fi
 
+# Stop if another program (local MySQL, Docker...) already uses the local port,
+# otherwise connections to 127.0.0.1 would reach that program and not the tunnel
+if (exec 3<>"/dev/tcp/127.0.0.1/${LOCAL_PORT}") 2>/dev/null; then
+  echo "Error: el port local ${LOCAL_PORT} ja està ocupat per un altre programa (MySQL local, Docker...)"
+  echo "Atura aquest programa i torna a executar ./proxmoxTunelStart.sh"
+  echo "Per saber quin programa és: lsof -nP -iTCP:${LOCAL_PORT} -sTCP:LISTEN"
+  exit 1
+fi
+
 # Start tunnel in background with control socket
 ssh -f -N -T \
   -M -S "$CTRL_SOCK" \
   -i "${RSA_PATH}" \
   -p 20127 \
   $SSH_OPTS \
-  -L ${LOCAL_PORT}:${REMOTE_HOST}:${REMOTE_PORT} \
+  -L 127.0.0.1:${LOCAL_PORT}:${REMOTE_HOST}:${REMOTE_PORT} \
   "$USER@ieticloudpro.ieti.cat"
 
 echo "Tunnel started on 127.0.0.1:${LOCAL_PORT}"

@@ -81,8 +81,8 @@ Executar els arxius a la carpeta **proxmox**
 ```bash
 cd proxmox
 ./proxmoxConnect.sh         # Inicia una connexió SSH de terminal amb el servidor
-./proxmoxDeploy.sh          # Puja el codi al servidor (i el reinicia)
-./proxmoxSetupAutostart.sh  # Configura el servidor remot perquè s'inicii automàticament al reiniciar
+./proxmoxDeploy.sh          # Compila el .jar, el puja al servidor i el (re)inicia. També el deixa configurat perquè s'inicii automàticament al reiniciar
+./proxmoxStop.sh            # Atura el servidor remot
 ./proxmoxSetupRedirect80.sh # Configura el servidor remot perquè redireccioni el port 80 cap al port del servidor
 ```
 
@@ -90,7 +90,7 @@ També podeu pasar la configuració per paràmetres:
 
 ```bash
 cd proxmox
-./proxmoxRedirect80.sh nomUsuari "$HOME/Desktop/Proxmox IETI/id_rsa" 3001
+./proxmoxSetupRedirect80.sh nomUsuari "$HOME/.ssh/id_rsa" 3001
 ```
 
 # Gestió de manera manual
