@@ -7,7 +7,7 @@
 | 5 | Adaptatiu | Colors | Accessibilitat | Prototipatge |
 | 6 | Introducció | Tipografies | Animacions | Sistemes de disseny | Escriptori
 
-Grup 1: Mohamed Styven
+Grup 1: Mohamed, Styven
 
 Grup 2: I. Muriel, M. Angel
 
