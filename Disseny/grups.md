@@ -8,11 +8,18 @@
 | 6 | Introducció | Tipografies | Animacions | Sistemes de disseny | Escriptori
 
 Grup 1: Mohamed Styven
+
 Grup 2: I. Muriel, M. Angel
+
 Grup 3: Marc Losada, Unai Escobar
+
 Grup 4: Hector, Aitor
+
 Grup 5: Anna, Melisbeth
+
 Grup 6: Marcos, Aleix, Marc Pino
+
+---
 
 Presentacions a l'atzar:
 
