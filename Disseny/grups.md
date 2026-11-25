@@ -1,4 +1,4 @@
-| Grup | Tema 1 | Tema 2 | Tema 3 | Tema 4 | Tema 4 |
+| Grup | Tema 1 | Tema 2 | Tema 3 | Tema 4 | Tema 5 |
 |---|---|---|---|---|---|
 | 1 | Introducció UX/UI | Colors | Mòbils | Prototipatge |
 | 2 | Principis UX/UI | Tipografies | Maquetació | Adaptatiu | Usabilitat |
